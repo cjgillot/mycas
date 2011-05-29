@@ -107,11 +107,6 @@ monomial<K>::ineg() {
   coef = - coef;
   return *this;
 }
-template<class K>
-inline monomial<K>
-monomial<K>::neg() const {
-  return monomial(- coef, expo);
-}
 
 template<class K>
 inline monomial<K> &

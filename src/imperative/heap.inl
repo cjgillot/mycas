@@ -72,21 +72,21 @@ inline void heap<O>::insert(const e &x) {
 
 template<class O>
 inline const typename heap<O>::e &
-heap<O>::findMin() const {
+heap<O>::find_min() const {
   assert(data.size() > 0);
   return data.front();
 }
 
 template<class O>
 inline typename heap<O>::e &
-heap<O>::findMin() {
+heap<O>::find_min() {
   assert(data.size() > 0);
   return data.front();
 }
 
 template<class O>
 inline std::list<typename heap<O>::e>
-heap<O>::findMins() const {
+heap<O>::find_mins() const {
   assert(data.size() > 0);
 
   e x0 = data.front();
@@ -101,7 +101,7 @@ heap<O>::findMins() const {
 }
 
 template<class O>
-inline void heap<O>::deleteMin() {
+inline void heap<O>::delete_min() {
   assert(data.size() > 0);
 
   std::pop_heap(
@@ -113,14 +113,14 @@ inline void heap<O>::deleteMin() {
 }
 
 template<class O>
-inline void heap<O>::deleteMins() {
+inline void heap<O>::delete_mins() {
   size_t sz = data.size();
 
   assert(sz > 0);
 
   e m = data.front();
 
-  vect_t::iterator
+  typename vect_t::iterator
     b=data.begin(),
     e=data.end();
 
@@ -181,7 +181,7 @@ adapt<T>::push_front(const T &x)
 { repr->push_front(x); }
 
 template<class T>
-inline const list_t &
+inline const typename adapt<T>::list_t &
 adapt<T>::list() const
 { return *repr; }
 
@@ -214,7 +214,7 @@ chain<O>::operator=(const chain &o) {
 
 template<class O>
 inline void
-chain<O>::swap(heap &o) {
+chain<O>::swap(chain &o) {
   impl::swap(o);
 }
 
@@ -237,13 +237,13 @@ chain<O>::empty() const {
 template<class O>
 inline void
 chain<O>::insert(const e &x) {
-  for(vect_t::iterator
-        it = impl::data.begin(),
-        end= impl::data.end();
-      it != end;
-      ++it)
-    if(algebra::compare(x, it->front()) == 0)
-    { (*it).push_front(x); return; }
+  /* seek for existing list */
+  foreach(le &l, impl::data)
+    if(algebra::compare(x, l.front()) == 0) {
+      /* got one */
+      l.push_front(x);
+      return;
+    }
 
   /* no existing list -> insert le(x) */
   impl::insert(le(x));
@@ -251,37 +251,38 @@ chain<O>::insert(const e &x) {
 
 template<class O>
 inline typename chain<O>::e &
-chain<O>::findMin() {
-  return impl::findMin().front();
+chain<O>::find_min() {
+  return impl::find_min().front();
 }
 
 template<class O>
 inline const typename chain<O>::e &
-chain<O>::findMin() const {
-  return impl::findMin().front();
+chain<O>::find_min() const {
+  return impl::find_min().front();
 }
 
 template<class O>
 inline std::list<typename chain<O>::e>
-chain<O>::findMins() const {
-  return impl::findMin().list();
+chain<O>::find_mins() const {
+  return impl::find_min().list();
 }
 
 template<class O>
 inline void
-chain<O>::deleteMin() {
-  le &lmin = impl::findMin();
+chain<O>::delete_min() {
+  le &lmin = impl::find_min();
 
   assert(! lmin.empty());
 
   lmin.pop_front();
 
-  if(lmin.empty()) impl::deleteMin();
+  if(lmin.empty())
+    impl::delete_min();
 }
 
 template<class O>
-inline void chain<O>::deleteMins() {
-  impl::deleteMin();
+inline void chain<O>::delete_mins() {
+  impl::delete_min();
 }
 
 }} // namespace imperative::heap

@@ -14,7 +14,7 @@ namespace poly {
 namespace sparse {
 
 template<class K>
-struct poly: public std::list<monomial<K> > {
+struct poly {
   typedef monomial<K> M;
 
   typedef typename M::Z Z;
@@ -26,7 +26,12 @@ struct poly: public std::list<monomial<K> > {
 
   typedef z e;
 
-  typedef std::list<monomial<K> > impl;
+  typedef std::list<monomial<K> > list_t;
+
+  typedef typename list_t::iterator iterator;
+  typedef typename list_t::const_iterator const_iterator;
+
+  list_t impl;
 
 public:
   poly();
@@ -39,6 +44,18 @@ public:
 
   ~poly();
 
+public:
+  /* range concept */
+  iterator begin() { return impl.begin(); }
+  iterator end()   { return impl.end(); }
+
+  const_iterator begin() const { return impl.begin(); }
+  const_iterator end()   const { return impl.end(); }
+
+  bool empty()  const { return impl.empty(); }
+  size_t size() const { return impl.size();  }
+
+public:
   static poly zero;
   static poly one;
 

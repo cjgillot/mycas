@@ -23,12 +23,12 @@ poly<K>::poly()
 template<class K>
 inline
 poly<K>::poly(const poly &m)
-: impl(m)
+: impl(m.impl)
 {}
 template<class K>
 inline poly<K> &
 poly<K>::operator=(const poly &m) {
-  impl::operator=(m);
+  impl.operator=(m.impl);
   return *this;
 }
 template<class K>
@@ -61,43 +61,49 @@ poly<K> poly<K>::one(
 template<class K>
 inline bool
 poly<K>::null() const {
-  return impl::empty();
+  return impl.empty();
 }
 
 template<class K>
 inline bool
 poly<K>::unit() const {
-  return impl::size() == 1 && impl::front().unit();
+  return impl.size() == 1 && impl.front().unit();
 }
 
 template<class K>
 inline const typename poly<K>::z &
 poly<K>::deg() const {
-  return impl::front().deg();
+  return impl.front().deg();
 }
 
 template<class K>
 inline poly<K> &
 poly<K>::operator+=(const poly &o) {
-  typename std::list<M>::iterator
-    i1 = impl::begin(),
-    e1 = impl::end();
-  typename std::list<M>::const_iterator
-    i2 = o.impl::begin(),
-    e2 = o.impl::end();
+  iterator
+    i1 = boost::begin(*this),
+    e1 = boost::end(*this);
+  const_iterator
+    i2 = boost::begin(o),
+    e2 = boost::end(o);
 
   while(i1 != e1 && i2 != e2) {
     int cmp = algebra::compare(*i1, *i2);
     if(cmp < 0) { ++i1; continue; }
-    if(cmp > 0) { impl::insert(i1, *i2); ++i2; continue; }
+    if(cmp > 0) { impl.insert(i1, *i2); ++i2; continue; }
     *i1 += *i2;
 
     ++i2;
 
     if(algebra::null(*i1))
-      i1 = impl::erase(*i1);
+      i1 = impl.erase(i1);
     else
       ++i1;
+  }
+
+  /* if terms remain in o */
+  while(i2 != e2) {
+    impl.insert(e1, *i2);
+    ++i2;
   }
 
   return *this;
@@ -106,25 +112,31 @@ poly<K>::operator+=(const poly &o) {
 template<class K>
 inline poly<K> &
 poly<K>::operator-=(const poly &o) {
-  impl::iterator
-    i1 = impl::begin(),
-    e1 = impl::end();
-  impl::const_iterator
-    i2 = o.impl::begin(),
-    e2 = o.impl::end();
+  iterator
+    i1 = boost::begin(*this),
+    e1 = boost::end(*this);
+  const_iterator
+    i2 = boost::begin(o),
+    e2 = boost::end(o);
 
   while(i1 != e1 && i2 != e2) {
     int cmp = algebra::compare(*i1, *i2);
     if(cmp < 0) { ++i1; continue; }
-    if(cmp > 0) { impl::insert(i1, - *i2); ++i2; continue; }
+    if(cmp > 0) { impl.insert(i1, - *i2); ++i2; continue; }
     *i1 -= *i2;
 
     ++i2;
 
     if(algebra::null(*i1))
-      i1 = impl::erase(*i1);
+      i1 = impl.erase(i1);
     else
       ++i1;
+  }
+
+  /* if terms remain in o */
+  while(i2 != e2) {
+    impl.insert(e1, - *i2);
+    ++i2;
   }
 
   return *this;
@@ -143,7 +155,7 @@ template<class K>
 inline poly<K> &
 poly<K>::operator*=(const k &o) {
   if(algebra::null(o)) {
-    impl::erase();
+    impl.clear();
     return *this;
   }
 
@@ -155,7 +167,7 @@ poly<K>::operator*=(const k &o) {
 template<class K>
 inline poly<K> &
 poly<K>::operator/=(const k &o) {
-  assert(! algebra::null(k));
+  assert(! algebra::null(o));
 
   foreach(mono &x, *this)
     x /= o;
@@ -167,10 +179,10 @@ template<class K>
 inline int
 poly<K>::compare(const poly &a, const poly &b) {
   typename std::list<M>::const_iterator
-    i1 = a.impl::begin(),
-    e1 = a.impl::end(),
-    i2 = b.impl::begin(),
-    e2 = b.impl::end();
+    i1 = a.impl.begin(),
+    e1 = a.impl.end(),
+    i2 = b.impl.begin(),
+    e2 = b.impl.end();
 
   for(; i1 != e1 && i2 != e2; ++i1, ++i2) {
     int cmp = M::deep_compare(*i1, *i2);
@@ -240,8 +252,8 @@ do_mul(const poly<K> &a, const poly<K> &b) {
 template<class K>
 inline poly<K> &
 poly<K>::operator*=(const poly &o) {
-  if(null() || o.null()) impl::clear();
-  else impl::operator=(do_mul(*this, o));
+  if(null() || o.null()) impl.clear();
+  else impl.operator=(do_mul(*this, o));
 
   return *this;
 }

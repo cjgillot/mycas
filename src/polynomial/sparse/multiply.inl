@@ -30,7 +30,7 @@ inline const typename P::mono &
 common<P,S>::get() const {
   if(ready) return cur;
   typedef typename P::mono mono;
-  const std::list<heap_obj<P>*> &mins = so.findMins();
+  const std::list<heap_obj<P>*> &mins = so.find_mins();
   cur = algebra::zero<mono>();
   foreach(heap_obj<P>* ho, mins)
     cur += ho->value();
@@ -41,11 +41,11 @@ common<P,S>::get() const {
 template<class P, class S>
 inline void
 common<P,S>::next() {
-  std::list<typename S::ho*> ml = so.findMins();
+  std::list<typename S::ho*> ml = so.find_mins();
 
   ready = false;
 
-  so.deleteMins();
+  so.delete_mins();
 
   so.update(ml);
 }
@@ -53,9 +53,7 @@ common<P,S>::next() {
 template<class P>
 inline
 heap_obj<P>::heap_obj(const mono &f0, const P &g)
-: gen((assert(!g.empty()),
-    g | boost::adaptors::transformed(mono_muler(f0))
-  ))
+: gen(mono_muler(f0), (assert(!g.empty()),g))
 , cur(gen.front())
 {}
 
@@ -96,9 +94,9 @@ inline
 heap<P>::~heap()
 {
   while(!super::empty()) {
-    std::list<ho*> min = super::findMins();
+    std::list<ho*> min = super::find_mins();
     foreach(ho* m, min) delete m;
-    super::deleteMins();
+    super::delete_mins();
   }
 }
 

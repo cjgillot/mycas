@@ -78,7 +78,7 @@ public:
   const adapt &
   operator=(const adapt &);
 
-  ~adapt() {}
+  ~adapt();
 
   template<class I>
   void

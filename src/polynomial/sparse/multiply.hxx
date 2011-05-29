@@ -48,10 +48,10 @@ private:
     { return *f0 * g0; }
   };
 
-  boost::transformed_range<
-    mono_muler
-  , const typename P::impl>
-      gen;
+  boost::transformed_range
+    < mono_muler
+    , const P
+    > gen;
 
   mono cur;
 
@@ -70,7 +70,10 @@ public:
 };
 
 template<class P>
-struct heap: public imperative::heap::chain<heap_obj<P>*>, boost::noncopyable {
+struct heap
+: public imperative::heap::chain<heap_obj<P>*>
+, private boost::noncopyable
+{
   typedef heap_obj<P> ho;
   typedef imperative::heap::chain<heap_obj<P>*> super;
 
