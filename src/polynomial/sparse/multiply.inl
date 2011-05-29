@@ -117,7 +117,7 @@ poly<P>::poly(const P &a, const P &b)
 {
   assert(!a.empty() && !b.empty());
 
-  foreach(mono m, a)
+  foreach(const mono &m, a)
     super::so.insert(new ho_t(m, b));
 }
 

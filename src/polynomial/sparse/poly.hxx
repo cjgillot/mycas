@@ -26,7 +26,6 @@ struct poly: public std::list<monomial<K> > {
 
   typedef z e;
 
-private:
   typedef std::list<monomial<K> > impl;
 
 public:
@@ -57,13 +56,14 @@ public:
   poly &operator/=(const k &o);
 
   poly &operator*=(const poly &o);
-  poly &operator/=(const poly &o);
 
   poly &ineg();
   poly  neg() const;
 
   static int compare(const poly &a, const poly &b);
 };
+
+// TODO: polynomial division
 
 }} // poly::sparse
 

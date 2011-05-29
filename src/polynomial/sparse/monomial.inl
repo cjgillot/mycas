@@ -20,24 +20,29 @@ namespace sparse {
 template<class K>
 inline
 monomial<K>::monomial(const k &c, const z &e)
-: coef(c), expo(e)
+: coef(c)
+, expo(e)
 {}
 
 template<class K>
 inline
 monomial<K>::monomial(const z &e)
-: coef(algebra::one<K>()), expo(e)
+: coef(algebra::one<K>())
+, expo(e)
 {}
 
 template<class K>
 inline
 monomial<K>::monomial()
+: coef(algebra::zero<K>())
+, expo(algebra::zero<Z>())
 {}
 
 template<class K>
 inline
 monomial<K>::monomial(const monomial &m)
-: coef(m.coef), expo(m.expo)
+: coef(m.coef)
+, expo(m.expo)
 {}
 
 template<class K>
@@ -54,10 +59,13 @@ monomial<K>::~monomial()
 {}
 
 template<class K>
-monomial<K> monomial<K>::zero(algebra::zero<K>(), algebra::zero<monomial<K>::Z>());
+monomial<K> monomial<K>::zero;
 
 template<class K>
-monomial<K> monomial<K>::one (algebra::one<K>(),  algebra::zero<monomial<K>::Z>());
+monomial<K> monomial<K>::one (
+  algebra::one<K>(),
+  algebra::zero<monomial<K>::Z>()
+);
 
 template<class K>
 inline bool
@@ -162,8 +170,8 @@ operator-(monomial<K> a, const monomial<K> &b) {
 
 template<class K>
 inline monomial<K>
-operator-(const monomial<K> &a) {
-  return a.neg();
+operator-(monomial<K> a) {
+  return a.ineg();
 }
 
 template<class K>

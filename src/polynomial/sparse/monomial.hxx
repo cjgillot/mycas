@@ -56,7 +56,6 @@ public:
   monomial &operator/=(const monomial &o);
 
   monomial &ineg();
-  monomial  neg() const;
 
   static int compare(const monomial &a, const monomial &b);
   static int deep_compare(const monomial &a, const monomial &b);

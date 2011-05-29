@@ -53,7 +53,10 @@ template<class K>
 poly<K> poly<K>::zero;
 
 template<class K>
-poly<K> poly<K>::one(algebra::one<K>(), algebra::one<poly<K>::Z>());
+poly<K> poly<K>::one(
+  algebra::one<K>(),
+  algebra::one<poly<K>::Z>()
+);
 
 template<class K>
 inline bool
@@ -84,11 +87,17 @@ poly<K>::operator+=(const poly &o) {
     e2 = o.impl::end();
 
   while(i1 != e1 && i2 != e2) {
-    int cmp = M::compare(*i1, *i2);
+    int cmp = algebra::compare(*i1, *i2);
     if(cmp < 0) { ++i1; continue; }
     if(cmp > 0) { impl::insert(i1, *i2); ++i2; continue; }
     *i1 += *i2;
-    ++i1; ++i2;
+
+    ++i2;
+
+    if(algebra::null(*i1))
+      i1 = impl::erase(*i1);
+    else
+      ++i1;
   }
 
   return *this;
@@ -97,19 +106,25 @@ poly<K>::operator+=(const poly &o) {
 template<class K>
 inline poly<K> &
 poly<K>::operator-=(const poly &o) {
-  typename std::list<M>::iterator
+  impl::iterator
     i1 = impl::begin(),
     e1 = impl::end();
-  typename std::list<M>::const_iterator
+  impl::const_iterator
     i2 = o.impl::begin(),
     e2 = o.impl::end();
 
   while(i1 != e1 && i2 != e2) {
-    int cmp = M::compare(*i1, *i2);
+    int cmp = algebra::compare(*i1, *i2);
     if(cmp < 0) { ++i1; continue; }
     if(cmp > 0) { impl::insert(i1, - *i2); ++i2; continue; }
     *i1 -= *i2;
-    ++i1; ++i2;
+
+    ++i2;
+
+    if(algebra::null(*i1))
+      i1 = impl::erase(*i1);
+    else
+      ++i1;
   }
 
   return *this;
@@ -118,42 +133,32 @@ poly<K>::operator-=(const poly &o) {
 template<class K>
 inline poly<K> &
 poly<K>::ineg() {
-  typename std::list<M>::iterator
-    i1 = impl::begin(),
-    e1 = impl::end();
-
-  for(; i1 != e1; ++i1)
-    i1->ineg();
+  foreach(mono &x, *this)
+    x = -x;
 
   return *this;
-}
-template<class K>
-inline poly<K>
-poly<K>::neg() const {
-  return poly(*this).ineg();
 }
 
 template<class K>
 inline poly<K> &
 poly<K>::operator*=(const k &o) {
-  typename std::list<M>::iterator
-    i1 = impl::begin(),
-    e1 = impl::end();
+  if(algebra::null(o)) {
+    impl::erase();
+    return *this;
+  }
 
-  for(; i1 != e1; ++i1)
-    *i1 *= o;
+  foreach(mono &x, *this)
+    x *= o;
 
   return *this;
 }
 template<class K>
 inline poly<K> &
 poly<K>::operator/=(const k &o) {
-  typename std::list<M>::iterator
-    i1 = impl::begin(),
-    e1 = impl::end();
+  assert(! algebra::null(k));
 
-  for(; i1 != e1; ++i1)
-    *i1 /= o;
+  foreach(mono &x, *this)
+    x /= o;
 
   return *this;
 }
@@ -167,10 +172,9 @@ poly<K>::compare(const poly &a, const poly &b) {
     i2 = b.impl::begin(),
     e2 = b.impl::end();
 
-  while(i1 != e1 && i2 != e2) {
+  for(; i1 != e1 && i2 != e2; ++i1, ++i2) {
     int cmp = M::deep_compare(*i1, *i2);
     if(cmp != 0) return cmp;
-    ++i1; ++i2;
   }
 
   if(i1 != e1) return 1;
@@ -216,18 +220,16 @@ inline std::list<typename poly<K>::mono>
 do_mul(const poly<K> &a, const poly<K> &b) {
   assert(!a.empty() && !b.empty());
 
-  multiply::poly<poly<K> > muler(a,b);
-
   typedef typename poly<K>::mono mono;
 
   std::list<mono> ret;
 
-  while(! muler.empty()) {
+  for(multiply::poly<poly<K> > muler(a,b);
+      ! muler.empty();
+      muler.next()) {
     const mono &m = muler.get();
 
     if(!algebra::null(m)) ret.push_back(m);
-
-    muler.next();
   }
 
   return ret;
@@ -243,22 +245,11 @@ poly<K>::operator*=(const poly &o) {
 
   return *this;
 }
-template<class K>
-inline poly<K> &
-poly<K>::operator/=(const poly &o) {
-  /* TODO: polynomial division */
-  return *this;
-}
 
 template<class K>
 inline poly<K>
 operator*(poly<K> a, const poly<K> &b) {
   return a *= b;
-}
-template<class K>
-inline poly<K>
-operator/(poly<K> a, const poly<K> &b) {
-  return a /= b;
 }
 
 }} // poly::sparse

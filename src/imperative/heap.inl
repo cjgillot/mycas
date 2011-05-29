@@ -14,34 +14,42 @@
 
 #include "algebra/utils.hxx"
 
-/*
-namespace algebra {
-
-template<class O, class A>
-int compare<std::list<O, A> >(const std::list<O, A> &a, const std::list<O, A> &b) {
-  assert(a && b);
-
-  return algebra::compare(a.front(), b.front());
-}
-
-}
-*/
-
 namespace imperative {
 namespace heap {
-using namespace imperative::heap;
+/*using namespace imperative::heap;*/
 
 
-// ********************************* heap ****************************** //
+// *************************** heap ************************ //
 template<class O>
 inline
 heap<O>::heap()
-: data() {}
+: data()
+{}
+
+template<class O>
+inline
+heap<O>::heap(const heap &o)
+: data(o.data)
+{}
+
+template<class O>
+inline heap<O> &
+heap<O>::operator=(const heap &o) {
+  data = o.data;
+  return *this;
+}
+
+template<class O>
+inline void
+heap<O>::swap(heap &o) {
+  std::swap(data, o.data);
+}
 
 template<class O>
 inline
 heap<O>::heap(size_t n)
-: data() { data.reserve(n); }
+: data()
+{ data.reserve(n); }
 
 template<class O>
 inline
@@ -56,7 +64,10 @@ heap<O>::empty() const
 template<class O>
 inline void heap<O>::insert(const e &x) {
   data.push_back(x);
-  std::push_heap(data.begin(), data.end(), algebra::compare<O>);
+  std::push_heap(
+    data.begin(),
+    data.end(),
+    algebra::compare<O>);
 }
 
 template<class O>
@@ -80,9 +91,9 @@ heap<O>::findMins() const {
 
   e x0 = data.front();
 
-  std::list<e*> ret(1, &x0);
+  std::list<e> ret(0);
 
-  foreach(e *x, data)
+  foreach(const e &x, data)
     if(algebra::compare(x0, x) == 0)
       ret.push_front(x);
 
@@ -93,7 +104,11 @@ template<class O>
 inline void heap<O>::deleteMin() {
   assert(data.size() > 0);
 
-  std::pop_heap(data.begin(), data.end(), algebra::compare<O>);
+  std::pop_heap(
+    data.begin(),
+    data.end(),
+    algebra::compare<O>
+  );
   data.pop_back();
 }
 
@@ -103,26 +118,105 @@ inline void heap<O>::deleteMins() {
 
   assert(sz > 0);
 
-  e* m = data.front();
+  e m = data.front();
 
-  typename std::vector<e*>::iterator
+  vect_t::iterator
     b=data.begin(),
     e=data.end();
 
   do {
-    std::pop_heap(b,e, algebra::compare<O>);
+    std::pop_heap(b, e, algebra::compare<O>);
     --e; --sz;
-  } while(sz >= 0
-      && O::compare(m, data.front()) == 0);
+  }
+  while(sz > 0
+     && algebra::compare(m, *b) == 0);
 
   data.resize(sz);
 }
 
-// ***************************** chain ********************************** //
+// ***** list adaptor for chain ***** //
+
+template<class T>
+inline
+adapt<T>::adapt(const T &x)
+: repr(new list_t(1,x))
+{}
+
+template<class T>
+inline
+adapt<T>::adapt()
+: repr()
+{}
+template<class T>
+inline
+adapt<T>::adapt(const adapt &a)
+: repr(a.repr)
+{}
+template<class T>
+inline const adapt<T> &
+adapt<T>::operator=(const adapt &a) {
+  repr = a.repr;
+  return *this;
+}
+
+template<class T>
+inline
+adapt<T>::~adapt()
+{}
+
+template<class T>
+template<class I>
+inline void
+adapt<T>::insert(const I &i)
+{ repr->insert(i); }
+
+template<class T>
+inline const T &
+adapt<T>::front() const
+{ return repr->front(); }
+
+template<class T>
+inline void
+adapt<T>::push_front(const T &x)
+{ repr->push_front(x); }
+
+template<class T>
+inline const list_t &
+adapt<T>::list() const
+{ return *repr; }
+
+template<class T>
+inline int
+adapt<T>::compare(const adapt &a, const adapt &b) {
+  return algebra::compare(
+    a.repr->front(),
+    b.repr->front());
+}
+
+// ***************************** chain *********************** //
 template<class O>
 inline
 chain<O>::chain()
 : impl() {}
+
+template<class O>
+inline
+chain<O>::chain(const chain &o)
+: impl(o)
+{}
+
+template<class O>
+inline chain<O> &
+chain<O>::operator=(const chain &o) {
+  impl::operator=(o);
+  return *this;
+}
+
+template<class O>
+inline void
+chain<O>::swap(heap &o) {
+  impl::swap(o);
+}
 
 template<class O>
 inline
@@ -143,17 +237,15 @@ chain<O>::empty() const {
 template<class O>
 inline void
 chain<O>::insert(const e &x) {
-  for(typename std::vector<le>::iterator
+  for(vect_t::iterator
         it = impl::data.begin(),
         end= impl::data.end();
-
       it != end;
-
       ++it)
-
     if(algebra::compare(x, it->front()) == 0)
     { (*it).push_front(x); return; }
 
+  /* no existing list -> insert le(x) */
   impl::insert(le(x));
 }
 

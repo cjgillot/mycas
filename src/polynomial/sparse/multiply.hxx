@@ -39,6 +39,7 @@ private:
 
     const mono *f0;
 
+    explicit
     mono_muler(const mono &f)
     : f0(&f)
     {}
@@ -47,19 +48,25 @@ private:
     { return *f0 * g0; }
   };
 
-  boost::transformed_range<mono_muler, const P> gen;
+  boost::transformed_range<
+    mono_muler
+  , const typename P::impl>
+      gen;
+
   mono cur;
 
 public:
+  heap_obj(const mono &f0, const P &g);
+
+  const mono &
+  value() const;
+
+  bool
+  update();
+
   /* the comparison function is reversed :
    * we want a max-heap on the exponent */
   static int compare(const heap_obj &a, const heap_obj &b);
-
-  const mono &value() const;
-
-  heap_obj(const mono &f0, const P &g);
-
-  bool update();
 };
 
 template<class P>
