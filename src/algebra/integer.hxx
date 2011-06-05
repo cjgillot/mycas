@@ -39,6 +39,11 @@ inline int
 compare<integer>(const integer &a, const integer &b)
 { return a-b; }
 
+template<>
+inline int &
+ineg<int>(int &a)
+{ return (a = -a); }
+
 }
 
 #endif /* INTEGER_HXX_ */

@@ -10,11 +10,19 @@
 
 #include "monomial.hxx"
 
+#include "multiply.hxx"
+
 namespace poly {
 namespace sparse {
 
 template<class K>
-struct poly {
+struct poly
+: public std::list<monomial<K> >
+, boost::arithmetic1<poly<K>
+, boost::arithmetic2<poly<K>, monomial<K>
+, boost::multiplicative2<poly<K>, K
+> > >
+{
   typedef monomial<K> M;
 
   typedef typename M::Z Z;
@@ -26,64 +34,198 @@ struct poly {
 
   typedef z e;
 
-  typedef std::list<monomial<K> > list_t;
+  typedef std::list<monomial<K> > impl;
 
-  typedef typename list_t::iterator iterator;
-  typedef typename list_t::const_iterator const_iterator;
-
-  list_t impl;
+  typedef typename impl::iterator iterator;
+  typedef typename impl::const_iterator const_iterator;
 
 public:
-  poly();
-  poly(const poly &m);
-  poly &operator=(const poly &);
+  inline
+  poly() {}
+  inline
+  poly(const poly &m)
+  : impl(m) {}
+  inline poly &
+  operator=(const poly &o) {
+    impl::operator=(o);
+    return *this;
+  }
 
-  poly(const k &, const z &);
-  explicit
-  poly(const z &);
+  inline
+  poly(const k &c, const z &e)
+  : impl(1,M(c,e)) {}
+  explicit inline
+  poly(const z &e)
+  : impl(1,M(e)) {}
 
-  ~poly();
-
-public:
-  /* range concept */
-  iterator begin() { return impl.begin(); }
-  iterator end()   { return impl.end(); }
-
-  const_iterator begin() const { return impl.begin(); }
-  const_iterator end()   const { return impl.end(); }
-
-  bool empty()  const { return impl.empty(); }
-  size_t size() const { return impl.size();  }
+  inline
+  ~poly() {}
 
 public:
   static poly zero;
   static poly one;
 
-  bool null() const;
-  bool unit() const;
+  inline bool
+  null() const
+  { return impl::empty(); }
+  inline bool
+  unit() const {
+    return impl::size() == 1
+        && algebra::unit(impl::front());
+  }
 
-  const z &deg() const;
+  inline const z &
+  deg() const {
+    return impl::front().deg();
+  }
 
-  bool monome() const;
+  inline bool
+  monome() const
+  { return impl::size() == 1; }
 
-  poly &operator+=(const poly &o);
-  poly &operator-=(const poly &o);
+private:
+  /// implementation of += and -= operators
+  ///   requirement : m != 0, f1(m) != 0
+  template<class Fnc1, class Fnc2>
+  static inline void
+  combine(poly &a, const poly &b, Fnc1 f1, Fnc2 f2) {
+    iterator
+      i1 = a.begin(),
+      e1 = a.end();
+    const_iterator
+      i2 = b.begin(),
+      e2 = b.end();
 
-  poly &operator*=(const k &o);
-  poly &operator/=(const k &o);
+    while(i1 != e1 && i2 != e2) {
+      int cmp = algebra::compare(*i1, *i2);
+      if(cmp < 0) { ++i1; continue; }
+      if(cmp > 0) { a.insert(i1, f1(*i2)); ++i2; continue; }
+      f2(*i1, *i2);
 
-  poly &operator*=(const poly &o);
+      ++i2;
 
-  poly &ineg();
-  poly  neg() const;
+      if(algebra::null(*i1))
+        i1 = a.erase(i1);
+      else
+        ++i1;
+    }
 
-  static int compare(const poly &a, const poly &b);
+    /* if terms remain in o */
+    while(i2 != e2) {
+      a.insert(e1, f1(*i2));
+      ++i2;
+    }
+  }
+
+public:
+  inline poly &
+  operator+=(const poly &o) {
+    combine(*this, o, _1, _1 += _2);
+    return *this;
+  }
+  inline poly &
+  operator-=(const poly &o) {
+    combine(*this, o, - _1, _1 -= _2);
+    return *this;
+  }
+
+  inline poly &
+  ineg() {
+    boost::for_each(*this, algebra::ineg<M>);
+    return *this;
+  }
+  inline poly &
+  operator*=(const k &o) {
+    if(algebra::null(o)) {
+      impl::clear();
+      return *this;
+    }
+    boost::for_each(*this, _1 *= o);
+    return *this;
+  }
+  inline poly &
+  operator/=(const k &o) {
+    assert(! algebra::null(o));
+    boost::for_each(*this, _1 /= o);
+    return *this;
+  }
+  inline poly &
+  operator*=(const mono &o) {
+    if(algebra::null(o)) {
+      impl::clear();
+      return *this;
+    }
+    boost::for_each(*this, _1 *= o);
+    return *this;
+  }
+  inline poly &
+  operator/=(const mono &o) {
+    assert(! algebra::null(o));
+    boost::for_each(*this, _1 /= o);
+    return *this;
+  }
+
+private:
+  // implementation helper for operator*=
+  static inline impl
+  do_mul(const poly &a, const poly &b) {
+    assert(!a.empty() && !b.empty());
+
+    typedef typename poly<K>::mono mono;
+
+    std::list<mono> ret;
+
+    for(multiply::poly::poly<poly> muler(a,b);
+        ! muler.empty();
+        muler.next()) {
+      const mono &m = muler.get();
+
+      if(!algebra::null(m)) ret.push_back(m);
+    }
+
+    return ret;
+  }
+
+public:
+  inline poly &
+  operator*=(const poly &o) {
+    if(impl::empty() || o.empty()) impl::clear();
+    else impl::operator=(do_mul(*this, o));
+
+    return *this;
+  }
+
+public: /// comparison -> lexicographical
+  static int
+  compare(const poly &a, const poly &b) {
+    typename std::list<M>::const_iterator
+      i1 = a.begin(),
+      e1 = a.end(),
+      i2 = b.begin(),
+      e2 = b.end();
+
+    for(; i1 != e1 && i2 != e2; ++i1, ++i2) {
+      int cmp = M::deep_compare(*i1, *i2);
+      if(cmp != 0) return cmp;
+    }
+
+    // one at least is empty
+    if(i1 != e1) return 1;
+    if(i2 != e2) return-1;
+    // both empty
+    return 0;
+  }
 };
 
-// TODO: polynomial division
+template<class K>
+poly<K> poly<K>::zero;
+
+template<class K>
+poly<K> poly<K>::one(
+  algebra::one<K>(),
+  algebra::one<poly<K>::Z>()
+);
 
 }} // poly::sparse
-
-#include "poly.inl"
 
 #endif /* POLY_HXX_ */

@@ -18,9 +18,32 @@
 
 #include<boost/range.hpp>
 #include<boost/range/adaptors.hpp>
+#include<boost/range/algorithm.hpp>
+#include<boost/range/algorithm_ext/push_back.hpp>
 
 #include<boost/iterator.hpp>
+#include<boost/iterator/iterator_facade.hpp>
 
 using boost::range_detail::safe_bool;
+
+#include<boost/operators.hpp>
+
+namespace boost {
+
+template<class T, class B=::boost::detail::empty_base<T> >
+struct ordered
+: less_than_comparable<T
+, equality_comparable<T
+, B> >
+{};
+
+}
+
+#include<boost/lambda/bind.hpp>
+#include<boost/lambda/lambda.hpp>
+
+using boost::lambda::_1;
+using boost::lambda::_2;
+using boost::lambda::_3;
 
 #endif /* STDLIB_HXX_ */

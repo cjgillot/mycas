@@ -16,7 +16,12 @@ namespace poly {
 namespace sparse {
 
 template<class K>
-struct monomial {
+struct monomial
+: boost::arithmetic1<monomial<K>
+, boost::multiplicative2<monomial<K>, K
+, algebra::ordered<monomial<K>
+> > >
+{
   typedef algebra::integer Z;
 
   typedef K k;
@@ -27,42 +32,114 @@ private:
   z expo;
 
 public:
-  monomial(const k &c, const z &e);
+  inline
+  monomial() {}
 
-  explicit
-  monomial(const z &e);
+  inline
+  monomial(const monomial &m)
+  : coef(m.coef), expo(m.expo) {}
 
-  monomial();
-  monomial(const monomial &m);
-  monomial &operator=(const monomial &);
+  inline monomial &
+  operator=(const monomial &m) {
+    coef = m.coef; expo = m.expo;
+    return *this;
+  }
 
-  ~monomial();
+  inline
+  monomial(const k &c, const z &e)
+  : coef(c), expo(e) {}
 
+  explicit inline
+  monomial(const z &e)
+  : expo(e) {}
+
+  inline
+  ~monomial() {}
+
+public: /// ring objects
   static monomial zero;
   static monomial one;
 
-  bool null() const;
-  bool unit() const;
+  inline bool
+  null() const
+  { return algebra::null(coef); }
+  inline bool
+  unit() const
+  { return algebra::null(expo) && algebra::unit(coef); }
 
-  const z &deg() const;
+  inline const z &
+  deg() const
+  { return expo; }
 
-  monomial &operator+=(const monomial &o);
-  monomial &operator-=(const monomial &o);
+public: /// operations
+  inline monomial &
+  operator+=(const monomial &o) {
+    assert(expo == o.expo);
+    coef += o.coef;
+    return *this;
+  }
+  inline monomial &
+  operator-=(const monomial &o) {
+    assert(expo == o.expo);
+    coef -= o.coef;
+    return *this;
+  }
+  inline monomial &
+  ineg() {
+    algebra::ineg(coef);
+    return *this;
+  }
+  inline monomial
+  operator-() const {
+    return monomial(*this).ineg();
+  }
 
-  monomial &operator*=(const k &o);
-  monomial &operator/=(const k &o);
+  inline monomial &
+  operator*=(const k &o) {
+    coef *= o;
+    return *this;
+  }
+  inline monomial &
+  operator/=(const k &o) {
+    coef /= o;
+    return *this;
+  }
 
-  monomial &operator*=(const monomial &o);
-  monomial &operator/=(const monomial &o);
+  inline monomial &
+  operator*=(const monomial &o) {
+    coef *= o.coef;
+    expo += o.expo;
+    return *this;
+  }
+  inline monomial &
+  operator/=(const monomial &o) {
+    coef /= o.coef;
+    expo -= o.expo;
+    return *this;
+  }
 
-  monomial &ineg();
-
-  static int compare(const monomial &a, const monomial &b);
-  static int deep_compare(const monomial &a, const monomial &b);
+public: /// comparison
+  static inline int
+  compare(const monomial &a, const monomial &b) {
+    return algebra::compare(a.expo, b.expo);
+  }
+  static inline int
+  deep_compare(const monomial &a, const monomial &b) {
+    int cmpe = algebra::compare(a.expo, b.expo);
+    if(cmpe != 0) return cmpe;
+    return algebra::compare(a.coef, b.coef);
+  }
 };
 
-}} // poly::sparse
+template<class K>
+monomial<K> monomial<K>::zero;
 
-#include "monomial.inl"
+template<class K>
+monomial<K> monomial<K>::one (
+  algebra::one<K>(),
+  algebra::zero<monomial<K>::Z>()
+);
+
+}} // poly::sparse
 
 #endif /* MONOMIAL_HXX_ */

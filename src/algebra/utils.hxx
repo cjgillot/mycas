@@ -8,6 +8,8 @@
 #ifndef UTILS_HXX_
 #define UTILS_HXX_
 
+#include "stdlib.hxx"
+
 namespace algebra {
 
 template<class S>
@@ -33,7 +35,35 @@ unit(const S &o)
 template<class S>
 inline int
 compare(const S &a, const S &b)
-{ return algebra::compare(a,b); }
+{ return S::compare(a,b); }
+
+template<class S>
+inline int
+compare(const S *a, const S *b)
+{ return algebra::compare(*a, *b); }
+
+template<class S>
+inline int
+compare(S *a, S *b)
+{ return algebra::compare(*a, *b); }
+
+template<class S>
+inline S &
+ineg(S &o)
+{ return o.ineg(); }
+
+template<class T, class B = ::boost::detail::empty_base<T> >
+struct ordered
+: boost::ordered<T, B> {
+  friend inline bool
+  operator< (const T &a, const T &b) {
+    return algebra::compare(a,b) < 0;
+  }
+  friend inline bool
+  operator==(const T &a, const T &b) {
+    return algebra::compare(a,b) == 0;
+  }
+};
 
 }
 
