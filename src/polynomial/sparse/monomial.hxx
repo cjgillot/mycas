@@ -34,11 +34,9 @@ private:
 public:
   inline
   monomial() {}
-
   inline
   monomial(const monomial &m)
   : coef(m.coef), expo(m.expo) {}
-
   inline monomial &
   operator=(const monomial &m) {
     coef = m.coef; expo = m.expo;
@@ -48,13 +46,16 @@ public:
   inline
   monomial(const k &c, const z &e)
   : coef(c), expo(e) {}
-
   explicit inline
-  monomial(const z &e)
-  : expo(e) {}
+  monomial(const k &c)
+  : coef(c) {}
 
   inline
   ~monomial() {}
+
+  static inline monomial
+  var(const z &e)
+  { return monomial(algebra::one<K>(), e); }
 
 public: /// ring objects
   static monomial zero;
@@ -113,6 +114,7 @@ public: /// operations
   }
   inline monomial &
   operator/=(const monomial &o) {
+    assert(coef >= o.coef);
     coef /= o.coef;
     expo -= o.expo;
     return *this;

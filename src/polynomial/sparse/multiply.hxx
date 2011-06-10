@@ -21,15 +21,12 @@ struct heap
 {
   typedef imperative::heap::chain<HO*> super;
 
-  mutable bool ready;
-  mutable M cur;
+  M cur;
 
 public:
   explicit inline
   heap(size_t n)
-  : super(n)
-  , ready(false)
-  , cur()
+  : super(n), cur()
   {}
   inline
   ~heap() {
@@ -42,31 +39,33 @@ public:
 
 public:
   using super::empty;
-  using super::insert;
 
   inline const M &
-  get() const {
-    if(ready) return cur;
-
-    const std::list<HO*> &mins = super::find_mins();
-
-    cur = algebra::zero<M>();
-    boost::for_each(mins,
-       boost::lambda::var(cur)
-    += boost::lambda::bind(&HO::value, *_1));
-
-    ready = true;
-    return cur;
-  }
+  get() const
+  { return cur; }
   inline void
   next() {
-    std::list<HO*> ml = super::find_mins();
+    {
+      std::list<HO*> ml = super::find_mins();
+      super::delete_mins();
+      static_cast<Impl*>(this)->update(ml);
+    }
 
-    super::delete_mins();
+    sync();
+  }
 
-    ready = false;
+private:
+  friend class Impl;
 
-    static_cast<Impl*>(this)->update(ml);
+  using super::insert;
+
+  // must be called after external insertions
+  inline void
+  sync() {
+    const std::list<HO*> &mins = super::find_mins();
+    cur = algebra::zero<M>();
+    foreach(HO* m, mins)
+      cur += m->value();
   }
 };
 
@@ -74,12 +73,11 @@ namespace poly {
 
 template<class P>
 struct hobj
-: algebra::ordered<hobj<P>
-> {
+: algebra::ordered<hobj<P> >
+, boost::noncopyable {
   typedef typename P::mono mono;
 
 private:
-
   const mono &fm;
   typename P::const_iterator gbeg, gend;
 
@@ -87,8 +85,6 @@ private:
 
 private:
   hobj();
-  hobj(const hobj &);
-  hobj &operator=(const hobj &);
 
 public:
   inline
@@ -103,7 +99,6 @@ public:
   inline const mono &
   value() const
   { return cur; }
-
   inline bool
   update() {
     assert(gbeg != gend);
@@ -134,8 +129,8 @@ class poly
   typedef heap<mono, ho_t, poly> super;
 
 protected:
+  // super needs update(ml)
   friend class heap<mono, ho_t, poly>;
-
   inline void
   update(const std::list<ho_t*> &ml) {
     foreach(ho_t* m, ml) {
@@ -151,8 +146,12 @@ public:
   {
     assert(!a.empty() && !b.empty());
 
+    // shall we prefer allocate a ho_t array of size a.size() ?
+    // for now, poly::update and heap::~heap do delete
     foreach(const mono &m, a)
       super::insert(new ho_t(m, b));
+
+    super::sync();
   }
   inline
   ~poly() {}
@@ -162,26 +161,28 @@ public:
   using super::next;
 };
 
-}
+} // namespace poly::sparse::multiply::poly
 
 namespace series {
 
-// base abstract class for obj0 and obj1
+// could we get it without vtable ?
+
+// abstract base class for obj0 and obj1
 template<class M>
-struct hobj {
+struct hobj
+: boost::noncopyable {
 protected:
   M cur;
 
 private:
   hobj();
-  hobj(const hobj &);
-  hobj &operator=(const hobj &);
 
-public:
+protected:
   explicit inline
   hobj(const M &c)
   : cur(c) {}
 
+public:
   virtual inline
   ~hobj() {}
 
@@ -193,6 +194,7 @@ public:
   virtual hobj*
   update() = 0;
 
+public:
   /* the comparison function is reversed :
    * we want a min-heap on the exponent */
   static inline int
@@ -204,6 +206,7 @@ public:
 template<class M, class P2>
 struct obj0
 : public hobj<M> {
+
   typedef hobj<M> super;
 
 private:
@@ -228,10 +231,9 @@ public:
   }
 };
 
-template<class P1, class P2>
+template<class M, class P1, class P2>
 struct obj1
-: public hobj<typename P1::mono> {
-  typedef typename P1::mono mono;
+: public hobj<M> {
 
   typedef hobj<mono> super;
 
@@ -239,7 +241,7 @@ private:
   P1 f;
   P2 g;
 
-  const mono &g0;
+  const M &g0;
 
 public:
   inline
@@ -257,7 +259,7 @@ public:
 
     super::cur = *f * g0;
 
-    return new obj0<mono, P2>(f0, g+1);
+    return new obj0<M, P2>(f0, g+1);
   }
 };
 
@@ -267,7 +269,8 @@ class series
     < typename P1::mono
     , hobj<typename P1::mono>
     , series<P1, P2>
-    > {
+    >
+, boost::noncopyable {
 
   typedef typename P1::mono mono;
   typedef hobj<mono> ho_t;
@@ -285,25 +288,159 @@ protected:
     }
   }
 
+private:
+  series();
+
 public:
   inline
   series(const P1 &a, const P2 &b)
-  : super(1)
+  : super(1) // initial size = 1 -> profiling ?
   {
     assert(!a.empty() && !b.empty());
-    super::insert(new obj1<P1, P2>(a, b));
+    super::insert(new obj1<mono, P1, P2>(a, b));
   }
   inline
   ~series() {}
 
+public:
   using super::empty;
   using super::get;
   using super::next;
 };
 
-
-}
+} // namespace poly::sparse::multiply::series
 
 }}} // poly::sparse::multiply
 
 #endif // SPARSE_MULTIPLY_HXX
+
+template<class M>
+struct iterator_base {
+  inline
+  iterator_base() {}
+
+  inline virtual
+  ~iterator_base() {}
+
+  virtual const M &
+  dereference() = 0;
+
+  // returns non-null if mutation
+  virtual iterator_base*
+  increment() = 0;
+};
+
+template<class M>
+struct meta_iterator {
+  typedef iterator<M> impl_t;
+  std::auto_ptr<impl_t> impl;
+
+public:
+  inline
+  meta_iterator()
+  : impl() {}
+
+  inline
+  meta_iterator(impl_t* ptr)
+  : impl(ptr) {}
+
+  inline
+  ~meta_iterator()
+  {}
+
+public:
+  inline void
+  increment() {
+    assert(impl);
+    impl_t* i2 = impl->increment();
+    if(i2) impl = i2;
+  }
+  inline const M &
+  dereference() const {
+    assert(impl);
+    return impl->dereference();
+  }
+};
+
+template<class K, class M>
+struct series_iterator
+: boost::iterator_facade<
+    series_iterator<K, M>
+  , M const
+  , boost::forward_traversal_tag
+  > {
+
+  typedef typename series<K>::list_t::const_iterator iter_t;
+
+  const series<K> *serie;
+  iter_t it;
+  const iter_t end;
+
+private:
+  series_iterator();
+
+public:
+  inline
+  series_iterator(const series_iterator &si)
+  : serie(si.serie), it(si.it), end(si.end)
+  {}
+  inline series_iterator &
+  operator=(const series_iterator &si) {
+    serie = si.serie; it = si.it; end = si.end;
+    return *this;
+  }
+
+public:
+  inline
+  series_iterator(const series<K> &s)
+  : serie(&s)
+  , it (boost::const_begin(s.values))
+  , end(boost::const_end(s.values))
+  {}
+
+  inline
+  ~series_iterator()
+  {}
+
+  inline void
+  increment() {
+    if(it == end) s->incr();
+    ++it;
+  }
+  inline const M &
+  dereference() const
+  { return *it; }
+};
+
+
+template<class K>
+class series {
+  typedef monomial<K> mono;
+  typedef std::list<mono> list_t;
+
+  friend class series_iterator<K,mono>;
+
+  mutable meta_iterator<mono> it;
+  mutable list_t values;
+
+private:
+  inline const mono &
+  incr() const {
+    const mono &val = *it;
+    values.push_back(val);
+    return values.back();
+  }
+
+public:
+
+};
+
+
+
+
+
+
+
+
+
+

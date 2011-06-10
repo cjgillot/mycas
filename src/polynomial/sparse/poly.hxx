@@ -5,11 +5,13 @@
  *      Author: k1000
  */
 
+// TODO:
+// - polynomial division
+
 #ifndef POLY_HXX_
 #define POLY_HXX_
 
 #include "monomial.hxx"
-
 #include "multiply.hxx"
 
 namespace poly {
@@ -112,7 +114,7 @@ private:
 
     /* if terms remain in o */
     while(i2 != e2) {
-      a.insert(e1, f1(*i2));
+      a.push_back(f1(*i2));
       ++i2;
     }
   }

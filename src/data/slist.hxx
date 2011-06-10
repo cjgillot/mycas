@@ -13,11 +13,9 @@ struct slist {
   T hd;
   slist<T>* tl;
 
-  slist(const T &h, slist<T>* t):
-    hd(h), tl(t)
+  slist(const T &h, slist<T>* t)
+  : hd(h), tl(t)
   {}
-
-
 };
 
 #endif /* SLIST_HXX_ */
