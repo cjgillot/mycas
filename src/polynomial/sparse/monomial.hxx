@@ -9,6 +9,7 @@
 #define MONOMIAL_HXX_
 
 #include "stdlib.hxx"
+#include "operators.hxx"
 
 #include "algebra/integer.hxx"
 
@@ -19,8 +20,9 @@ template<class K>
 struct monomial
 : boost::arithmetic1<monomial<K>
 , boost::multiplicative2<monomial<K>, K
-, algebra::ordered<monomial<K>
-> > >
+, operators::ordered<monomial<K>
+, operators::printable<monomial<K>
+> > > >
 {
   typedef algebra::integer Z;
 
@@ -72,15 +74,24 @@ public: /// ring objects
   deg() const
   { return expo; }
 
+public: /// printing
+  template<class S>
+  inline void
+  print(S &ios) const {
+    ios << coef << '@' << expo;
+  }
+
 public: /// operations
   inline monomial &
   operator+=(const monomial &o) {
+    if(null()) return *this = o;
     assert(expo == o.expo);
     coef += o.coef;
     return *this;
   }
   inline monomial &
   operator-=(const monomial &o) {
+    if(null()) return *this = o;
     assert(expo == o.expo);
     coef -= o.coef;
     return *this;

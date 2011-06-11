@@ -11,6 +11,8 @@
 #ifndef POLY_HXX_
 #define POLY_HXX_
 
+#include "stdlib.hxx"
+#include "utils.hxx"
 #include "monomial.hxx"
 #include "multiply.hxx"
 
@@ -23,7 +25,9 @@ struct poly
 , boost::arithmetic1<poly<K>
 , boost::arithmetic2<poly<K>, monomial<K>
 , boost::multiplicative2<poly<K>, K
-> > >
+, operators::ordered<poly<K>
+, operators::printable<poly<K>
+> > > > >
 {
   typedef monomial<K> M;
 
@@ -36,7 +40,9 @@ struct poly
 
   typedef z e;
 
-  typedef std::list<monomial<K> > impl;
+  // monomials are sorted
+  // biggest exponent first
+  typedef std::list<M> impl;
 
   typedef typename impl::iterator iterator;
   typedef typename impl::const_iterator const_iterator;
@@ -57,8 +63,8 @@ public:
   poly(const k &c, const z &e)
   : impl(1,M(c,e)) {}
   explicit inline
-  poly(const z &e)
-  : impl(1,M(e)) {}
+  poly(const k &c)
+  : impl(1,M(c)) {}
 
   inline
   ~poly() {}
@@ -85,12 +91,35 @@ public:
   monome() const
   { return impl::size() == 1; }
 
+public: /// construction
+  template<class Range>
+  static inline poly
+  from_coefs(const Range &r) {
+    poly ret;
+    z exp(boost::size(r)-1);
+    foreach(k c, r) {
+      ret.impl::push_back(M(c, exp));
+      exp -= 1;
+    }
+    return ret;
+  }
+
+public: /// printing
+  template<class S>
+  inline void
+  print(S &ios) const {
+    ios << " [ ";
+    foreach(M m, *this)
+      ios << m << " ; ";
+    ios << " ] ";
+  }
+
 private:
   /// implementation of += and -= operators
   ///   requirement : m != 0, f1(m) != 0
   template<class Fnc1, class Fnc2>
   static inline void
-  combine(poly &a, const poly &b, Fnc1 f1, Fnc2 f2) {
+  combine(poly &a, const poly &b, const Fnc1 &f1, const Fnc2 &f2) {
     iterator
       i1 = a.begin(),
       e1 = a.end();
@@ -122,12 +151,20 @@ private:
 public:
   inline poly &
   operator+=(const poly &o) {
-    combine(*this, o, _1, _1 += _2);
+    combine(
+        *this, o,
+        functor::identity<M>(),
+        functor::plus_eq<M>()
+    );
     return *this;
   }
   inline poly &
   operator-=(const poly &o) {
-    combine(*this, o, - _1, _1 -= _2);
+    combine(
+        *this, o,
+        functor::negate<M>(),
+        functor::minus_eq<M>()
+    );
     return *this;
   }
 
@@ -137,33 +174,45 @@ public:
     return *this;
   }
   inline poly &
+  operator*=(const M &o) {
+    if(algebra::null(o)) {
+      impl::clear();
+      return *this;
+    }
+    boost::for_each(
+        *this,
+        functor::multiplies_by<M>(o)
+    );
+    return *this;
+  }
+  inline poly &
+  operator/=(const M &o) {
+    assert(! algebra::null(o));
+    boost::for_each(
+        *this,
+        functor::divides_by<M>(o)
+    );
+    return *this;
+  }
+  inline poly &
   operator*=(const k &o) {
     if(algebra::null(o)) {
       impl::clear();
       return *this;
     }
-    boost::for_each(*this, _1 *= o);
+    boost::for_each(
+        *this,
+        functor::multiplies_by<M,k>(o)
+    );
     return *this;
   }
   inline poly &
   operator/=(const k &o) {
     assert(! algebra::null(o));
-    boost::for_each(*this, _1 /= o);
-    return *this;
-  }
-  inline poly &
-  operator*=(const mono &o) {
-    if(algebra::null(o)) {
-      impl::clear();
-      return *this;
-    }
-    boost::for_each(*this, _1 *= o);
-    return *this;
-  }
-  inline poly &
-  operator/=(const mono &o) {
-    assert(! algebra::null(o));
-    boost::for_each(*this, _1 /= o);
+    boost::for_each(
+        *this,
+        functor::divides_by<M,k>(o)
+    );
     return *this;
   }
 
@@ -177,7 +226,7 @@ private:
 
     std::list<mono> ret;
 
-    for(multiply::poly::poly<poly> muler(a,b);
+    for(multiply::poly<poly> muler(a,b);
         ! muler.empty();
         muler.next()) {
       const mono &m = muler.get();

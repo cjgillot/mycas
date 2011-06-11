@@ -28,22 +28,15 @@ using boost::range_detail::safe_bool;
 
 #include<boost/operators.hpp>
 
-namespace boost {
-
-template<class T, class B=::boost::detail::empty_base<T> >
-struct ordered
-: less_than_comparable<T
-, equality_comparable<T
-, B> >
-{};
-
-}
-
+/*
 #include<boost/lambda/bind.hpp>
 #include<boost/lambda/lambda.hpp>
 
 using boost::lambda::_1;
 using boost::lambda::_2;
 using boost::lambda::_3;
+*/
+
+#include<boost/intrusive_ptr.hpp>
 
 #endif /* STDLIB_HXX_ */

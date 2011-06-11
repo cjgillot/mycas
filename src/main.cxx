@@ -5,20 +5,26 @@
  *      Author: k1000
  */
 
-#include "algebra/integer.hxx"
+#include <iostream>
 
-#include "imperative/heap.hxx"
 #include "polynomial/sparse/poly.hxx"
-#include "polynomial/sparse/series.hxx"
-
-template class poly::sparse::poly<algebra::integer>;
 
 int main() {
-  poly::sparse::poly<algebra::integer> p;
+  double array[] = { 5.,4.,3.,2.,1. };
 
-  p *= algebra::integer(5);
+  typedef poly::sparse::poly<double> poly_t;
+
+  poly_t p = poly_t::from_coefs(array);
+
+  std::cout << p << std::endl;
+  std::cout << p * 5 << std::endl;
+  std::cout << p + p << std::endl;
+  std::cout << p - p << std::endl;
+  std::cout << p / 2 << std::endl;
 
   p *= p;
+
+  std::cout << p << std::endl;
 
   return 1;
 }

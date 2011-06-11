@@ -9,6 +9,7 @@
 #define HEAP_HXX_
 
 #include "stdlib.hxx"
+#include "operators.hxx"
 
 namespace imperative {
 namespace heap {
@@ -16,15 +17,16 @@ namespace heap {
 
 // standard _max_-heap class
 // implemented on top of std::*_heap
-
+//
 // O must be less_than_compare'able,
 // assignable and copyable
-
-// all references returned by find_min* functions
-// are invalidated by insert and detete_min* calls
-
+//
+// all references returned by find_max* functions
+// are invalidated by insert and detete_max* calls
 template<class O>
 struct heap {
+  BOOST_STATIC_ASSERT(!boost::is_pointer<O>::value);
+
   typedef O e;
 
 protected:
@@ -44,7 +46,8 @@ public:
   // construct empty heap and reserve size
   explicit inline
   heap(size_t n)
-  : data(n) {}
+  : data()
+  { data.reserve(n); }
 
   inline
   ~heap() {}
@@ -63,24 +66,24 @@ public: // access
 
   /// C = 1
   inline e &
-  find_min() {
+  find_max() {
     assert(! empty());
     return data.front();
   }
   inline const e &
-  find_min() const {
+  find_max() const {
     assert(! empty());
     return data.front();
   }
 
   /// C = n
   inline std::list<e>
-  find_mins() const {
+  find_maxs() const {
     assert(! empty());
 
     e x0 = data.front();
 
-    std::list<e> ret(0);
+    std::list<e> ret;
 
     foreach(const e &x, data)
       if(x0 == x)
@@ -99,7 +102,7 @@ public: // modification algorithms
 
   /// C = lg n
   inline void
-  delete_min() {
+  delete_max() {
     assert(data.size() > 0);
 
     boost::pop_heap(data);
@@ -108,7 +111,7 @@ public: // modification algorithms
 
   /// C = n * lg n
   inline void
-  delete_mins() {
+  delete_maxs() {
     assert(! empty());
 
     size_t sz = data.size();
@@ -129,13 +132,72 @@ public: // modification algorithms
   }
 };
 
+namespace detail {
+
+template<class O>
+struct list
+: operators::ordered<list<O>
+, operators::printable<list<O>
+> > {
+  typedef std::list<O> ptr_t;
+  ptr_t* ptr;
+
+  inline
+  list()
+  : ptr(0) {}
+  inline
+  list(ptr_t* p)
+  : ptr(p) {}
+  inline
+  list(std::size_t n, const O &x)
+  : ptr(new ptr_t(n,x)) {}
+  inline
+  list(const list &o)
+  : ptr(o.ptr) {}
+  inline list &
+  operator=(const list &o) {
+    ptr = o.ptr;
+    return *this;
+  }
+  inline
+  ~list() {}
+
+  inline ptr_t*
+  get() const
+  { return ptr; }
+
+  inline ptr_t &
+  operator*() const
+  { return *ptr; }
+  inline ptr_t*
+  operator->() const
+  { return ptr; }
+
+  template<class S>
+  inline void
+  print(S &ios) {
+    ios << "heap::list[ ";
+    foreach(const O &e, *ptr) {
+      ios << e << " ; ";
+    }
+    ios << " ] ";
+    return ios;
+  }
+
+  static inline int
+  compare(const list &a, const list &b) {
+    return algebra::compare(a->front(), b->front());
+  }
+};
+
+} // namespace detail
 
 // chained heap structure
 // elements comparing equal are packed in lists
 //
 // speeds up :
-// -> find_mins   from (n) to (1)
-// -> delete_mins from (n * lg n) to (lg n)
+// -> find_maxs   from (n) to (1)
+// -> delete_maxs from (n * lg n) to (lg n)
 //
 // drawbacks :
 // -> insert from (lg n) to (n)
@@ -147,16 +209,16 @@ public: // modification algorithms
 // -> delete in delete_* and dtor
 template<class O>
 struct chain
-: protected heap<std::list<O>*> {
+: protected heap<detail::list<O> > {
   typedef O e;
-  typedef std::list<O> le;
+  typedef detail::list<e> le;
 
   // the underlying heap contains
-  //  k [adapt<O>] objects
+  //  k [list<O>] objects
   // for a total of n [O] objects
 
 private:
-  typedef heap<le*> impl;
+  typedef heap<le> impl;
 
 public:
   inline
@@ -179,8 +241,8 @@ public:
   inline
   ~chain() {
     // properly free all allocated lists
-    foreach(le* l, impl::data)
-      delete l;
+    foreach(le l, impl::data)
+      delete l.get();
     impl::data.clear();
   }
 
@@ -194,56 +256,57 @@ public:
 
   /// C = 1
   inline e &
-  find_min()
-  { return impl::find_min()->front(); }
+  find_max()
+  { return impl::find_max()->front(); }
   inline const e &
-  find_min() const
-  { return impl::find_min()->front(); }
+  find_max() const
+  { return impl::find_max()->front(); }
 
   /// C = 1
   inline const std::list<e> &
-  find_mins() const
-  { return *impl::find_min(); }
+  find_maxs() const
+  { return *impl::find_max(); }
 
 public:
   /// C = k
   inline void
   insert(const e &x) {
     // seek for existing list
-    foreach(le *l, impl::data)
+    foreach(le &l, impl::data) {
       if(x == l->front()) {
         // got one
         l->push_front(x);
         return;
       }
+    }
 
     // no existing list -> insert new le(x)
-    impl::insert(new le(1, x));
+    impl::insert(le(1, x));
   }
 
   /// C = lg k
   inline void
-  delete_min() {
+  delete_max() {
     assert(! empty());
 
-    le* lmin = impl::find_min();
+    le lmax = impl::find_max();
 
-    assert(! lmin->empty());
+    assert(!lmax->empty());
 
-    lmin->pop_front();
+    lmax->pop_front();
 
-    if(lmin->empty()) {
-      delete lmin;
-      impl::delete_min();
+    if(lmax->empty()) {
+      delete lmax.get();
+      impl::delete_max();
     }
   }
 
   /// C = lg k
   inline void
-  delete_mins() {
+  delete_maxs() {
     assert(! empty());
-    delete impl::find_min();
-    impl::delete_min();
+    delete impl::find_max().get();
+    impl::delete_max();
   }
 };
 

@@ -5,10 +5,11 @@
  *      Author: k1000
  */
 
-#ifndef UTILS_HXX_
-#define UTILS_HXX_
+#ifndef ALGEBRA_UTILS_HXX_
+#define ALGEBRA_UTILS_HXX_
 
 #include "stdlib.hxx"
+#include "operators.hxx"
 
 namespace algebra {
 
@@ -33,38 +34,12 @@ unit(const S &o)
 { return o.unit(); }
 
 template<class S>
-inline int
-compare(const S &a, const S &b)
-{ return S::compare(a,b); }
-
-template<class S>
-inline int
-compare(const S *a, const S *b)
-{ return algebra::compare(*a, *b); }
-
-template<class S>
-inline int
-compare(S *a, S *b)
-{ return algebra::compare(*a, *b); }
-
-template<class S>
 inline S &
 ineg(S &o)
 { return o.ineg(); }
 
-template<class T, class B = ::boost::detail::empty_base<T> >
-struct ordered
-: boost::ordered<T, B> {
-  friend inline bool
-  operator< (const T &a, const T &b) {
-    return algebra::compare(a,b) < 0;
-  }
-  friend inline bool
-  operator==(const T &a, const T &b) {
-    return algebra::compare(a,b) == 0;
-  }
-};
+using operators::compare;
 
-}
+} // namespace algebra
 
-#endif /* UTILS_HXX_ */
+#endif /* ALGEBRA_UTILS_HXX_ */
