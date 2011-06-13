@@ -8,7 +8,13 @@
 #ifndef POLY_HXX_
 #define POLY_HXX_
 
-#include "multiply.hxx"
+#include "operators.hxx"
+
+#include "algebra/integer.hxx"
+#include "algebra/compare.hxx"
+#include "utils.hxx"
+
+#include "polynomial/dense/multiply.hxx"
 
 namespace poly {
 namespace dense {
@@ -17,7 +23,9 @@ template<class K>
 struct poly
 : boost::arithmetic1<poly<K>
 , boost::multiplicative2<poly<K>, K
-> > {
+, operators::ordered<poly<K>
+, operators::printable<poly<K>
+> > > > {
   typedef algebra::integer Z;
 
   typedef K k;
@@ -28,14 +36,17 @@ struct poly
   typedef typename impl_t::iterator iterator;
   typedef typename impl_t::const_iterator const_iterator;
 
-  mutable impl_t impl;
+  // least exponent first -> ease shrinking
+  impl_t impl;
 
 private:
+  // call after any modification
+  // modifying the degree
   inline void
-  reduce() const {
+  reduce() {
     while(! impl.empty())
-      if(algebra::null(impl.front()))
-        impl.pop_front();
+      if(algebra::null(impl.back()))
+        impl.pop_back();
       else
         return;
   }
@@ -45,7 +56,7 @@ public:
   poly() {}
   inline
   poly(const poly &o)
-  : impl(o) {}
+  : impl(o.impl) {}
   inline poly &
   operator=(const poly &o) {
     impl = o.impl;
@@ -55,23 +66,32 @@ public:
 public:
   inline explicit
   poly(const k &c)
-  : impl(1,c) {}
+  : impl(1,c)
+  { if(algebra::null(c)) impl.clear(); }
 
   inline
   ~poly() {}
 
 public:
-  // range concept
+  inline void
+  swap(poly &o) {
+    std::swap(impl, o.impl);
+  }
+
+private: /// range concept
+  // mutable
   inline iterator
   begin()
   { return impl.begin(); }
-  inline const_iterator
-  begin() const
-  { return impl.begin(); }
-
   inline iterator
   end()
   { return impl.end(); }
+
+public:
+  // const
+  inline const_iterator
+  begin() const
+  { return impl.begin(); }
   inline const_iterator
   end() const
   { return impl.end(); }
@@ -81,28 +101,23 @@ public:
   static poly one;
 
   inline bool
-  null() const {
-    reduce();
-    return impl::empty();
-  }
+  null() const
+  { return impl.empty(); }
   inline bool
   unit() const {
-    reduce();
-    return impl::size() == 1
-        && algebra::unit(impl::front());
+    return impl.size() == 1
+        && algebra::unit(impl.front());
   }
 
-  inline const z &
-  deg() const {
-    reduce();
-    return impl::size() - 1;
-  }
+  inline z
+  deg() const
+  { return impl.size() - 1; }
 
   inline bool
   monome() const {
     reduce();
     if(impl.empty()) return false;
-    iterator it = impl.begin(), end = impl.end();
+    const_iterator it = impl.begin(), end = impl.end();
     ++it;
     for(; it != end; ++it)
       if(! algebra::null(*it))
@@ -116,6 +131,8 @@ private:
   template<class Fnc1, class Fnc2>
   static inline void
   combine(poly &a, const poly &b, Fnc1 f1, Fnc2 f2) {
+    a.impl.reserve(std::max(a.impl.size(), b.impl.size()));
+
     iterator
       i1 = a.begin(),
       e1 = a.end();
@@ -123,37 +140,37 @@ private:
       i2 = b.begin(),
       e2 = b.end();
 
-    {
-      int sz = std::min(a.impl.size(), b.impl.size());
-      a.impl.reserve(sz);
-    }
-
     for(; i1 != e1 && i2 != e2; ++i1, ++i2)
       f2(*i1, *i2);
 
     /* if terms remain in o */
     for(; i2 != e2; ++i2)
       a.impl.push_back(f1(*i2));
+
+    a.reduce();
   }
 
 public:
   inline poly &
   operator+=(const poly &o) {
-    reduce(); o.reduce();
-    combine(*this, o, _1, _1 += _2);
+    combine(*this, o,
+        functor::identity<K>(),
+        functor::plus_eq<K>()
+    );
     return *this;
   }
   inline poly &
   operator-=(const poly &o) {
-    reduce(); o.reduce();
-    combine(*this, o, - _1, _1 -= _2);
+    combine(*this, o,
+        functor::negate<K>(),
+        functor::minus_eq<K>()
+    );
     return *this;
   }
 
   inline poly &
   ineg() {
-    reduce();
-    boost::for_each(*this, algebra::ineg<M>);
+    boost::for_each(*this, algebra::ineg<K>);
     return *this;
   }
   inline poly &
@@ -162,16 +179,69 @@ public:
       impl.clear();
       return *this;
     }
-    reduce();
-    boost::for_each(*this, _1 *= o);
+    std::for_each(begin(), end(), functor::multiplies_by<K>(o));
     return *this;
   }
   inline poly &
   operator/=(const k &o) {
     assert(! algebra::null(o));
-    reduce();
-    boost::for_each(*this, _1 /= o);
+    std::for_each(begin(), end(), functor::divides_by<K>(o));
     return *this;
+  }
+
+protected:
+  static inline void
+  do_mul(const impl_t &a, const impl_t &b, impl_t &r) {
+    if(a.empty() || b.empty()) {
+      r.clear();
+      return;
+    }
+    r.resize(a.size() + b.size() - 1, algebra::zero<K>());
+    typedef multiply::mult<K
+    , impl_t, impl_t
+    , typename impl_t::iterator> mul_t;
+    mul_t::do_mul(a,b,r.begin());
+  }
+
+public:
+  inline poly &
+  operator*=(const poly &o) {
+    impl_t ret;
+    do_mul(impl, o.impl, ret);
+    std::swap(impl, ret);
+    reduce();
+    return *this;
+  }
+
+public: /// construction
+  template<class Range>
+  static inline poly
+  from_coefs(const Range &r) {
+    poly ret;
+    int sz = boost::size(r);
+    ret.impl.reserve(sz);
+    foreach(k c, r)
+      ret.impl.push_back(c);
+    return ret;
+  }
+
+public: /// printing
+  template<class S>
+  inline void
+  print(S &ios) const {
+    ios << " [ ";
+    foreach(K m, *this)
+      ios << m << " ; ";
+    ios << " ] ";
+  }
+
+public:
+  inline static int
+  compare(const poly &a, const poly &b) {
+    return algebra::range_compare(
+        a.impl, b.impl,
+        algebra::compare<K>
+    );
   }
 };
 
