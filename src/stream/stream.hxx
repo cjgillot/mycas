@@ -27,21 +27,43 @@ class stream_impl
 private:
   stream_impl();
 
+  template<class Range>
+  inline
+  stream_impl(iterator_base<T>* i, const Range &r)
+  : it(i), values(boost::begin(r), boost::end(r)) {
+    if(values.empty() && it)
+      incr();
+  }
+
 public:
   inline explicit
   stream_impl(iterator_base<T>* i)
-  : it(i) {}
+  : it(i) { incr(); }
   inline
   ~stream_impl() {}
+
+public:
+  template<class It>
+  static inline stream_impl*
+  from_iter(const It &it) {
+    iterator_base<T>* a = detail::adapt(it);
+    return new stream_impl(a);
+  }
+
+  template<class Range>
+  static inline stream_impl*
+  from_range(const Range &r) {
+    return new stream_impl(0, r);
+  }
 
 private:
   friend class stream_iterator<T>;
 
   typename list_t::iterator
-  incr() const{
+  incr() const {
     if(! it) return values.end();
 
-    values.push_back(*it++);
+    values.push_back(*it); ++it;
     return --values.end();
   }
 };
@@ -80,6 +102,24 @@ public:
 
   inline
   ~stream() {}
+
+private:
+  inline
+  stream(impl_t* i)
+  : impl(i) {}
+
+public:
+  template<class It>
+  static inline stream
+  from_iter(const It &it) {
+    return stream(impl_t::from_iter(it));
+  }
+
+  template<class Range>
+  static inline stream
+  from_range(const Range &r) {
+    return stream(impl_t::from_range(r));
+  }
 
 public:
   typedef stream_iterator<T> iterator;

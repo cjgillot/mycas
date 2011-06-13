@@ -32,6 +32,7 @@ protected:
     return *this;
   }
 
+  inline virtual
   ~refcounted() {}
 
 public:

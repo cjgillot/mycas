@@ -66,8 +66,8 @@ struct meta_iterator
   meta_iterator<T>
 , const T
 , boost::incrementable_traversal_tag
+, const T // Reference
 > {
-
   // [impl] contains the actual iterator
   typedef iterator_base<T> impl_t;
 

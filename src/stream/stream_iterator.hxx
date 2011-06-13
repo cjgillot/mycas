@@ -53,7 +53,7 @@ public:
   stream_iterator(stream_t* s)
   : str(s)
   , it(s->values.begin()), end(s->values.end())
-  {}
+  { if(it == end) it=s->incr(); }
 
 private:
   friend class boost::iterator_core_access;
@@ -61,8 +61,8 @@ private:
   inline void
   increment() {
     assert(it != end);
-    if(++it == end)
-      it = str->incr();
+    if(++it == end) // no memoized left
+      it=str->incr();
   }
   inline const T &
   dereference() const {
