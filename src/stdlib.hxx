@@ -8,9 +8,11 @@
 #ifndef STDLIB_HXX_
 #define STDLIB_HXX_
 
+#include<iostream>
 #include<algorithm>
 #include<cassert>
 #include<vector>
+#include<deque>
 #include<list>
 
 #include<boost/foreach.hpp>
@@ -23,10 +25,11 @@
 
 #include<boost/iterator.hpp>
 #include<boost/iterator/iterator_facade.hpp>
-
-using boost::range_detail::safe_bool;
+#include<boost/iterator/transform_iterator.hpp>
 
 #include<boost/operators.hpp>
+
+#include<boost/optional.hpp>
 
 /*
 #include<boost/lambda/bind.hpp>

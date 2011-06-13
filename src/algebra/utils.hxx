@@ -38,8 +38,6 @@ inline S &
 ineg(S &o)
 { return o.ineg(); }
 
-using operators::compare;
-
 } // namespace algebra
 
 #endif /* ALGEBRA_UTILS_HXX_ */
