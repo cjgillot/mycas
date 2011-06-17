@@ -105,12 +105,14 @@ private:
   > f, g;
 
   const M &g0;
+  M f0;
 
 public:
   inline
   obj1(iterator_base<M> *fit, iterator_base<M> *git)
-  : f(fit), g(git), g0(git->deref()) {
-    super::cur = fit->deref() * g0;
+  : f(fit), g(git)
+  , f0(fit->deref()), g0(git->deref()) {
+    super::cur = f0 * g0;
   }
   inline
   ~obj1() {}
@@ -118,31 +120,35 @@ public:
 public:
   virtual super*
   update() {
-    M f0 = f->deref(); f->incr();
+    f->incr();
 
-    super::cur = f->deref() * g0;
+    M f02 = f->deref();
+
+    std::swap(f0, f02);
+
+    super::cur = f0 * g0;
 
     iterator_base<M> *g2 = g->clone();
     g2->incr();
 
-    return obj0<M>::make(f0, g2);
+    return obj0<M>::make(f02, g2);
   }
 };
 
 template<class M>
-class series
+class muler
 : private heap<
     M
   , util::ptr<hobj<M> >
-  , series<M>
+  , muler<M>
   >
 , public util::refcounted {
 
   typedef hobj<M> ho_t;
-  typedef heap<M, util::ptr<ho_t>, series> super;
+  typedef heap<M, util::ptr<ho_t>, muler> super;
 
 protected:
-  friend class heap<M, util::ptr<ho_t>, series>;
+  friend class heap<M, util::ptr<ho_t>, muler>;
   inline void
   do_update(const std::list<util::ptr<ho_t> > &ml) {
     foreach(util::ptr<ho_t> m, ml) {
@@ -153,11 +159,11 @@ protected:
   }
 
 private:
-  series();
+  muler();
 
 public:
   inline
-  series(iterator_base<M> *a, iterator_base<M> *b)
+  muler(iterator_base<M> *a, iterator_base<M> *b)
   : super(1) // initial size = 1 -> profiling ?
   {
     assert(!a->empty() && !b->empty());
@@ -165,7 +171,7 @@ public:
     super::sync();
   }
   inline
-  ~series() {}
+  ~muler() {}
 
 public:
   using super::empty;
@@ -186,7 +192,7 @@ class mul_iterator
 : public iterator_base<M>
 {
   boost::intrusive_ptr<
-    multiply::series<M>
+    multiply::muler<M>
   > impl;
 
 public:
@@ -232,7 +238,7 @@ public:
 template<class M>
 inline iterator_base<M>*
 mul(iterator_base<M>* a, iterator_base<M>* b) {
-  assert(a && b);
+  if(!a || !b) return 0;
   if(a->empty() || b->empty()) return 0;
   return new mul_iterator<M>(a,b);
 }

@@ -177,9 +177,10 @@ public:
 
   friend inline series
   operator*(const series &a, const series &b) {
-    return from_iter_base(
-        detail::mul(a.impl.iter(), b.impl.iter())
-    );
+    return from_iter_base(detail::mul(
+      a.impl.iter()
+    , b.impl.iter()
+    ));
   }
 };
 

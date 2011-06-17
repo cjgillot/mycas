@@ -26,6 +26,53 @@ struct combine_iterator_base {
   typedef iterator_base<Res_t> type;
 };
 
+template<class Arg1, class Arg2>
+struct saving {
+  Arg1 l;
+  Arg2 r;
+  int cmp;
+
+public:
+  inline
+  saving(const saving &o)
+  : l(o.l), r(o.r), cmp(o.cmp) {}
+  inline saving &
+  operator=(const saving &o) {
+    l=o.l; r=o.r; cmp=o.cmp;
+    return *this;
+  }
+
+public:
+  template<class A1, class A2>
+  inline
+  saving(const saving<A1,A2> &o)
+  : l(o.l), r(o.r), cmp(o.cmp) {}
+  template<class A1, class A2>
+  inline saving &
+  operator=(const saving<A1,A2> &o) {
+    l=o.l; r=o.r; cmp=o.cmp;
+    return *this;
+  }
+
+public:
+  inline
+  saving(const Arg1 &l, const Arg2 &r, int c)
+  : l(l), r(r), cmp(c) {}
+
+  inline
+  ~saving() {}
+
+  inline void
+  swap(saving &o) {
+    std::swap(l,o.l);
+    std::swap(r,o.r);
+    std::swap(cmp,o.cmp);
+  }
+
+private:
+  saving();
+};
+
 // due to flow requirements,
 // null coefficients are allowed
 template<class It1, class It2, class FL, class FR, class F2>
@@ -44,42 +91,17 @@ class combine_iterator
   It1 left;
   It2 right;
 
-  struct saving {
-    Arg1 l;
-    Arg2 r;
-    int cmp;
+  mutable boost::optional<saving<Arg1, Arg2> > saved;
 
-  public:
-    inline
-    saving(const saving &o)
-    : l(o.l), r(o.r), cmp(o.cmp) {}
-    inline saving &
-    operator=(const saving &o) {
-      l=o.l; r=o.r; cmp=o.cmp;
-      return *this;
-    }
-
-    inline
-    saving(const Arg1 &l, const Arg2 &r, int c)
-    : l(l), r(r), cmp(c) {}
-
-    inline
-    ~saving() {}
-
-  private:
-    saving();
-  };
-  mutable boost::optional<saving> saved;
+private:
+  combine_iterator();
 
 public:
-  inline
-  combine_iterator() {}
   inline
   combine_iterator(const combine_iterator &o)
   : fl(o.fl), fr(o.fr), f2(o.f2)
   , left(o.left), right(o.right)
-  , saved(o.saved)
-  {}
+  , saved(o.saved) {}
   inline combine_iterator&
   operator=(const combine_iterator &o) {
     fl=o.fl; fr=o.fr; f2=o.f2;
@@ -103,10 +125,9 @@ public:
       const FL &fl_, const FR &fr_, const F2 &f2_
   )
   : fl(fl_), fr(fr_), f2(f2_)
-  , left(l), right(r)
-  {}
+  , left(l), right(r) {}
 
-  inline virtual
+  inline
   ~combine_iterator() {}
 
 private:
@@ -115,11 +136,13 @@ private:
     if(saved) return;
     Arg1 l = *left;
     Arg2 r = *right;
-    saved=saving(l,r,algebra::compare(l,r));
+    saved=boost::make_optional(
+      saving<Arg1&,Arg2&>(l,r,algebra::compare(l,r))
+    );
   }
   inline void
   unsave() const {
-    saved = boost::none;
+    saved=boost::none;
   }
 
 public:

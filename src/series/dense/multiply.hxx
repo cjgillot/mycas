@@ -11,16 +11,16 @@
 #include "stdlib.hxx"
 #include "utils.hxx"
 
-#include "imperative/stream.hxx"
+#include "stream.hxx"
 
 #include "polynomial/dense/multiply.hxx"
 
 namespace series {
-namespace sparse {
+namespace dense {
 namespace multiply {
 
 using imperative::stream::iterator_base;
 
-}}} // namespace series::sparse::multiply
+}}} // namespace series::dense::multiply
 
 #endif // SERIES_SPARSE_MULTIPLY_HXX
