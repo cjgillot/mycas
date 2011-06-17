@@ -24,7 +24,6 @@ class range_iterator
   >
 {
   typedef typename boost::range_value<Range>::type T;
-
   typedef typename boost::range_iterator<const Range>::type iter;
 
   iter it, end;

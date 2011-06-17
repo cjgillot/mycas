@@ -9,55 +9,74 @@
 #define ITERATOR_MAP_HXX_
 
 #include "stdlib.hxx"
+#include<boost/type_traits/remove_reference.hpp>
 
 namespace imperative {
 namespace iterator {
 
 namespace detail {
 
+template<class,class> class map_iterator;
+
+template<class Self, class It, class F>
+struct map_iterator_type {
+  typedef typename boost::iterator_value<It>::type iter_ref;
+
+  typedef typename boost::result_of<F(iter_ref)>::type reference;
+
+  typedef boost::iterator_facade<
+    map_iterator<It,F>
+  , boost::remove_reference<reference>::type
+  , boost::incrementable_traversal_tag
+  , reference
+  > type;
+};
+
 template<class It, class F>
 class map_iterator
-: public boost::transform_iterator<F, It>
+: public map_iterator_type<F, It>::type
 {
-  typedef boost::transform_iterator<F, It> super_t;
+  typedef typename map_iterator_type<F, It>::type super_t;
+  typedef typename super_t::reference reference;
+
+  It iter;
+  F func;
+
+private:
+  map_iterator();
 
 public:
-  inline typename super_t::value_type
-  operator*() const {
-    return super_t::operator*();
-  }
-  inline map_iterator &
-  operator++() {
-    super_t::operator++();
-    return *this;
-  }
-
-public:
-  inline
-  map_iterator() {}
   inline
   map_iterator(const map_iterator &o)
-  : super_t(o) {}
+  : iter(o.iter), func(o.func) {}
   inline map_iterator &
   operator=(const map_iterator &o) {
-    super_t::operator=(o);
+    iter=o.iter; func=o.func;
     return *this;
   }
 
   inline void
   swap(map_iterator &o) {
-    std::swap(
-      static_cast<super_t&>(*this)
-    , static_cast<super_t&>(o)
-    );
+    std::swap(iter, o.iter);
+    std::swap(func, o.func);
   }
 
   inline
   map_iterator(const It &s, const F &f)
-  : super_t(s, f) {}
+  : iter(s), func(f) {}
 
   inline
   ~map_iterator() {}
+
+private:
+  friend class boost::iterator_core_access;
+
+  inline reference
+  dereference() const
+  { return func(*iter); }
+  inline void
+  increment()
+  { ++iter; }
 
 private:
   typedef util::safe_bool<void(map_iterator::*)(map_iterator&)> safe_bool;
@@ -67,13 +86,13 @@ public:
   inline
   operator bool_t() const {
     return safe_bool::to_unspecified_bool(
-        super_t::base(),
+        iter,
         &map_iterator::swap
     );
   }
   inline bool
   operator!() const
-  { return !super_t::base(); }
+  { return !iter; }
 };
 
 } // namespace detail

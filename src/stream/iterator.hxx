@@ -6,6 +6,7 @@
  */
 
 /*
+ *
  * definition of several iterator classes
  * for use with the stream structure
  *
@@ -14,6 +15,7 @@
  *
  * this design allows objects deriving
  * from iterator_base to promote when incremented
+ *
  */
 
 #ifndef ITERATOR_HXX_
@@ -29,6 +31,8 @@ template<class T>
 struct iterator_base
 : util::refcounted
 , boost::noncopyable {
+  typedef T value_type;
+
   inline
   iterator_base() {}
   inline virtual
@@ -58,8 +62,8 @@ struct iterator_base
   { return false; }
 };
 
-
 // enveloppe class
+// need of special handling of copy/move semantics
 template<class T>
 struct meta_iterator
 : boost::iterator_facade<
@@ -71,19 +75,29 @@ struct meta_iterator
   // [impl] contains the actual iterator
   typedef iterator_base<T> impl_t;
 
-  // mutable for empty() optimization
+  // mutable for increment() promotion
   mutable boost::intrusive_ptr<impl_t> impl;
 
 public:
   inline
   meta_iterator()
   : impl() {}
+
+  inline explicit
+  meta_iterator(impl_t* ptr)
+  : impl(ptr) {}
+
   inline
+  ~meta_iterator() {}
+
+public: /// copy semantic
+  inline explicit
   meta_iterator(const meta_iterator &o)
-  : impl(o.impl) {}
+  : impl(o.impl->clone()) {}
   inline meta_iterator &
   operator=(const meta_iterator &o) {
-    impl=o.impl;
+    if(this != &o)
+      impl=o.impl->clone();
     return *this;
   }
   inline void
@@ -91,13 +105,22 @@ public:
     std::swap(impl, o.impl);
   }
 
-  inline
-  meta_iterator(impl_t* ptr)
-  : impl(ptr) {}
+public: /// move semantic
+  typedef util::move_ptr<impl_t> proxy;
 
   inline
-  ~meta_iterator()
-  {}
+  operator proxy() { // non-const
+    return proxy(impl);
+  }
+  inline
+  meta_iterator(const proxy &o) {
+    impl=o.release();
+  }
+  inline meta_iterator &
+  operator=(const proxy &o) {
+    impl=o.release();
+    return *this;
+  }
 
 public:
   inline impl_t*
@@ -126,7 +149,6 @@ private: /// forwarding methods to impl
   inline void
   increment() {
     assert(! empty());
-    // impl = impl->incr();
     impl_t* p = impl->incr();
     if(p != impl.get())
       impl.reset(p);
@@ -150,43 +172,31 @@ private: /// forwarding methods to impl
 namespace detail {
 
 template<class It>
-struct adapter
-: iterator_base<
-    typename boost::iterator_value<It>::type
-  > {
+struct adapter_type {
+  typedef typename boost::iterator_value<It>::type value_type;
+  typedef iterator_base<value_type> type;
+};
 
-  typedef typename boost::iterator_value<It>::type T;
+template<class It>
+struct adapter
+: adapter_type<It>::type {
+
+  typedef adapter_type<It>::type super_t;
   It impl;
 
+protected:
+  inline  adapter() {}
+  inline ~adapter() {}
+
 public:
-  inline
-  adapter()
-  {}
-  inline
-  adapter(const adapter &o)
-  : impl(o.impl) {}
-  inline adapter &
-  operator=(const adapter &o) {
-    impl=o.impl;
-    return *this;
-  }
-
-  inline void
-  swap(adapter &o) {
-    std::swap(impl, o.impl);
-  }
-  inline
-  ~adapter()
-  {}
-
   inline explicit
   adapter(const It &it)
   : impl(it) {}
 
 public:
-  iterator_base<T>* clone() const
+  super_t* clone() const
   { return new adapter(impl); }
-  iterator_base<T>* incr()
+  super_t* incr()
   { return ++impl ? this : 0; }
   T    deref() const
   { return *impl; }
@@ -195,15 +205,29 @@ public:
 };
 
 template<class It>
-inline adapter<It>*
+struct do_adapt {
+  inline iterator_base<It>*
+  do_it(const It &it) {
+    return new adapter<It>(it);
+  }
+};
+
+template<class T>
+struct do_adapt<meta_iterator<T> > {
+  inline iterator_base<It>*
+  do_it(const meta_iterator<It> &it) {
+    return it.ptr();
+  }
+};
+
+template<class It>
+inline boost::intrusive_ptr<iterator_base<It> >
 adapt(const It &it) {
-  return new adapter<It>(it);
+  return do_adapt<It>::do_it(it);
 }
 
 } // namespace detail
 
 } // namespace streams
-
-
 
 #endif /* ITERATOR_HXX_ */
