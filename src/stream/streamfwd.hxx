@@ -10,14 +10,11 @@
 
 namespace streams {
 
-template<class T>
-class stream;
+template<class T, class Mem>
+class stream_ptr;
 
-template<class T>
+template<class T, class Mem>
 struct stream_iterator;
-
-template<class T>
-struct stream_iterator_adapt;
 
 } // namespace streams
 

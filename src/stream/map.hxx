@@ -27,10 +27,10 @@ map_base(iterator_base<T>* a, const F &f) {
   return streams::map_iter(meta_iterator<T>(a),f);
 }
 
-template<class T, class F>
-inline stream<T>
-map(const stream<T> &a, const F &f) {
-  return stream<T>(map_base(a.iter(), f));
+template<class T, class Mem, class F>
+inline stream_ptr<T>
+map(const stream_ptr<T,Mem> &a, const F &f) {
+  return stream_ptr<T,Mem>::from_iter(map_base(a.iter(), f));
 }
 
 } // namespace streams

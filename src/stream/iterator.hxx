@@ -181,7 +181,9 @@ template<class It>
 struct adapter
 : adapter_type<It>::type {
 
-  typedef adapter_type<It>::type super_t;
+  typedef typename adapter_type<It>::type super_t;
+  typedef typename super_t::value_type T;
+
   It impl;
 
 protected:
@@ -206,7 +208,7 @@ public:
 
 template<class It>
 struct do_adapt {
-  inline iterator_base<It>*
+  static inline typename adapter_type<It>::type*
   do_it(const It &it) {
     return new adapter<It>(it);
   }
@@ -214,14 +216,14 @@ struct do_adapt {
 
 template<class T>
 struct do_adapt<meta_iterator<T> > {
-  inline iterator_base<It>*
-  do_it(const meta_iterator<It> &it) {
+  static inline iterator_base<T>*
+  do_it(const meta_iterator<T> &it) {
     return it.ptr();
   }
 };
 
 template<class It>
-inline boost::intrusive_ptr<iterator_base<It> >
+inline typename adapter_type<It>::type*
 adapt(const It &it) {
   return do_adapt<It>::do_it(it);
 }
