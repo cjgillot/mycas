@@ -10,11 +10,30 @@
 
 #include<functional>
 
+/*!
+ * \namespace functor
+ *
+ * \brief Miscellaneous utility functor objects
+ *
+ * Here are defined :
+ * - identity
+ * - plus/minus/multiplies/divides
+ *   with their variants (rev, left, right,
+ *   eq, by, to)
+ */
 namespace functor {
 
+/*!
+ * \struct identity
+ *
+ * \brief identity functor
+ */
 template<class T>
 struct identity
 : std::unary_function<T, T> {
+  /*!
+   * \brief Call operator
+   */
   inline const T &
   operator()(const T &a) const
   { return a; }
@@ -110,9 +129,16 @@ using std::negate;
   OP_BY(name##_by, op##=);      \
   OP_TO(name##_to, op##=)
 
+//! \brief {plus_*} functors around {+}
 OP_ALL(plus, +);
+
+//! \brief {minus_*} functors around {-}
 OP_ALL(minus, -);
+
+//! \brief {multiplies_*} functors around {*}
 OP_ALL(multiplies, *);
+
+//! \brief {divides_*} functors around {/}
 OP_ALL(divides, /);
 
 } // namespace functor

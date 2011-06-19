@@ -15,42 +15,84 @@ namespace iterator {
 
 namespace detail {
 
+template<class> class range_iterator;
+
+/*!
+ * \struct range_iterator_type
+ * \brief Range iterator base typing helper
+ */
+template<class Range>
+struct range_iterator_type {
+  //! \brief Iterator type
+  typedef typename boost::range_iterator<const Range>::type iterator;
+
+  //! \brief Value type
+  typedef typename boost::range_value<const Range>::type value_type;
+
+  //! \brief The proper iterator facade type
+  typedef typename boost::iterator_facade<
+    range_iterator<It,F>
+  , value_type
+  , boost::incrementable_traversal_tag
+  > type;
+};
+
+/*!
+ * \class range_iterator
+ * \brief An iterator on a range
+ */
 template<class Range>
 class range_iterator
-: public boost::iterator_facade<
-    range_iterator<Range>
-  , typename boost::range_value<Range>::type
-  , boost::incrementable_traversal_tag
-  >
-{
-  typedef typename boost::range_value<Range>::type T;
-  typedef typename boost::range_iterator<const Range>::type iter;
+: public range_iterator_type<Range>::type
+, public operators::testable<range_iterator<Range> > {
+
+  typedef range_iterator_type<Range> types;
+
+  typedef typename types::value_type T;
+  typedef typename types::iterator iter;
 
   iter it, end;
 
+private:
+  range_iterator();
+
 public:
-  inline
-  range_iterator() {}
+  /*!
+   * \brief Copy constructor
+   */
   inline
   range_iterator(const range_iterator &o)
   : it(o.it), end(o.end) {}
+  /*!
+   * \brief Assignment operator
+   */
   inline range_iterator &
   operator=(const range_iterator &o) {
     it=o.it; end=o.end;
     return *this;
   }
-
+  /*!
+   * \brief Non-throwing swap
+   */
   inline void
   swap(range_iterator &o) {
     std::swap(it, o.it);
     std::swap(end,o.end);
   }
 
+public:
+  /*!
+   * \brief Contructor from a range
+   * \param r : a range
+   */
   inline explicit
   range_iterator(const Range &r)
   : it(boost::begin(r)), end(boost::end(r)) {}
 
-  inline virtual
+  /*!
+   * \brief Destructor
+   */
+  inline
   ~range_iterator() {}
 
 private:
@@ -67,38 +109,24 @@ private:
     return *it;
   }
 
-private:
-  typedef util::safe_bool<void(range_iterator::*)(range_iterator&)> safe_bool;
-  typedef typename safe_bool::unspecified_bool_type bool_t;
 public:
-  inline
-  operator bool_t() const {
-    return safe_bool::to_unspecified_bool(
-        it != end,
-        &range_iterator::swap
-    );
-  }
+  //! \brief Validity test
   inline bool
-  operator!() const
-  { return it == end; }
+  valid() const
+  { return it != end; }
 };
 
 } // namespace detail
 
-template<class F>
-struct gen_type {
-  typedef detail::gen_iterator<It,F> iterator;
-  typedef typename iterator::value_type         value_type;
-  typedef typename iterator::reference          reference;
-  typedef typename iterator::pointer            pointer;
-  typedef typename iterator::difference_type    difference_type;
-  typedef typename iterator::iterator_category  iterator_category;
-};
-
-template<class It, class F>
-inline detail::map_iterator<It, F>
-map(const It &it, const F &f) {
-  return detail::map_iterator<It,F>(it, f);
+/*!
+ * \brief Front-end to the range_iterator class
+ * \param r : a range
+ * \return an iterator on this range
+ */
+template<class Range>
+inline detail::range_iterator<Range>
+iterate(const Range &r) {
+  return detail::range_iterator<Range>(r);
 }
 
 }} // imperative::iterator

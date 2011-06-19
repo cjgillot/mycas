@@ -16,11 +16,12 @@ namespace streams {
 
 template<class T, class Mem>
 struct stream_iterator
-: boost::iterator_facade<
+: public boost::iterator_facade<
     stream_iterator<T, Mem>
   , const T
   , boost::incrementable_traversal_tag
-  > {
+  >
+, public operators::testable<stream_iterator<T, Mem> > {
 
   typedef stream_base<T, Mem> stream_t;
   typedef typename stream_t::list_t::const_iterator iter_t;
@@ -75,20 +76,10 @@ private:
     return *it;
   }
 
-private:
-  typedef util::safe_bool<void(stream_iterator::*)(stream_iterator&)> safe_bool;
-  typedef typename safe_bool::unspecified_bool_type bool_t;
 public:
-  inline
-  operator bool_t() const {
-    return safe_bool::to_unspecified_bool(
-        it != end(),
-        &stream_iterator::swap
-    );
-  }
   inline bool
-  operator!() const
-  { return it == end(); }
+  valid() const
+  { return it != end(); }
 };
 
 } // namespace streams

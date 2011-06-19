@@ -5,11 +5,16 @@
  *      Author: k1000
  */
 
+#ifndef TUPLE_IXX_
+#define TUPLE_IXX_
+
 #include <boost/preprocessor/repetition/enum.hpp>
 #include <boost/preprocessor/repetition/enum_shifted.hpp>
 #include <boost/preprocessor/repetition/repeat_from_to.hpp>
 
+#ifndef MAX_TUPLE_ARITY
 #define MAX_TUPLE_ARITY 5
+#endif
 
 namespace tuple {
 
@@ -29,11 +34,13 @@ tuple(BOOST_PP_ENUM_##z(N, DECL, _)) {  \
   ));                                   \
 }
 
+//! \brief Empty case {tuple()} maker
 inline nil_t
 tuple() {
   return nil;
 }
 
+//! \brief Preprocessor loop declaring {tuple(...)} makers
 BOOST_PP_REPEAT_FROM_TO(1, MAX_TUPLE_ARITY, TUPLE, _)
 
 #undef TUPLE
@@ -56,11 +63,13 @@ tie(BOOST_PP_ENUM_##z(N, DECL, _)) {    \
   ));                                   \
 }
 
+//! \brief Empty case {tie()} maker
 inline nil_t
 tie() {
   return nil;
 }
 
+//! \brief Preprocessor loop declaring {tie(...)} makers
 BOOST_PP_REPEAT_FROM_TO(1, MAX_TUPLE_ARITY, TIE, _)
 
 #undef TIE
@@ -68,3 +77,5 @@ BOOST_PP_REPEAT_FROM_TO(1, MAX_TUPLE_ARITY, TIE, _)
 #undef DECL
 
 }
+
+#endif // TUPLE_IXX_

@@ -23,66 +23,86 @@
 namespace poly {
 namespace sparse {
 
-template<class K>
-struct poly
-: boost::arithmetic1<poly<K>
-, boost::arithmetic2<poly<K>, monomial<K>
-, boost::multiplicative2<poly<K>, K
-, operators::ordered<poly<K>
-, operators::printable<poly<K>
-> > > > >
+/*!
+ * \class poly
+ * \brief Main class for sparse polynomials representation
+ *
+ * These are created on top of M, a monomial group (see monomial.hxx)
+ */
+template<class M>
+class poly
+: boost::additive1<poly<M>
+, boost::multiplicative2<poly<M>, M
+, operators::ordered<poly<M>
+, operators::printable<poly<M>
+> > > >
 {
-  typedef monomial<K> M;
-
-  typedef typename M::Z Z;
-
-  typedef typename M::k k;
-  typedef typename M::z z;
-
-  typedef M mono;
-
-  typedef z e;
-
   // monomials are sorted
   // biggest exponent first
   typedef std::list<M> impl_t;
   impl_t impl;
 
-  typedef typename impl_t::iterator iterator;
-  typedef typename impl_t::const_iterator const_iterator;
-  typedef typename impl_t::reverse_iterator reverse_iterator;
-  typedef typename impl_t::const_reverse_iterator const_reverse_iterator;
+public:
+  /*!
+   * \brief Integer ring type
+   */
+  typedef typename M::Z Z;
 
 public:
+  /*!
+   * \brief Default constructor
+   *
+   * Creates a null polynomial
+   */
   inline
   poly() {}
+
+  /*!
+   * \brief Copy constructor
+   */
   inline
   poly(const poly &m)
   : impl(m.impl) {}
+  /*!
+   * \brief Assignement operator
+   */
   inline poly &
   operator=(const poly &o) {
     impl=o.impl;
     return *this;
   }
-
-  inline
-  poly(const k &c, const z &e)
-  : impl(1,M(c,e)) {}
-  explicit inline
-  poly(const k &c)
-  : impl(1,M(c)) {}
-
-  inline
-  ~poly() {}
-
-public:
+  /*!
+   * \brief Non-throwing swap
+   */
   inline void
   swap(poly &o) {
     std::swap(impl, o.impl);
   }
 
-private: /// range concept
-  // mutable
+  /*!
+   * \brief Monomial polynomial constructor
+   */
+  inline explicit
+  poly(const M &m)
+  : impl(1,m) {}
+
+  /*!
+   * \brief Destructor
+   */
+  inline
+  ~poly() {}
+
+public:
+  //! \brief Iterator traversing the underlying container
+  typedef typename impl_t::iterator iterator;
+  //! \brief Const iterator traversing the underlying container
+  typedef typename impl_t::const_iterator const_iterator;
+  //! \brief Reverse iterator traversing the underlying container
+  typedef typename impl_t::reverse_iterator reverse_iterator;
+  //! \brief Const reverse iterator traversing the underlying container
+  typedef typename impl_t::const_reverse_iterator const_reverse_iterator;
+
+private:
   inline iterator
   begin()
   { return impl.begin(); }
@@ -98,66 +118,99 @@ private: /// range concept
 
 
 public:
-  // const
+  /*!
+   * \brief Const begin
+   *
+   * constant time
+   */
   inline const_iterator
   begin() const
   { return impl.begin(); }
+  /*!
+   * \brief Const end
+   *
+   * constant time
+   */
   inline const_iterator
   end() const
   { return impl.end(); }
-  // const
+  /*!
+   * \brief Const reverse begin
+   *
+   * constant time
+   */
   inline const_reverse_iterator
   rbegin() const
   { return impl.rbegin(); }
+  /*!
+   * \brief Const reverse end
+   *
+   * constant time
+   */
   inline const_reverse_iterator
   rend() const
   { return impl.rend(); }
 
 public:
+  /*!
+   * \brief static zero polynomial
+   */
   static const poly zero;
+  /*!
+   * \brief static unity polynomial
+   */
   static const poly one;
 
+  /*!
+   * \brief nullity test
+   *
+   * constant time
+   */
   inline bool
   null() const
   { return impl.empty(); }
+  /*!
+   * \brief unity test
+   *
+   * constant time
+   */
   inline bool
   unit() const {
     return impl.size() == 1
         && algebra::unit(impl.front());
   }
 
-  inline const z &
+  /*!
+   * \brief Polynomial degree
+   *
+   * constant time
+   */
+  inline const Z &
   deg() const {
     return impl.front().deg();
   }
 
+  /*!
+   * \brief Monomial test
+   *
+   * \return true if the polynomial has the form [a * X^p]
+   *    where [a != 0].
+   *
+   * constant time
+   */
   inline bool
   monome() const
   { return impl.size() == 1; }
 
-public: /// construction
-  template<class Range>
-  static inline poly
-  from_coefs(const Range &r) {
-    poly ret;
-    z exp(boost::size(r)-1);
-    foreach(k c, r) {
-      ret.impl.push_back(M(c, exp));
-      --exp;
-    }
-    return ret;
-  }
-
-public: /// printing
-  template<class S>
-  inline void
-  print(S &ios) const {
-    algebra::print_range(impl, ios);
-  }
-
 private:
-  /// implementation of += and -= operators
-  ///   requirement : m != 0, f1(m) != 0
+  /*!
+   * \brief polynomial combination
+   *
+   * Implementation of += and -= operators
+   *   requirement : m != 0 implies f1(m) != 0
+   *
+   * linear time
+   */
   template<class Fnc1, class Fnc2>
   static inline void
   combine(impl_t &a, const impl_t &b, const Fnc1 &f1, const Fnc2 &f2) {
@@ -190,6 +243,11 @@ private:
   }
 
 public:
+  /*!
+   * \brief in-place addition operator
+   *
+   * linear time
+   */
   inline poly &
   operator+=(const poly &o) {
     combine(
@@ -199,6 +257,11 @@ public:
     );
     return *this;
   }
+  /*!
+   * \brief in-place addition operator
+   *
+   * linear time
+   */
   inline poly &
   operator-=(const poly &o) {
     combine(
@@ -209,11 +272,22 @@ public:
     return *this;
   }
 
+  /*!
+   * \brief in-place negation
+   *
+   * linear time
+   */
   inline poly &
   ineg() {
     boost::for_each(impl, algebra::ineg<M>);
     return *this;
   }
+
+  /*!
+   * \brief in-place scalar multiplication
+   *
+   * linear time
+   */
   inline poly &
   operator*=(const M &o) {
     if(algebra::null(o)) {
@@ -226,6 +300,11 @@ public:
     );
     return *this;
   }
+  /*!
+   * \brief in-place scalar division
+   *
+   * linear time
+   */
   inline poly &
   operator/=(const M &o) {
     assert(! algebra::null(o));
@@ -235,61 +314,92 @@ public:
     );
     return *this;
   }
-  inline poly &
-  operator*=(const k &o) {
-    if(algebra::null(o)) {
-      impl.clear();
-      return *this;
+
+public:
+  /*!
+   * \brief multiplication operator
+   *
+   * time : see multiply.hxx
+   *
+   * \param a,b : polynomials
+   * \return their product [a*b]
+   */
+  friend inline poly
+  operator*(const poly &a, const poly &b) {
+    if(a.impl.empty() || b.impl.empty()) {
+      return zero;
     }
-    boost::for_each(
-        impl,
-        functor::multiplies_by<M,k>(o)
-    );
+
+    poly ret;
+    multiply::do_mul<M, impl_t, impl_t>(impl, o.impl, ret.impl);
+    return ret;
+  }
+  /*!
+   * \brief in-place multiplication operator
+   *
+   * time : see multiply.hxx
+   */
+  inline poly &
+  operator*=(const poly &o) {
+    (*this * o).swap(*this);
     return *this;
   }
-  inline poly &
-  operator/=(const k &o) {
-    assert(! algebra::null(o));
-    boost::for_each(
-        impl,
-        functor::divides_by<M,k>(o)
-    );
-    return *this;
+
+
+public:
+  /*!
+   * \brief Named constructor from coefficients range
+   *
+   * linear time
+   *
+   * \param r : a coefficient range
+   * \return : the polynomial whose coefficients are r's
+   *    exponents in increasing order
+   */
+  template<class Range>
+  static inline poly
+  from_monos(const Range &r) {
+    poly ret;
+    boost::copy(r, std::back_inserter(ret.impl));
+    return ret;
   }
 
 public:
-  inline poly &
-  operator*=(const poly &o) {
-    if(impl.empty() || o.impl.empty()) {
-      impl.clear();
-      return *this;
-    }
-
-    impl_t ret;
-    multiply::do_mul<M, impl_t, impl_t>(impl, o.impl, ret);
-    std::swap(impl, ret);
-
-    return *this;
+  /*!
+   * \brief Printing function
+   *
+   * linear time
+   *
+   * \param ios : an output stream
+   */
+  template<class S>
+  inline void
+  print(S &ios) const {
+    algebra::print_range(impl, ios);
   }
 
-public: /// comparison -> lexicographical
+public:
+  /*!
+   * \brief Comparison function
+   *
+   * worst case linear time
+   *
+   * \return the lexicographical comparison value
+   */
   static int
   compare(const poly &a, const poly &b) {
     return algebra::range_compare(
         a.impl, b.impl,
-        M::deep_compare
+        std::mem_fun_ref(&M::deep_compare)
     );
   }
 };
 
-template<class K>
-const poly<K> poly<K>::zero;
+template<class M>
+const poly<M> poly<M>::zero;
 
-template<class K>
-const poly<K> poly<K>::one(
-  algebra::one<K>(),
-  algebra::one<poly<K>::Z>()
-);
+template<class M>
+const poly<M> poly<M>::one(algebra::one<M>());
 
 }} // poly::sparse
 

@@ -15,10 +15,4 @@
 #include "utils/ptr.hxx"
 #include "utils/move.hxx"
 
-namespace util {
-
-using boost::range_detail::safe_bool;
-
-}
-
 #endif /* UTILS_HXX_ */

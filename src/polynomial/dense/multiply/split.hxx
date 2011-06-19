@@ -29,6 +29,9 @@ namespace split {
  */
 template<unsigned N, class It>
 struct split_help {
+  /*!
+   * \brief actual function
+   */
   static inline
   typename tuple::tuple_t<N+1, It>::type
   do_it(const It &b, const It &e, int step) {
@@ -43,6 +46,9 @@ struct split_help {
  */
 template<class It>
 struct split_help<0,It> {
+  /*!
+   * \brief actual function
+   */
   static inline
   typename tuple::tuple_t<1, It>::type
   do_it(const It &, const It &e, int) {

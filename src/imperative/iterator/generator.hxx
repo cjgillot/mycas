@@ -15,6 +15,11 @@ namespace iterator {
 
 namespace detail {
 
+/*!
+ * \class gen_iterator
+ *
+ * \brief helper iterator class for generate
+ */
 template<class F>
 class gen_iterator
 : public boost::iterator_facade<
@@ -22,34 +27,50 @@ class gen_iterator
   , typename boost::result_of<F()>::type const
   , boost::incrementable_traversal_tag
   >
-{
+, public operators::testable<gen_iterator<F> > {
+
   typedef typename boost::iterator_value<It>::type T;
   typedef typename boost::result_of<F(T)>::type res_t;
 
   F f;
 
+private:
+  gen_iterator();
+
 public:
-  inline
-  gen_iterator() {}
+  /*!
+   * \brief Copy constructor
+   */
   inline
   gen_iterator(const gen_iterator &o)
   : f(o.f) {}
+  /*!
+   * \brief Assignment operator
+   */
   inline gen_iterator &
   operator=(const gen_iterator &o) {
     f=o.f;
     return *this;
   }
-
+  /*!
+   * \brief Non-throwing swap
+   */
   inline void
   swap(gen_iterator &o) {
     std::swap(f, o.f);
   }
 
+  /*!
+   * \brief Constructor from function
+   */
   inline explicit
   gen_iterator(const F &f)
   : f(f) {}
 
-  inline virtual
+  /*!
+   * \brief Destructor
+   */
+  inline
   ~gen_iterator() {}
 
 private:
@@ -62,37 +83,42 @@ private:
     return f();
   }
 
-private:
-  typedef util::safe_bool<void(gen_iterator::*)(gen_iterator&)> safe_bool;
-  typedef typename safe_bool::unspecified_bool_type bool_t;
 public:
-  inline
-  operator bool_t() const {
-    return safe_bool::to_unspecified_bool(
-        true,
-        &gen_iterator::swap
-    );
-  }
+  //! \brief Validity test
   inline bool
-  operator!() const
-  { return false; }
+  valid() const
+  { return true; }
 };
 
 } // namespace detail
 
+/*!
+ * \struct gen_type
+ * \brief Helper class for typing generate
+ */
 template<class F>
 struct gen_type {
+  //! \brief Iterator type
   typedef detail::gen_iterator<F> iterator;
+  //! \brief Value type
   typedef typename iterator::value_type         value_type;
+  //! \brief Reference type
   typedef typename iterator::reference          reference;
+  //! \brief Pointer type
   typedef typename iterator::pointer            pointer;
+  //! \brief Iterator difference type
   typedef typename iterator::difference_type    difference_type;
+  //! \brief Iterator category
   typedef typename iterator::iterator_category  iterator_category;
 };
 
+/*!
+ * \fn gen_iterator<F> generate(F)
+ * \brief Creates a generator iterator
+ */
 template<class F>
 inline detail::gen_iterator<F>
-generate(const F &f) {
+generate(F f) {
   return detail::gen_iterator<F>(f);
 }
 

@@ -16,72 +16,124 @@
 namespace poly {
 namespace sparse {
 
-template<class K>
-struct monomial
+/*!
+ * \class monomial
+ * \brief Default monomial class for sparse polynomials
+ *
+ * Here we define the monomial concept. monomials are :
+ * - multipliable, dividable in all cases
+ * - algebra::compare'able
+ * - compatible deep_compare'able
+ *   (ie. if algebra::compare says less, deep_compare must also)
+ * - additionable ant subtractable if they algebra::compare equal
+ * - printable
+ */
+template<class K, class Z=algebra::integer>
+class monomial
 : boost::arithmetic1<monomial<K>
 , boost::multiplicative2<monomial<K>, K
 , operators::ordered<monomial<K>
 , operators::printable<monomial<K>
-> > > >
-{
-  typedef algebra::integer Z;
-
-  typedef K k;
-  typedef Z z;
-
-private:
-  k coef;
-  z expo;
+> > > > {
+  /// represents [coef * X^expo]
+  K coef;
+  Z expo;
 
 public:
+  /*!
+   * \brief Default Constructor
+   */
   inline
   monomial() {}
+  /*!
+   * \brief Copy constructor
+   */
   inline
   monomial(const monomial &m)
   : coef(m.coef), expo(m.expo) {}
+  /*!
+   * \brief Assignment operator
+   */
   inline monomial &
   operator=(const monomial &m) {
     coef = m.coef; expo = m.expo;
     return *this;
   }
+  /*!
+   * \brief Non-throwing swap
+   */
+  inline void
+  swap(monomial &o) {
+    std::swap(coef, o.coef);
+    std::swap(expo, o.expo);
+  }
 
+  /*!
+   * \brief Coefficient-exponent constructor
+   */
   inline
-  monomial(const k &c, const z &e)
+  monomial(const K &c, const Z &e)
   : coef(c), expo(e) {}
-  explicit inline
-  monomial(const k &c)
+  /*!
+   * \brief Constant constructor
+   */
+  inline // explicit // FIXME : explicit or not ?
+  monomial(const K &c)
   : coef(c) {}
 
+  /*!
+   * \brief Destructor
+   */
   inline
   ~monomial() {}
 
+  /*!
+   * \brief Exponent constructor
+   */
   static inline monomial
   var(const z &e)
   { return monomial(algebra::one<K>(), e); }
 
-public: /// ring objects
+public:
+  /*!
+   * \brief static zero polynomial
+   */
   static const monomial zero;
+  /*!
+   * \brief static unity polynomial
+   */
   static const monomial one;
 
+  /*!
+   * \brief nullity test
+   *
+   * constant time
+   */
   inline bool
   null() const
   { return algebra::null(coef); }
+  /*!
+   * \brief unitity test
+   *
+   * constant time
+   */
   inline bool
   unit() const
   { return algebra::null(expo) && algebra::unit(coef); }
 
+  /*!
+   * \brief Exponent (degree) accessor
+   */
   inline const z &
   deg() const
   { return expo; }
 
-public: /// printing
-  template<class S>
-  inline void
-  print(S &ios) const {
-    ios << coef << '@' << expo;
-  }
-
-public: /// operations
+public:
+  /*!
+   * \brief in-place addition operator
+   *
+   * constant time
+   */
   inline monomial &
   operator+=(const monomial &o) {
     if(null()) return *this = o;
@@ -89,6 +141,11 @@ public: /// operations
     coef += o.coef;
     return *this;
   }
+  /*!
+   * \brief in-place subtraction operator
+   *
+   * constant time
+   */
   inline monomial &
   operator-=(const monomial &o) {
     if(null()) return *this = o;
@@ -96,33 +153,34 @@ public: /// operations
     coef -= o.coef;
     return *this;
   }
+
+  /*!
+   * \brief in-place negation operator
+   *
+   * constant time
+   */
   inline monomial &
   ineg() {
     algebra::ineg(coef);
     return *this;
   }
-  inline monomial
-  operator-() const {
-    return monomial(*this).ineg();
-  }
 
-  inline monomial &
-  operator*=(const k &o) {
-    coef *= o;
-    return *this;
-  }
-  inline monomial &
-  operator/=(const k &o) {
-    coef /= o;
-    return *this;
-  }
-
+  /*!
+   * \brief in-place multiplication
+   *
+   * constant time
+   */
   inline monomial &
   operator*=(const monomial &o) {
     coef *= o.coef;
     expo += o.expo;
     return *this;
   }
+  /*!
+   * \brief in-place division
+   *
+   * constant time
+   */
   inline monomial &
   operator/=(const monomial &o) {
     assert(coef >= o.coef);
@@ -131,11 +189,66 @@ public: /// operations
     return *this;
   }
 
-public: /// comparison
+  /*!
+   * \brief in-place scalar multiplication
+   *
+   * constant time
+   */
+  inline monomial &
+  operator*=(const k &o) {
+    coef *= o;
+    return *this;
+  }
+  /*!
+   * \brief in-place scalar division
+   *
+   * constant time
+   */
+  inline monomial &
+  operator/=(const k &o) {
+    coef /= o;
+    return *this;
+  }
+
+public:
+  /*!
+   * \brief Printing function
+   *
+   * constant time
+   *
+   * \param ios : an output stream
+   */
+  template<class S>
+  inline void
+  print(S &ios) const {
+    ios << coef << '@' << expo;
+  }
+
+public:
+  /*!
+   * \brief Partial comparison function
+   *
+   * Here are just compared exponents,
+   * see the addition operator.
+   *
+   * constant time
+   *
+   * \return the comparison value of exponents
+   */
   static inline int
   compare(const monomial &a, const monomial &b) {
     return algebra::compare(a.expo, b.expo);
   }
+  /*!
+   * \brief Comparison function
+   *
+   * Here are compared exponents then coefficients,
+   * (in this order for comparison compatibility).
+   *
+   * constant time
+   *
+   * \return the comparison value
+   */
   static inline int
   deep_compare(const monomial &a, const monomial &b) {
     int cmpe = algebra::compare(a.expo, b.expo);
@@ -148,10 +261,7 @@ template<class K>
 const monomial<K> monomial<K>::zero;
 
 template<class K>
-const monomial<K> monomial<K>::one (
-  algebra::one<K>(),
-  algebra::zero<monomial<K>::Z>()
-);
+const monomial<K> monomial<K>::one (algebra::one<K>());
 
 }} // poly::sparse
 

@@ -25,7 +25,7 @@ template<class Mono, class Muler, class Range1, class RRange>
 inline void
 do_mul_loop(const Range1 &a, const Range1 &b, RRange &r) {
   for(Muler muler(a,b);
-      !  muler.empty();
+      ! muler.empty();
       muler.next()) {
     const Mono &m = muler.get();
 
@@ -43,7 +43,6 @@ do_mul_left (const Range1 &a, const Range1 &b, RRange &r) {
 
   do_mul_loop<Mono, muler, Range1, RRange>(a,b,r);
 }
-
 template<class Mono, class Range1, class RRange>
 inline void
 do_mul_right(const Range1 &a, const Range1 &b, RRange &r) {
@@ -56,7 +55,20 @@ do_mul_right(const Range1 &a, const Range1 &b, RRange &r) {
 } // namespace detail
 
 
-
+/*!
+ * \brief Dispatch function for sparse multiplication
+ *
+ * This function chooses the major polynomial
+ * (the shortest), being the first argument of muler.
+ * Here comes the {Mul} template argument in {muler} and
+ * {hobj} : it says whether the product is right {a * b} or
+ * reversed {b *' a} with *' the reversed operator.
+ * See {detail::do_mul_left} and {detail::do_mul_right} for {Mul} coping.
+ * See {detail::do_mul_loop} for muler usage.
+ *
+ * \param a,b : two polynomials
+ * \param r : the return range
+ */
 template<class Mono, class Range1, class RRange>
 inline void
 do_mul(const Range1 &a, const Range1 &b, RRange &r) {

@@ -14,7 +14,7 @@
 namespace util {
 
 /*!
- * \class ptr<T>
+ * \class ptr
  *
  * \brief pointer class
  *
@@ -37,7 +37,7 @@ public:
   ptr()
   : p(0) {}
   /*!
-   * \brief Pointer constructor
+   * \brief Pointer (cast)-constructor
    */
   inline
   ptr(T* p)

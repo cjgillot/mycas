@@ -22,11 +22,22 @@ template<class, class> class muler;
 
 namespace detail {
 
+/*!
+ * \struct muler_type
+ * \brief typing helper class for poly::sparse::multiply::muler
+ */
 template<class P, class Mul>
 struct muler_type {
+  //! \brief Monomial type
   typedef typename boost::range_value<P>::type mono;
+
+  //! \brief Iterator type
   typedef typename boost::range_iterator<const P>::type iter;
+
+  //! \brief Heap object type
   typedef util::ptr<hobj<P, Mul> > hp;
+
+  //! \brief Multiplication heap type (see multiply/heap.hxx)
   typedef heap<
     typename boost::range_value<P>::type
   , util::ptr<hobj<P, Mul> >

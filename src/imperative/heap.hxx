@@ -30,7 +30,10 @@ class heap {
   BOOST_STATIC_ASSERT(!boost::is_pointer<O>::value);
 
 protected:
+  //! \brief Implementation container type
   typedef std::vector<O> vect_t;
+
+  //! \brief Implementation container
   vect_t data;
 
 public:
@@ -98,6 +101,8 @@ public:
    * \brief Maximum element access
    *
    * constant time.
+   *
+   * \return Reference to the maximum element
    */
   inline O &
   find_max() {
@@ -108,6 +113,8 @@ public:
    * \brief Maximum element access, const version
    *
    * constant time.
+   *
+   * \return Reference to the maximum element
    */
   inline const O &
   find_max() const {
@@ -374,14 +381,16 @@ public:
   /*!
    * \brief Emptiness test
    *
-   * constant time
+   * constant time.
    */
   using impl::empty;
 
   /*!
    * \brief Maximum element access
    *
-   * constant time
+   * constant time.
+   *
+   * \return Reference to the maximum element
    */
   inline O &
   find_max()
@@ -390,6 +399,8 @@ public:
    * \brief Maximum element access, const version
    *
    * constant time.
+   *
+   * \return Reference to the maximum element
    */
   inline const O &
   find_max() const
@@ -398,11 +409,20 @@ public:
   /*!
    * \brief Maximum elements list access
    *
-   * constant time
+   * constant time.
+   *
+   * \return Reference to the maximum elements list
    */
   inline list_t &
   find_maxs()
   { return *impl::find_max(); }
+  /*!
+   * \brief Maximum elements list access, const version
+   *
+   * constant time.
+   *
+   * \return Reference to the maximum elements list
+   */
   inline const list_t &
   find_maxs() const
   { return *impl::find_max(); }
@@ -436,7 +456,7 @@ public:
    * \brief Maximum deletion
    *
    * Deletes the maximum element from the heap.
-   * amortized constant time (logarithmic worst case).
+   * worst case logarithmic time.
    */
   inline void
   delete_max() {

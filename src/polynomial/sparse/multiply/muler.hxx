@@ -18,6 +18,15 @@ namespace poly {
 namespace sparse {
 namespace multiply {
 
+/*!
+ * \class muler
+ * \brief Multiplication class for sparse polynomials.
+ *
+ * Given {a} and {b} two polynomials, this class
+ * constructs a heap containing {hobj}s, ie.
+ * objects computing online the scalar products
+ * [ {a[i]} * {b} ].
+ */
 template<class P, class Mul>
 class muler
 : private detail::muler_type<P, Mul>::type {
@@ -28,8 +37,13 @@ class muler
   typedef typename types::mono mono;
   typedef hobj<P, Mul> ho_t;
 
-protected:
-  // super needs update(ml)
+private:
+  /*!
+   * \brief update class supplied to super
+   *
+   * This function handles the updating of
+   * the {hobj}s, and proper re-inserting.
+   */
   friend class detail::muler_type<P, Mul>::type;
   template<class Range>
   inline void
@@ -40,11 +54,21 @@ protected:
     }
   }
 
+private:
+  muler();
+
 public:
+  /*!
+   * \brief Constructor
+   *
+   * Constructs a muler representing {a * b}.
+   * time and heap size : linear in {a.size()}
+   *
+   * \param a,b : two polynomials
+   */
   inline
   muler(const P &a, const P &b)
-  : super(a.size())
-  {
+  : super(a.size()) {
     assert(!a.empty() && !b.empty());
 
     // shall we prefer allocate a ho_t array of size a.size() ?
@@ -54,11 +78,22 @@ public:
 
     super::sync();
   }
+
+  /*!
+   * \brief Destructor
+   *
+   * All memory handling is made by super.
+   */
   inline
   ~muler() {}
 
+  //! \brief Emptiness test
   using super::empty;
+
+  //! \brief Current monomial access
   using super::get;
+
+  //! \brief Next monomial computing
   using super::next;
 };
 

@@ -45,6 +45,13 @@ struct mult
 
 #undef IMPL
 
+/*!
+ * \fn void mul(const R1 &a, const R2 &b, I3 ret)
+ * \param a,b : two coefficient ranges representing polynomials,
+ *      exponents in increasing order
+ * \param ret : iterator to a range storing their product
+ *      [ret += a * b]
+ */
 template<class R1, class R2, class I3>
 inline void
 mul(const R1 &a, const R2 &b, I3 ret) {

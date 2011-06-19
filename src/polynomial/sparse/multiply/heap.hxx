@@ -15,8 +15,12 @@ namespace poly {
 namespace sparse {
 namespace multiply {
 
-/// common implementation
-/// used for both polynomials and series
+/*!
+ * \class heap
+ * \brief Multiplication heap used by both
+ *    polynomial and series multiplication
+ *    algorithms.
+ */
 template<class M, class HO, class Impl>
 class heap
 : private imperative::heap::chain<HO>
@@ -31,10 +35,19 @@ private:
   heap();
 
 public:
+  /*!
+   * \brief Sized constructor
+   */
   explicit inline
   heap(size_t n)
   : super(n), cur()
   {}
+  /*!
+   * \brief Destructor
+   *
+   * This dtor HO::del() all
+   * HO objects left in the heap.
+   */
   inline
   ~heap() {
     while(!empty()) {
@@ -47,16 +60,24 @@ public:
   }
 
 public:
+  /*!
+   * \brief Copy constructor
+   */
   inline
   heap(const heap &o)
   : super(o), cur(o.cur) {}
+  /*!
+   * \brief Assignement operator
+   */
   inline heap &
   operator=(const heap &o) {
     super::operator=(o);
     cur=o.cur;
     return *this;
   }
-
+  /*!
+   * \brief Non-throwing swap
+   */
   inline void
   swap(heap &o) {
     super::swap(o);
@@ -64,11 +85,25 @@ public:
   }
 
 public:
+  /*!
+   * \brief Emptiness test
+   */
   using super::empty;
 
+  /*!
+   * \brief Current monomial getter
+   * \return the last computed monomial
+   */
   inline const M &
   get() const
   { return cur; }
+
+  /*!
+   * \brief Next monomial computer
+   *
+   * This function calls the derived
+   * Impl::do_update() function.
+   */
   inline void
   next() {
     {
@@ -81,9 +116,18 @@ public:
   }
 
 protected:
+  /*!
+   * \brief Element insertion into the heap
+   */
   using super::insert;
 
-  // must be called after insertions/deletions
+  /*!
+   * \brief Current monomial recalculation.
+   *
+   * This function must be called after
+   * any insertion/deletion in the heap,
+   * in order to update the value of cur.
+   */
   inline void
   sync() {
     if(super::empty()) return;

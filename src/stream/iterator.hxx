@@ -66,12 +66,14 @@ struct iterator_base
 // need of special handling of copy/move semantics
 template<class T>
 struct meta_iterator
-: boost::iterator_facade<
-  meta_iterator<T>
-, const T
-, boost::incrementable_traversal_tag
-, const T // Reference
-> {
+: public boost::iterator_facade<
+    meta_iterator<T>
+  , const T
+  , boost::incrementable_traversal_tag
+  , const T // Reference
+  >
+, public operators::testable<meta_iterator<T> > {
+
   // [impl] contains the actual iterator
   typedef iterator_base<T> impl_t;
 
@@ -110,15 +112,20 @@ public: /// move semantic
 
   inline
   operator proxy() { // non-const
-    return proxy(impl);
+    impl_t* p = impl.get();
+    intrusive_ptr_add_ref(p);
+    impl.reset();
+    return proxy(p);
   }
   inline
   meta_iterator(const proxy &o) {
     impl=o.release();
+    intrusive_ptr_release(impl.get());
   }
   inline meta_iterator &
   operator=(const proxy &o) {
     impl=o.release();
+    intrusive_ptr_release(impl.get());
     return *this;
   }
 
@@ -127,21 +134,10 @@ public:
   ptr() const
   { return impl.get(); }
 
-private:
-  typedef util::safe_bool<void(meta_iterator::*)(meta_iterator&)> safe_bool;
-  typedef typename safe_bool::unspecified_bool_type bool_t;
 public:
-  inline
-  operator bool_t() const {
-    return safe_bool::to_unspecified_bool(
-        !empty(),
-        &meta_iterator::swap
-    );
-  }
   inline bool
-  operator!() const {
-    return empty();
-  }
+  valid() const
+  { return !empty(); }
 
 private: /// forwarding methods to impl
   friend class boost::iterator_core_access;
