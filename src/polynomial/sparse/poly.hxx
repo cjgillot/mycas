@@ -15,6 +15,7 @@
 #include "utils.hxx"
 
 #include "algebra/compare.hxx"
+#include "algebra/print.hxx"
 
 #include "polynomial/sparse/monomial.hxx"
 #include "polynomial/sparse/multiply.hxx"
@@ -45,7 +46,6 @@ struct poly
   // monomials are sorted
   // biggest exponent first
   typedef std::list<M> impl_t;
-
   impl_t impl;
 
   typedef typename impl_t::iterator iterator;
@@ -114,8 +114,8 @@ public:
   { return impl.rend(); }
 
 public:
-  static poly zero;
-  static poly one;
+  static const poly zero;
+  static const poly one;
 
   inline bool
   null() const
@@ -143,7 +143,7 @@ public: /// construction
     z exp(boost::size(r)-1);
     foreach(k c, r) {
       ret.impl.push_back(M(c, exp));
-      exp -= 1;
+      --exp;
     }
     return ret;
   }
@@ -152,10 +152,7 @@ public: /// printing
   template<class S>
   inline void
   print(S &ios) const {
-    ios << " [ ";
-    foreach(M m, impl)
-      ios << m << " ; ";
-    ios << " ] ";
+    algebra::print_range(impl, ios);
   }
 
 private:
@@ -260,31 +257,16 @@ public:
     return *this;
   }
 
-private:
-  // implementation helper for operator*=
-  static inline void
-  do_mul(const impl_t &a, const impl_t &b, impl_t &r) {
-    assert(!a.empty() && !b.empty());
-
-    for(multiply::poly<poly> muler(a,b);
-        ! muler.empty();
-        muler.next()) {
-      const mono &m = muler.get();
-
-      if(!algebra::null(m)) r.push_back(m);
-    }
-  }
-
 public:
   inline poly &
   operator*=(const poly &o) {
     if(impl.empty() || o.impl.empty()) {
       impl.clear();
-      return;
+      return *this;
     }
 
     impl_t ret;
-    do_mul(impl, o.impl, ret);
+    multiply::do_mul<M, impl_t, impl_t>(impl, o.impl, ret);
     std::swap(impl, ret);
 
     return *this;
@@ -301,10 +283,10 @@ public: /// comparison -> lexicographical
 };
 
 template<class K>
-poly<K> poly<K>::zero;
+const poly<K> poly<K>::zero;
 
 template<class K>
-poly<K> poly<K>::one(
+const poly<K> poly<K>::one(
   algebra::one<K>(),
   algebra::one<poly<K>::Z>()
 );

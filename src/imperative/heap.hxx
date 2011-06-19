@@ -14,93 +14,128 @@
 namespace imperative {
 namespace heap {
 
-
-// standard _max_-heap class
-// implemented on top of std::*_heap
-//
-// O must be less_than_compare'able,
-// assignable and copyable
-//
-// all references returned by find_max* functions
-// are invalidated by insert and detete_max* calls
+/*!
+ * \class heap
+ * \brief standard _max_-heap class
+ *     implemented on top of std::*_heap
+ *
+ * O must be less_than_comparable,
+ * assignable and copyable
+ *
+ * all references returned by find_max* functions
+ * are invalidated by insert and detete_max* calls
+ */
 template<class O>
-struct heap {
+class heap {
   BOOST_STATIC_ASSERT(!boost::is_pointer<O>::value);
 
-  typedef O e;
-
 protected:
-  typedef std::vector<e> vect_t;
+  typedef std::vector<O> vect_t;
   vect_t data;
 
 public:
-  inline heap() {}
-  inline heap(const heap &o)
+  /*!
+   * \brief Default constructor
+   *
+   * Creates an empty heap
+   */
+  inline
+  heap() {}
+
+public:
+  /*!
+   * \brief Copy constructor
+   */
+  inline
+  heap(const heap &o)
   : data(o.data) {}
+  /*!
+   * \brief Assignment operator
+   */
   inline heap &
   operator=(const heap &o) {
     data = o.data;
     return *this;
   }
-
-  // construct empty heap and reserve size
-  explicit inline
-  heap(size_t n)
-  : data()
-  { data.reserve(n); }
-
-  inline
-  ~heap() {}
-
+  /*!
+   * \brief Non-throwing swap
+   */
   inline void
   swap(heap &o) {
     std::swap(data, o.data);
   }
 
-public: // access
-  /// C = 1
+  /*!
+   * \brief Sized constructor
+   *
+   * Construct empty heap and reserves size
+   *
+   * \param n : the reserved size
+   */
+  explicit inline
+  heap(size_t n)
+  : data()
+  { data.reserve(n); }
+
+  /*!
+   * \brief Destructor
+   */
+  inline
+  ~heap() {}
+
+public:
+  /*!
+   * \brief Emptiness test
+   *
+   * constant time.
+   */
   inline bool
   empty() const {
     return data.empty();
   }
 
-  /// C = 1
-  inline e &
+  /*!
+   * \brief Maximum element access
+   *
+   * constant time.
+   */
+  inline O &
   find_max() {
     assert(! empty());
     return data.front();
   }
-  inline const e &
+  /*!
+   * \brief Maximum element access, const version
+   *
+   * constant time.
+   */
+  inline const O &
   find_max() const {
     assert(! empty());
     return data.front();
   }
 
-  /// C = n
-  inline std::list<e>
-  find_maxs() const {
-    assert(! empty());
-
-    e x0 = data.front();
-
-    std::list<e> ret;
-
-    foreach(const e &x, data)
-      if(x0 == x)
-        ret.push_front(x);
-
-    return ret;
-  }
-
-public: // modification algorithms
-  /// C = lg n
+public:
+  /*!
+   *  \brief Insertion
+   *
+   *  \param x : the element to be inserted
+   *
+   *  Inserts a new element into the heap.
+   *  logarithmic time.
+   */
   inline void
-  insert(const e &x) {
+  insert(const O &x) {
     data.push_back(x);
     boost::push_heap(data);
   }
 
-  /// C = lg n
+  /*!
+   * \brief Maximum deletion
+   *
+   * Deletes the maximum element from the heap.
+   * logarithmic time.
+   */
   inline void
   delete_max() {
     assert(data.size() > 0);
@@ -108,183 +143,301 @@ public: // modification algorithms
     boost::pop_heap(data);
     data.pop_back();
   }
-
-  /// C = n * lg n
-  inline void
-  delete_maxs() {
-    assert(! empty());
-
-    size_t sz = data.size();
-
-    const e &m = data.front();
-
-    typename vect_t::iterator
-      b=data.begin(),
-      e=data.end();
-
-    do {
-      std::pop_heap(b, e);
-      --e; --sz;
-    }
-    while(sz && m == *b);
-
-    data.resize(sz);
-  }
 };
 
 namespace detail {
 
+/*!
+ * \class list
+ *
+ * \brief list pointer proxy for chain class
+ *
+ * The struct behaves like a raw pointer :
+ * there is no allocation/deallocation caring.
+ * Have been added :
+ * - one forwarding contructor
+ * - the front() element comparison function
+ */
 template<class O>
-struct list
-: operators::ordered<list<O>
-, operators::printable<list<O>
-> > {
-  typedef std::list<O> ptr_t;
-  ptr_t* ptr;
+class list
+: operators::ordered<list<O> > {
 
+public:
+  /*!
+   * \brief Pointed list type
+   */
+  typedef std::deque<O> impl_t;
+
+private:
+  impl_t* ptr;
+
+public:
+  /*!
+   * \brief Default construction
+   */
   inline
   list()
   : ptr(0) {}
-  inline
-  list(ptr_t* p)
-  : ptr(p) {}
-  inline
-  list(std::size_t n, const O &x)
-  : ptr(new ptr_t(n,x)) {}
+
+public:
+  /*!
+   * \brief Copy constructor
+   */
   inline
   list(const list &o)
   : ptr(o.ptr) {}
+  /*!
+   * \brief Assignment operator
+   */
   inline list &
   operator=(const list &o) {
-    ptr = o.ptr;
+    ptr=o.ptr;
     return *this;
   }
+  /*!
+   * \brief Non-throwing swap
+   */
+  inline void
+  swap(list &o) {
+    std::swap(ptr, o.ptr);
+  }
+
+public:
+  /*!
+   * \brief Forwarded constructor
+   *
+   * \param n : list size
+   * \param x : list element
+   *
+   * This call is directly passed to
+   * the corresponding list constructor.
+   */
+  inline
+  list(std::size_t n, const O &x)
+  : ptr(new impl_t(n,x)) {}
+
+public:
+  /*!
+   * \brief Destructor
+   */
   inline
   ~list() {}
 
-  inline ptr_t*
-  get() const
-  { return ptr; }
+  /*!
+   * \brief Pointer deallocation
+   */
+  inline void
+  destroy()
+  { delete ptr; }
 
-  inline ptr_t &
+public:
+  /*!
+   * \brief List dereference operator
+   */
+  inline impl_t &
   operator*() const
   { return *ptr; }
-  inline ptr_t*
+
+  /*!
+   * \brief List member dereference operator
+   */
+  inline impl_t*
   operator->() const
   { return ptr; }
 
-  template<class S>
-  inline void
-  print(S &ios) {
-    ios << "heap::list[ ";
-    foreach(const O &e, *ptr) {
-      ios << e << " ; ";
-    }
-    ios << " ] ";
-    return ios;
-  }
-
+public:
+  /*!
+   * \brief Comparison function
+   *
+   * Only compares the lists' front() elements.
+   *
+   * \param a,b : list objects
+   * \return : comparison integer
+   *    between a.front() and b.front()
+   */
   static inline int
   compare(const list &a, const list &b) {
     return algebra::compare(a->front(), b->front());
+  }
+
+  /*!
+   * \brief Element equality function
+   *
+   * \param a : a list
+   * \param x : a value
+   *
+   * \return : true if a.front() == x
+   */
+  friend inline bool
+  operator==(const list &a, const O &x) {
+    return a->front() == x;
   }
 };
 
 } // namespace detail
 
-// chained heap structure
-// elements comparing equal are packed in lists
-//
-// speeds up :
-// -> find_maxs   from (n) to (1)
-// -> delete_maxs from (n * lg n) to (lg n)
-//
-// drawbacks :
-// -> insert from (lg n) to (n)
-//
-// memory management :
-// -> all heap allocated lists in impl,
-//      no null pointer nor empty list
-// -> new in insert
-// -> delete in delete_* and dtor
+/*!
+ * \class chain
+ *
+ * \brief chained heap class :
+ *     elements comparing equal are packed in lists
+ *
+ * features :
+ * -> constant time    find_maxs()
+ * -> logarithmic time delete_maxs()
+ *
+ * drawbacks :
+ * -> linear time      insert()
+ *    (heap<O>::insert() is logarithmic time)
+ *
+ * memory management :
+ * -> all sub-lists are new-allocated,
+ *      no null pointer nor empty list
+ * -> allocation in insert()
+ * -> deallocation in delete_*() and dtor
+ */
 template<class O>
-struct chain
+class chain
 : protected heap<detail::list<O> > {
-  typedef O e;
-  typedef detail::list<e> le;
+
+private:
+  typedef detail::list<O> le;
+  typedef heap<le> impl;
 
   // the underlying heap contains
   //  k [list<O>] objects
   // for a total of n [O] objects
 
-private:
-  typedef heap<le> impl;
+public:
+  /*!
+   * \brief List type returned by find_maxs()
+   */
+  typedef typename le::impl_t list_t;
 
 public:
+  /*!
+   * \brief Default constructor
+   *
+   * Creates an empty chained heap
+   */
   inline
   chain()
   : impl() {}
+
+public:
+  /*!
+   * \brief Copy constructor
+   */
   inline
   chain(const chain &o)
   : impl(o) {}
+  /*!
+   * \brief Assignment operator
+   */
   inline chain &
   operator=(const chain &o) {
     impl::operator=(o);
     return *this;
   }
-
-  // construct empty heap and reserve size
-  explicit inline
-  chain(size_t n)
-  : impl(n) {}
-
-  inline
-  ~chain() {
-    // properly free all allocated lists
-    foreach(le l, impl::data)
-      delete l.get();
-    impl::data.clear();
-  }
-
+  /*!
+   * \brief Non-throwing swap
+   */
   inline void
   swap(chain &o)
   { impl::swap(o); }
 
+  /*!
+   * \brief Sized constructor
+   *
+   * Construct empty heap and reserves size
+   *
+   * \param n : the reserved size
+   */
+  explicit inline
+  chain(size_t n)
+  : impl(n) {}
+
+  /*!
+   * \brief Destructor
+   *
+   * Properly deletes all the allocated lists.
+   */
+  inline
+  ~chain() {
+    boost::for_each(impl::data
+    , std::mem_fun_ref(&le::destroy)
+    );
+    impl::data.clear();
+  }
+
 public:
-  /// C = 1
+  /*!
+   * \brief Emptiness test
+   *
+   * constant time
+   */
   using impl::empty;
 
-  /// C = 1
-  inline e &
+  /*!
+   * \brief Maximum element access
+   *
+   * constant time
+   */
+  inline O &
   find_max()
   { return impl::find_max()->front(); }
-  inline const e &
+  /*!
+   * \brief Maximum element access, const version
+   *
+   * constant time.
+   */
+  inline const O &
   find_max() const
   { return impl::find_max()->front(); }
 
-  /// C = 1
-  inline const std::list<e> &
+  /*!
+   * \brief Maximum elements list access
+   *
+   * constant time
+   */
+  inline list_t &
+  find_maxs()
+  { return *impl::find_max(); }
+  inline const list_t &
   find_maxs() const
   { return *impl::find_max(); }
 
 public:
-  /// C = k
+  /*!
+   * \brief Insertion
+   *
+   * \param x : the element to be inserted
+   *
+   * If there already exists a list
+   * whose elements are equivalent to x,
+   * x is added at the back of this list.
+   * linear time.
+   */
   inline void
-  insert(const e &x) {
+  insert(const O &x) {
     // seek for existing list
-    foreach(le &l, impl::data) {
-      if(x == l->front()) {
-        // got one
-        l->push_front(x);
-        return;
-      }
+    typedef typename impl::vect_t::iterator iter;
+    iter it = std::find(impl::data.begin(), impl::data.end(), x);
+    if(it != impl::data.end()) {
+      (*it)->push_back(x);
+      return;
     }
 
     // no existing list -> insert new le(x)
     impl::insert(le(1, x));
   }
 
-  /// C = lg k
+  /*!
+   * \brief Maximum deletion
+   *
+   * Deletes the maximum element from the heap.
+   * amortized constant time (logarithmic worst case).
+   */
   inline void
   delete_max() {
     assert(! empty());
@@ -296,16 +449,21 @@ public:
     lmax->pop_front();
 
     if(lmax->empty()) {
-      delete lmax.get();
+      lmax.destroy();
       impl::delete_max();
     }
   }
 
-  /// C = lg k
+  /*!
+   * \brief Maximum list deletion
+   *
+   * Deletes the maximum list from the heap.
+   * logarithmic time.
+   */
   inline void
   delete_maxs() {
     assert(! empty());
-    delete impl::find_max().get();
+    impl::find_max().destroy();
     impl::delete_max();
   }
 };

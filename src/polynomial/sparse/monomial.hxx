@@ -60,8 +60,8 @@ public:
   { return monomial(algebra::one<K>(), e); }
 
 public: /// ring objects
-  static monomial zero;
-  static monomial one;
+  static const monomial zero;
+  static const monomial one;
 
   inline bool
   null() const
@@ -145,10 +145,10 @@ public: /// comparison
 };
 
 template<class K>
-monomial<K> monomial<K>::zero;
+const monomial<K> monomial<K>::zero;
 
 template<class K>
-monomial<K> monomial<K>::one (
+const monomial<K> monomial<K>::one (
   algebra::one<K>(),
   algebra::zero<monomial<K>::Z>()
 );

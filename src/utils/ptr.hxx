@@ -21,11 +21,29 @@ class ptr
   T* p;
 
 public:
+  inline
   ptr()
   : p(0) {}
+  inline
   ptr(T* p)
   : p(p) {}
+
+  inline
+  ptr(const ptr &o)
+  : p(o.p) {}
+  inline ptr &
+  operator=(const ptr &o) {
+    p=o.p;
+    return *this;
+  }
+
+  inline
   ~ptr() {}
+
+  inline void
+  swap(ptr &o) {
+    std::swap(p, o.p);
+  }
 
 public:
   inline T*

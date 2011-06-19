@@ -31,6 +31,15 @@ using std::negate;
     { return a op b; }                          \
   }
 
+#define OP_REV(name, op)                        \
+  template<class T, class U=T, class R=T>       \
+  struct name                                   \
+  : std::binary_function<U, T, R> {             \
+    inline R                                    \
+    operator()(const U &b, const T &a) const    \
+    { return a op b; }                          \
+  }
+
 #define OP_L(name, op)                          \
   template<class T, class U=T, class R=T>       \
   struct name                                   \
@@ -94,6 +103,7 @@ using std::negate;
 
 #define OP_ALL(name, op)        \
   OP(name, op);                 \
+  OP_REV(name##_rev, op);       \
   OP_L(name##_left, op);        \
   OP_R(name##_right,op);        \
   OP_EQ(name##_eq, op##=);      \
