@@ -8,29 +8,43 @@
 #ifndef DENSE_SERIES_HXX_
 #define DENSE_SERIES_HXX_
 
-#include "imperative/stream.hxx"
-#include "polynomial/sparse/monomial.hxx"
+#include "stream.hxx"
 
-#include "series/sparse/map.hxx"
-#include "series/sparse/add.hxx"
-#include "series/sparse/multiply.hxx"
+#include "polynomial/dense/poly.hxx"
+
+#include "series/dense/add.hxx"
 
 namespace series {
-namespace sparse {
+namespace dense {
 
-using poly::sparse::monomial;
-using namespace imperative::stream;
+template<class> class series;
+
+using namespace streams;
+
+namespace multiply {
+template<class K, class Mem>
+inline stream_ptr<K, Mem>
+do_mul(const series<K> &, const series<K> &);
+}
 
 template<class K>
-struct series {
-  typedef algebra::integer Z;
+class series {
+  typedef stream_ptr<K, std::deque<K> > impl_t;
 
-  typedef stream<K> impl_t;
+public:
+  typedef algebra::integer z;
+  typedef K k;
+
+  typedef std::deque<K> list_t;
 
   typedef typename impl_t::iterator iterator;
   typedef typename impl_t::const_iterator const_iterator;
 
-  mutable boost::intrusive_ptr<impl_t> impl;
+private:
+  mutable impl_t impl;
+
+  series(stream_base<K, list_t>* s)
+  : impl(s) {}
 
 public:
   inline
@@ -44,26 +58,55 @@ public:
     return *this;
   }
 
-  /* TODO simple constructors
   inline
-  series(const k &c, const z &e)
-  : impl(1,M(c,e)) {}
+  series(const k &c, const z &e) {
+    std::vector<K> array(e);
+    array.back() = c;
+    impl=impl_t::from_range(array);
+  }
   explicit inline
-  series(const k &c)
-  : impl(1,M(c)) {}
-  */
+  series(const k &c) {
+    K array[1] = { c };
+    impl=impl_t::from_range(array);
+  }
 
   inline
   ~series() {}
 
 private:
-  inline
+  inline explicit
   series(iterator_base<K> *it)
-  : impl(new impl_t(it)) {}
+  : impl(it) {}
+
+  inline explicit
+  series(const impl_t &s)
+  : impl(s) {}
+
+  static inline series
+  from_iter_base(iterator_base<K>* it) {
+    return series(impl_t(it));
+  }
 
 public:
-  static series zero;
-  static series one;
+  static inline series
+  from_poly(const ::poly::dense::poly<K> &p) {
+    return series(impl_t::from_range(p));
+  }
+
+public:
+  template<class S>
+  inline void
+  print_n(int n, S &ios) {
+    typename impl_t::iterator it = impl.begin();
+    ios << "series<" << typeid(K).name() << ">[ ";
+    for(int i = 1; i <= n && it; ++i, ++it)
+      ios << *it << " ; ";
+    ios << " ] ";
+  }
+
+public:
+  static const series zero;
+  static const series one;
 
   inline bool
   null() const {
@@ -75,91 +118,80 @@ public:
     return false;
   }
 
-private:
-  inline iterator_base<M>*
-  iter() const
-  { return impl ? impl->iter() : 0; }
-
 public:
   inline iterator
+  begin()
+  { return impl.begin(); }
+  inline const_iterator
   begin() const
-  { return impl ? impl->begin() : iterator(); }
+  { return impl.begin(); }
+
+  const std::deque<K> &
+  values() const
+  { return impl.values(); }
 
 public:
   friend inline series
   operator+(const series &a, const series &b) {
-    return detail::combine(
-        a.iter(), b.iter(),
-        functor::identity<M>(), functor::identity<M>(),
-        functor::plus<M>()
-    );
+    return from_iter_base(detail::combine(
+        a.begin(), b.begin(),
+        functor::identity<K>(), functor::identity<K>(),
+        functor::plus<K>()
+    ));
   }
   friend inline series
   operator-(const series &a, const series &b) {
-    return detail::combine(
-        a.iter(), b.iter(),
-        functor::identity<M>(), functor::negate<M>(),
-        functor::minus<M>()
-    );
+    return from_iter_base(detail::combine(
+        a.begin(), b.begin(),
+        functor::identity<K>(), functor::negate<K>(),
+        functor::minus<K>()
+    ));
   }
 
   inline series
   operator-() const {
-    return detail::map(this->iter(), functor::negate<M>());
+    return from_iter_base(streams::map_iter(
+        begin(),
+        functor::negate<K>()
+    ));
   }
 
   friend inline series
-  operator*(const series &a, const M &o) {
+  operator*(const series &a, const K &o) {
     if(algebra::null(o))
       return zero;
-    return detail::map(
-        a.iter(),
-        functor::multiplies_right<M>(o)
-    );
+    return from_iter_base(streams::map_iter(
+        a.begin(),
+        functor::multiplies_right<K>(o)
+    ));
   }
   friend inline series
-  operator/(const series &a, const M &o) {
+  operator/(const series &a, const K &o) {
     assert(! algebra::null(o));
-    return detail::map(
-        a.iter(),
-        functor::divides_right<M>(o)
-    );
-  }
-  friend inline series
-  operator*(const series &a, const k &o) {
-    if(algebra::null(o))
-      return zero;
-    return detail::map(
-        a.iter(),
-        functor::multiplies_right<M,k>(o)
-    );
-  }
-  friend inline series
-  operator/(const series &a, const k &o) {
-    assert(! algebra::null(o));
-    return detail::map(
-        a.iter(),
-        functor::divides_right<M,k>(o)
-    );
+    return from_iter_base(streams::map_iter(
+        a.begin(),
+        functor::divides_right<K>(o)
+    ));
   }
 
   friend inline series
   operator*(const series &a, const series &b) {
-    return detail::mul(a.iter(), b.iter());
+    return series(multiply::do_mul<K, list_t>(a,b));
   }
 };
 
 template<class K>
-series<K> series<K>::zero;
+const series<K> series<K>::zero;
 
 template<class K>
-series<K> series<K>::one(
+const series<K> series<K>::one(
   algebra::one<K>(),
   algebra::one<series<K>::Z>()
 );
 
 
-}} // series::sparse
+}} // series::dense
 
+#include "series/dense/multiply.hxx"
 
 #endif /* DENSE_SERIES_HXX_ */

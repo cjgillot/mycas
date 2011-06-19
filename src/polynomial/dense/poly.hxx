@@ -197,10 +197,7 @@ protected:
       return;
     }
     r.resize(a.size() + b.size() - 1, algebra::zero<K>());
-    typedef multiply::mult<K
-    , impl_t, impl_t
-    , typename impl_t::iterator> mul_t;
-    mul_t::do_mul(a,b,r.begin());
+    multiply::mul(a,b,r.begin());
   }
 
 public:
@@ -220,8 +217,7 @@ public: /// construction
     poly ret;
     int sz = boost::size(r);
     ret.impl.reserve(sz);
-    foreach(k c, r)
-      ret.impl.push_back(c);
+    boost::copy(r, std::back_inserter(ret.impl));
     return ret;
   }
 
@@ -229,10 +225,7 @@ public: /// printing
   template<class S>
   inline void
   print(S &ios) const {
-    ios << " [ ";
-    foreach(K m, *this)
-      ios << m << " ; ";
-    ios << " ] ";
+    algebra::print_range(impl, ios);
   }
 
 public:

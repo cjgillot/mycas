@@ -10,6 +10,7 @@
 
 #include<iostream>
 #include<algorithm>
+#include<numeric>
 #include<cassert>
 #include<vector>
 #include<deque>
@@ -30,6 +31,10 @@
 #include<boost/operators.hpp>
 
 #include<boost/optional.hpp>
+
+#include<boost/type_traits.hpp>
+
+#include<boost/bind.hpp>
 
 /*
 #include<boost/lambda/bind.hpp>

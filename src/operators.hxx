@@ -58,18 +58,5 @@ inline std::basic_ostream<Char, Traits> &
 operator<<(std::basic_ostream<Char, Traits> &ios, T* a) {
   return ios << *a;
 }
-/*
-template<class T, class Char, class Traits>
-inline std::basic_ostream<Char, Traits> &
-operator<<(
-    std::basic_ostream<Char, Traits> &ios,
-    const std::list<T> &l
-) {
-  ios << "std::list[ ";
-  foreach(const T &e, l)
-    ios << e << " ; ";
-  ios << " ] ";
-  return ios;
-}
-*/
+
 #endif /* OPERATORS_HXX_ */

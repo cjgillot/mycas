@@ -18,15 +18,15 @@ namespace detail {
 
 template<class,class> class map_iterator;
 
-template<class Self, class It, class F>
+template<class It, class F>
 struct map_iterator_type {
   typedef typename boost::iterator_value<It>::type iter_ref;
 
   typedef typename boost::result_of<F(iter_ref)>::type reference;
 
-  typedef boost::iterator_facade<
+  typedef typename boost::iterator_facade<
     map_iterator<It,F>
-  , boost::remove_reference<reference>::type
+  , typename boost::remove_reference<reference>::type
   , boost::incrementable_traversal_tag
   , reference
   > type;
@@ -34,9 +34,9 @@ struct map_iterator_type {
 
 template<class It, class F>
 class map_iterator
-: public map_iterator_type<F, It>::type
+: public map_iterator_type<It, F>::type
 {
-  typedef typename map_iterator_type<F, It>::type super_t;
+  typedef typename map_iterator_type<It, F>::type super_t;
   typedef typename super_t::reference reference;
 
   It iter;

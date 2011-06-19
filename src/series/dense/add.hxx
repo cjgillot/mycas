@@ -26,51 +26,6 @@ struct combine_iterator_base {
   typedef iterator_base<Res_t> type;
 };
 
-template<class Arg1, class Arg2>
-struct saving {
-  Arg1 l;
-  Arg2 r;
-
-public:
-  inline
-  saving(const saving &o)
-  : l(o.l), r(o.r) {}
-  inline saving &
-  operator=(const saving &o) {
-    l=o.l; r=o.r;
-    return *this;
-  }
-
-public:
-  template<class A1, class A2>
-  inline
-  saving(const saving<A1,A2> &o)
-  : l(o.l), r(o.r) {}
-  template<class A1, class A2>
-  inline saving &
-  operator=(const saving<A1,A2> &o) {
-    l=o.l; r=o.r;
-    return *this;
-  }
-
-public:
-  inline
-  saving(const Arg1 &l, const Arg2 &r)
-  : l(l), r(r) {}
-
-  inline
-  ~saving() {}
-
-  inline void
-  swap(saving &o) {
-    std::swap(l,o.l);
-    std::swap(r,o.r);
-  }
-
-private:
-  saving();
-};
-
 // due to flow requirements,
 // null coefficients are allowed
 template<class It1, class It2, class FL, class FR, class F2>
@@ -89,8 +44,6 @@ class combine_iterator
   It1 left;
   It2 right;
 
-  mutable boost::optional<saving<Arg1, Arg2> > saved;
-
 private:
   combine_iterator();
 
@@ -98,13 +51,11 @@ public:
   inline
   combine_iterator(const combine_iterator &o)
   : fl(o.fl), fr(o.fr), f2(o.f2)
-  , left(o.left), right(o.right)
-  , saved(o.saved) {}
+  , left(o.left), right(o.right) {}
   inline combine_iterator&
   operator=(const combine_iterator &o) {
     fl=o.fl; fr=o.fr; f2=o.f2;
     left=o.left; right=o.right;
-    saved=o.saved;
     return *this;
   }
 
@@ -114,7 +65,6 @@ public:
     std::swap(f2,o.f2);
     std::swap(left,o.left);
     std::swap(right,o.right);
-    std::swap(saved,o.saved);
   }
 
   inline
@@ -128,21 +78,6 @@ public:
   inline
   ~combine_iterator() {}
 
-private:
-  inline void
-  save() const {
-    if(saved) return;
-    Arg1 l = *left;
-    Arg2 r = *right;
-    saved=boost::make_optional(
-      saving<Arg1&,Arg2&>(l,r)
-    );
-  }
-  inline void
-  unsave() const {
-    saved=boost::none;
-  }
-
 public:
   inline iterator_base<Res_t>*
   clone() const
@@ -151,10 +86,7 @@ public:
   inline iterator_base<Res_t>*
   incr() {
     assert(left && right);
-
-    save();
     ++left; ++right;
-    unsave();
 
     if(!left ) return streams::map_iter(right, fr);
     if(!right) return streams::map_iter(left , fl);
@@ -164,9 +96,7 @@ public:
   inline Res_t
   deref() const {
     assert(left && right);
-
-    save();
-    return f2(saved->l,saved->r);
+    return f2(*left, *right);
   }
 };
 

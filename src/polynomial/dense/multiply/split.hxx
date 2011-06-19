@@ -15,10 +15,18 @@ namespace poly {
 namespace dense {
 namespace multiply {
 
-// splitting functions
-// return a (N+1)-tuple of iterators
-// last one is the end iterator
-namespace detail {
+/*!
+ * \namespace poly::dense::multiply::split
+ *
+ * Splitting functions
+ * These return a (N+1)-tuple of iterators,
+ * last one being the end iterator.
+ */
+namespace split {
+
+/*!
+ * \brief split helper function
+ */
 template<unsigned N, class It>
 struct split_help {
   static inline
@@ -29,6 +37,10 @@ struct split_help {
     );
   }
 };
+
+/*!
+ * \brief split helper function
+ */
 template<class It>
 struct split_help<0,It> {
   static inline
@@ -37,22 +49,31 @@ struct split_help<0,It> {
     return tuple::cons(e);
   }
 };
-} // namespace detail
 
+/*!
+ * \fn tuple<N, It> split (Range &r, int step)
+ *
+ * \brief Splitting function
+ *
+ * \param r : the range to be split
+ * \param step : the splitting step
+ *
+ * \return a (N+1)-tuple of iterators,
+ *      last one being the end iterator.
+ */
 template<unsigned N, class Range>
 typename tuple::tuple_t<N+1,
   typename boost::range_iterator<Range>::type
 >::type
 split(Range &r, int step) {
   typedef typename boost::range_iterator<Range>::type It;
-  return detail::split_help<N, It>::do_it(
+  return split_help<N, It>::do_it(
     boost::begin(r)
   , boost::end(r)
   , step
   );
 }
 
-
-}}} // namespace poly::dense::multiply::detail
+}}}} // namespace poly::dense::multiply::split
 
 #endif /* POLY_DENSE_MULTIPLY_SPLIT_HXX_ */

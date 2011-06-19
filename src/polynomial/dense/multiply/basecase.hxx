@@ -15,9 +15,27 @@ namespace poly {
 namespace dense {
 namespace multiply {
 
-// simple multiplication by a scalar
+/*!
+ * \struct scalar
+ *
+ * \brief scalar multiplication
+ *
+ * Given \f$ A \in K[X]\f$, \f$ k \in K\f$,
+ * \f$ Left = k A\f$ and \f$ Right = A k \f$
+ * Then \f$ Left[i] = k A[i]\f$ and \f$ Right[i] = A[i] k\f$
+ *
+ */
 template<class K, class R1, class I3>
 struct scalar {
+  /*!
+   * \brief Right scalar multiplication
+   *
+   * [ret] becomes [ret + p * k]
+   *
+   * \param p : a range
+   * \param k : a non-null scalar
+   * \param ret : an iterator
+   */
   static inline void
   right(const R1 &p, const K &k, I3 ret) {
     assert(! algebra::null(k));
@@ -29,6 +47,16 @@ struct scalar {
     for(; it != end; ++it, ++ret)
       *ret += *it * k;
   }
+
+  /*!
+   * \brief Left scalar multiplication
+   *
+   * [ret] becomes [ret + k * p]
+   *
+   * \param k : a non-null scalar
+   * \param p : a range
+   * \param ret : an iterator
+   */
   static inline void
   left(const K &k, const R1 &p, I3 ret) {
     assert(! algebra::null(k));
@@ -42,9 +70,22 @@ struct scalar {
   }
 };
 
-// apply simple convolution rule
+/*!
+ * \struct naive
+ *
+ * \brief Simple multiplication based on the convolution rule.
+ *
+ * Given \f$(A, B) \in K[X]^2\f$, \f$ C = A B \f$
+ * Then \f$ C[k] = \sum_{i+j=k} A[i] B[j] \f$
+ */
 template<class K, class R1, class R2, class I3>
 struct naive {
+  /*!
+   * \brief algorithm function
+   *
+   * \param a,b : ranges
+   * \param ret : an iterator
+   */
   static inline void
   convolution(const R1 &a, const R2 &b, I3 ret) {
     typename boost::range_iterator<const R1>::type
@@ -61,6 +102,12 @@ struct naive {
       *ir += *i1 * *i2;
   }
 
+  /*!
+   * \brief main function
+   *
+   * \param a,b : ranges
+   * \param ret : an iterator
+   */
   static inline void
   do_mul(const R1 &a, const R2 &b, I3 &ret) {
     {
