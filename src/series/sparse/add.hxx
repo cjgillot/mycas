@@ -21,7 +21,9 @@ template<class It1, class It2, class FL, class FR, class F2>
 struct combine_iterator_base {
   typedef typename boost::iterator_value<It1>::type Arg1;
   typedef typename boost::iterator_value<It2>::type Arg2;
-  typedef typename boost::result_of<F2(Arg1, Arg2)>::type Res_t;
+  typedef typename boost::iterator_reference<It1>::type Arg1r;
+  typedef typename boost::iterator_reference<It2>::type Arg2r;
+  typedef typename boost::result_of<F2(Arg1r, Arg2r)>::type Res_t;
 
   typedef iterator_base<Res_t> type;
 };
@@ -38,18 +40,6 @@ public:
   : l(o.l), r(o.r), cmp(o.cmp) {}
   inline saving &
   operator=(const saving &o) {
-    l=o.l; r=o.r; cmp=o.cmp;
-    return *this;
-  }
-
-public:
-  template<class A1, class A2>
-  inline
-  saving(const saving<A1,A2> &o)
-  : l(o.l), r(o.r), cmp(o.cmp) {}
-  template<class A1, class A2>
-  inline saving &
-  operator=(const saving<A1,A2> &o) {
     l=o.l; r=o.r; cmp=o.cmp;
     return *this;
   }
@@ -91,7 +81,8 @@ class combine_iterator
   It1 left;
   It2 right;
 
-  mutable boost::optional<saving<Arg1, Arg2> > saved;
+  typedef saving<Arg1, Arg2> save_t;
+  mutable boost::optional<save_t> saved;
 
 private:
   combine_iterator();
@@ -136,9 +127,8 @@ private:
     if(saved) return;
     Arg1 l = *left;
     Arg2 r = *right;
-    saved=boost::make_optional(
-      saving<Arg1&,Arg2&>(l,r,algebra::compare(l,r))
-    );
+    int cmp = algebra::compare(l,r);
+    saved=save_t(l,r,cmp);
   }
   inline void
   unsave() const {

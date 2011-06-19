@@ -55,14 +55,16 @@ public:
     return *this;
   }
 
-  /* TODO simple constructors
   inline
-  series(const k &c, const z &e)
-  : impl(1,M(c,e)) {}
+  series(const k &c, const z &e) {
+    M array[1] = { M(c,e) };
+    impl=impl_t::from_range(array);
+  }
   explicit inline
-  series(const k &c)
-  : impl(1,M(c)) {}
-  */
+  series(const k &c) {
+    M array[1] = { M(c) };
+    impl=impl_t::from_range(array);
+  }
 
   inline
   ~series() {}
@@ -137,7 +139,10 @@ public:
 
   inline series
   operator-() const {
-    return detail::map(this->iter(), functor::negate<M>());
+    return from_iter_base(streams::map_iter(
+        begin(),
+        functor::negate<M>()
+    ));
   }
 
   friend inline series
