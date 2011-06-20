@@ -77,6 +77,14 @@ public:
     if(--it->refcount == 0)
       delete it;
   }
+  /*!
+   * \brief Simple function testing if referenced pointer is unique
+   *    (ie. if {refcount == 1}).
+   */
+  friend bool
+  unique(const refcounted* it) {
+    return it->refcount == 1;
+  }
 };
 
 inline
