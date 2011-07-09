@@ -11,9 +11,12 @@
 namespace analysis {
 
 class basic;
+
 class add;
 class mul;
-class number;
+class power;
+
+class numeric;
 
 }
 

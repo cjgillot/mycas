@@ -13,11 +13,17 @@
 #include<numeric>
 #include<cassert>
 #include<vector>
+#include<string>
 #include<deque>
 #include<list>
 
+#include<ext/slist>
+
+namespace std_ext = __gnu_cxx;
+
 #include<boost/foreach.hpp>
 #define foreach BOOST_FOREACH
+#define reverse_foreach BOOST_REVERSE_FOREACH
 
 #include<boost/range.hpp>
 #include<boost/range/adaptors.hpp>

@@ -15,4 +15,15 @@
 #include "utils/ptr.hxx"
 #include "utils/move.hxx"
 
+namespace util {
+
+inline unsigned
+pad_boolp(bool a, bool b) {
+  a &= 1;  b &= 1; // this may not be needed
+  a <<= 1; a |= b;
+  return (a << 1 | b);
+}
+
+}
+
 #endif /* UTILS_HXX_ */

@@ -89,7 +89,7 @@ struct printable
  * \struct testable
  * \brief Safe bool operator facility
  *
- * Provided a mamber {valid()} function,
+ * Provided a member {valid()} function,
  * this class creates the safe bool operator
  * and the unary not (!) operator.
  */
@@ -106,7 +106,8 @@ public:
   inline
   operator bool_t() const {
     return safe_bool::to_unspecified_bool(
-        !!*this, &T::valid
+      static_cast<const T*>(this)->valid()
+    , &T::valid
     );
   }
   //! \brief Negation operator

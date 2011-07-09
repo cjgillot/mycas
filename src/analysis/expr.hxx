@@ -9,62 +9,93 @@
 #define EXPR_HXX_
 
 #include "stdlib.hxx"
+#include "utils/refcounted.hxx"
+#include "operators.hxx"
+
 #include "analysis/basic.hxx"
 
-#include "operators.hxx"
+#include "analysis/ptr.hxx"
 
 namespace analysis {
 
 // uses Copy On Write idiom
-class expr {
-  boost::intrusive_ptr<basic> impl;
+class expr
+: private ptr<basic>
+, public boost::field_operators1<expr
+, operators::printable<expr
+, operators::ordered<expr
+> > > {
+
+  typedef ptr<basic> super;
 
 public:
-  inline
-  expr()
-  : impl(0) {}
+  expr();
+  expr(const expr &);
+  expr& operator=(const expr &);
 
-  inline
-  expr(const expr &o)
-  : impl(o.impl) {}
+  void swap(expr&);
 
-  inline expr&
-  operator=(const expr &o) {
-    impl=o.impl;
-    return *this;
-  }
+  ~expr();
 
-  inline void
-  swap(expr &o) {
-    std::swap(impl, o.impl);
-  }
-
-  inline
-  ~expr()
-  {}
+  explicit
+  expr(const basic*);
 
 private:
-  inline
-  expr(basic* p)
-  : impl(p) {}
-
   // copy before write function
-  inline void
-  cow() {
-    if(!util::unique(impl.get()))
-      impl=impl->clone();
-  }
+  template<class T>
+  T* cow();
 
 public:
-  friend inline expr
-  operator+(const expr &a, const expr &b) {
-    return a.impl->add(b);
-  }
-  inline expr&
-  operator+=(const expr &o) {
-    cow(); a.impl->iadd(o);
-    return *this;
-  }
+  using super::null;
+  using super::unit;
+  using super::print;
+  using super::get;
+
+  static const unsigned default_eval_depth;
+  void eval(unsigned = default_eval_depth) const;
+
+  bool is_numeric() const
+  { return super::get() && super::get()->is_numeric(); }
+
+  template<class T>
+  bool is_a() const
+  { return dynamic_cast<const T*>(super::get()); }
+
+  template<class T>
+  bool is_exactly_a() const
+  { return typeid(*super::get()) == typeid(const T); }
+
+  template<class T>
+  const T* as_a() const
+  { return static_cast<const T*>(super::get()); }
+
+public:
+  friend expr operator+(const expr &a)
+  { return a; }
+  friend expr operator-(const expr &a)
+  { return expr(a).ineg(); }
+
+  expr &ineg();
+
+  expr &operator+=(const expr &);
+  expr &operator-=(const expr &);
+
+  expr &operator*=(const expr &);
+  expr &operator/=(const expr &);
+
+  expr &iinv();
+
+  expr &ipow(const expr &);
+  expr   pow(const expr &) const;
+
+protected:
+  virtual int
+  do_compare(const basic &b) const;
+
+public:
+  static int
+  compare(const expr &a, const expr &b)
+  { return super::compare(a,b); }
 };
 
 }
