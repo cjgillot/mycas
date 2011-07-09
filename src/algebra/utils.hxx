@@ -38,6 +38,11 @@ inline S &
 ineg(S &o)
 { return o.ineg(); }
 
+template<class S>
+inline S &
+iinv(S &o)
+{ return o.iinv(); }
+
 } // namespace algebra
 
 #endif /* ALGEBRA_UTILS_HXX_ */

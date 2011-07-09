@@ -30,91 +30,68 @@ class ptr
   T* p;
 
 public:
-  /*!
-   * \brief Default constructor
-   */
+  //! \brief Default constructor
   inline
   ptr()
   : p(0) {}
-  /*!
-   * \brief Pointer (cast)-constructor
-   */
+  //! \brief Pointer (cast)-constructor
   inline
-  ptr(T* p)
-  : p(p) {}
+  ptr(T* p_)
+  : p(p_) {}
 
 public:
-  /*!
-   * \brief Copy constructor
-   */
+  //! \brief Copy constructor
   inline
   ptr(const ptr &o)
   : p(o.p) {}
-  /*!
-   * \brief Assignment operator
-   */
+  //! \brief Assignment operator
   inline ptr &
   operator=(const ptr &o) {
     p=o.p;
     return *this;
   }
-  /*!
-   * \brief Non-throwing swap
-   */
+  //! \brief Non-throwing swap
   inline void
   swap(ptr &o) {
     std::swap(p, o.p);
   }
 
 public:
-  /*!
-   * \brief Destructor
-   */
+  //! \brief Destructor
   inline
   ~ptr() {}
 
 public:
-  /*!
-   * \brief Accessing the underlying pointer
-   */
+  //! \brief Accessing the underlying pointer
   inline T*
   get() const
   { return p; }
-  /*!
-   * \brief Dereference operator
-   */
+  //! \brief Dereference operator
   inline T&
   operator*() const
   { return *p; }
-  /*!
-   * \brief Member dereference operator
-   */
+  //! \brief Member dereference operator
   inline T*
   operator->() const
   { return p; }
 
 public:
-  /*!
-   * \brief Pointer deletion member function
-   */
+  //! \brief Pointer deletion member function
   inline void
   del() {
+    // checked delete
     BOOST_STATIC_ASSERT(sizeof(T) > 0);
     delete p;
   }
 
 public:
-  /*!
-   * \brief Printing function forwarding
-   */
+  //! \brief Printing function forwarding
   template<class S>
   inline void
   print(S &ios) const {
     ios << *p;
   }
-  /*!
-   * \brief Comparison function forwarding
-   */
+  //! \brief Comparison function forwarding
   static inline int
   compare(const ptr &a, const ptr &b) {
     return algebra::compare(*a.p, *b.p);

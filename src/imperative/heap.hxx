@@ -170,10 +170,8 @@ class list
 : operators::ordered<list<O> > {
 
 public:
-  /*!
-   * \brief Pointed list type
-   */
-  typedef std::deque<O> impl_t;
+  //! \brief Pointed list type
+  typedef std_ext::slist<O> impl_t;
 
 private:
   impl_t* ptr;
@@ -444,7 +442,7 @@ public:
     typedef typename impl::vect_t::iterator iter;
     iter it = std::find(impl::data.begin(), impl::data.end(), x);
     if(it != impl::data.end()) {
-      (*it)->push_back(x);
+      (*it)->push_front(x);
       return;
     }
 

@@ -16,7 +16,7 @@ using operators::compare;
 
 template<class Range1, class Range2, class Cmp>
 inline int
-range_compare(const Range1 &a, const Range2 &b, const Cmp &f) {
+range_compare(const Range1 &a, const Range2 &b, Cmp f) {
   typename boost::range_iterator<const Range1>::type
     i1 = boost::begin(a),
     e1 = boost::end  (a);

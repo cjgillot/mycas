@@ -91,7 +91,7 @@ public:
    * \brief Exponent constructor
    */
   static inline monomial
-  var(const z &e)
+  var(const Z &e)
   { return monomial(algebra::one<K>(), e); }
 
 public:
@@ -124,7 +124,7 @@ public:
   /*!
    * \brief Exponent (degree) accessor
    */
-  inline const z &
+  inline const Z &
   deg() const
   { return expo; }
 
@@ -195,7 +195,7 @@ public:
    * constant time
    */
   inline monomial &
-  operator*=(const k &o) {
+  operator*=(const K &o) {
     coef *= o;
     return *this;
   }
@@ -205,7 +205,7 @@ public:
    * constant time
    */
   inline monomial &
-  operator/=(const k &o) {
+  operator/=(const K &o) {
     coef /= o;
     return *this;
   }
@@ -257,11 +257,13 @@ public:
   }
 };
 
+/*
 template<class K>
 const monomial<K> monomial<K>::zero;
 
 template<class K>
 const monomial<K> monomial<K>::one (algebra::one<K>());
+*/
 
 }} // poly::sparse
 

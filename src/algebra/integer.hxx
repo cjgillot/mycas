@@ -41,35 +41,6 @@ inline integer &
 ineg<integer>(integer &a)
 { return (a = -a); }
 
-// double
-typedef double real;
-
-template<>
-inline real
-zero<real>()
-{ return 0.; }
-template<>
-inline real
-one<real>()
-{ return 0.; }
-
-template<>
-inline bool
-null<real>(const real &o)
-{ return o == 0.; }
-template<>
-inline bool
-unit<real>(const real &o)
-{ return o == 1.; }
-
-inline int
-compare(real a, real b)
-{ return a-b; }
-template<>
-inline real &
-ineg<real>(real &a)
-{ return (a = -a); }
-
 }
 
 #endif /* INTEGER_HXX_ */

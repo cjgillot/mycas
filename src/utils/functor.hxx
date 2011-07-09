@@ -65,8 +65,8 @@ using std::negate;
   : std::unary_function<U, R> {                 \
     T a;                                        \
     inline                                      \
-    name(const T &a)                            \
-    : a(a) {}                                   \
+    name(const T &a_)                           \
+    : a(a_) {}                                  \
     inline R                                    \
     operator()(const U &b) const                \
     { return a op b; }                          \
@@ -78,8 +78,8 @@ using std::negate;
   : std::unary_function<T, R> {                 \
     U b;                                        \
     inline                                      \
-    name(const U &b)                            \
-    : b(b) {}                                   \
+    name(const U &b_)                           \
+    : b(b_) {}                                  \
     inline R                                    \
     operator()(const T &a) const                \
     { return a op b; }                          \
@@ -100,8 +100,8 @@ using std::negate;
   : std::unary_function<T &, T &> {             \
     U b;                                        \
     inline                                      \
-    name(const U &b)                            \
-    : b(b) {}                                   \
+    name(const U &b_)                           \
+    : b(b_) {}                                  \
     inline T &                                  \
     operator()(T &a) const                      \
     { return a op b; }                          \
@@ -113,8 +113,8 @@ using std::negate;
   : std::unary_function<U &, T &> {             \
     T &a;                                       \
     inline                                      \
-    name(T &a)                                  \
-    : a(a) {}                                   \
+    name(T &a_)                                 \
+    : a(a_) {}                                  \
     inline T &                                  \
     operator()(const U &b)                      \
     { return a op b; }                          \
