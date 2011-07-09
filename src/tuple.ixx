@@ -37,7 +37,7 @@ tuple(BOOST_PP_ENUM_##z(N, DECL, _)) {  \
 //! \brief Empty case {tuple()} maker
 inline nil_t
 tuple() {
-  return nil;
+    return nil;
 }
 
 //! \brief Preprocessor loop declaring {tuple(...)} makers
@@ -66,7 +66,7 @@ tie(BOOST_PP_ENUM_##z(N, DECL, _)) {    \
 //! \brief Empty case {tie()} maker
 inline nil_t
 tie() {
-  return nil;
+    return nil;
 }
 
 //! \brief Preprocessor loop declaring {tie(...)} makers
