@@ -8,6 +8,8 @@
 #ifndef PRINT_HXX_
 #define PRINT_HXX_
 
+#include "stdlib.hxx"
+
 namespace algebra {
 
 namespace detail {
