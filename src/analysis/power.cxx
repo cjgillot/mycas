@@ -84,9 +84,9 @@ bool power::unit() const {
   return m_impl.null();
 }
 
-const basic* power::eval(unsigned lv) const {
+expr power::eval(unsigned lv) const {
   if(lv == 0)
-    return this;
+    return basic::eval(lv);
   --lv;
 
   const expr &e = m_impl.m_coef, &b = m_impl.m_rest;
@@ -99,14 +99,14 @@ const basic* power::eval(unsigned lv) const {
     bu = b.unit();
 
   if(en | bu)
-    return number::one.get();
+    return number::one;
 
   if(eu)
-    return b.get();
+    return b;
 
   // FIXME (^ 0 x)
   if(bn)
-    return 0;
+    return expr(0);
 
   // TODO :
   // (^ (^ a b) c) -> (^ a (* b c)) if(x > 0 && c real)
@@ -114,10 +114,10 @@ const basic* power::eval(unsigned lv) const {
   if(e.is_numeric()) {
 
     if(b.is_numeric() && e.is_numeric()) {
-      const numeric
-        *basis = b.as_a<numeric>(),
-        *expon = e.as_a<numeric>();
-      return basis->cow<numeric>()->ipow(expon);
+      const number
+        basis = b.as_a<numeric>(),
+        expon = e.as_a<numeric>();
+      return basis.pow(expon);
     }
 
     // TODO :
@@ -125,7 +125,7 @@ const basic* power::eval(unsigned lv) const {
 
   }
 
-  return this;
+  return basic::eval(++lv);
 }
 
 // coercion
@@ -135,13 +135,6 @@ power* power::clone() const
 const power*
 power::as_power() const
 { return this; }
-
-// operation
-power*
-power::ipow(const basic* e) {
-  m_impl.m_rest *= expr(e);
-  return this;
-}
 
 // misc.
 void power::print(std::basic_ostream<char> &os) const

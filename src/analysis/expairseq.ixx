@@ -31,12 +31,14 @@ struct expairseq_traits<Traits, MonoTraits>::ep
   compare_rest(const rest_type &r1, const rest_type &r2)
   { return poly_t::compare(*r1.get(), *r2.get()); }
 
-  // all coef operations :
+// all coef operations :
+
+// using importation doesn't work
+// when a particuliar operation is not defined in super
 #define IMPORT_BIN_OP(name)               \
   static void name##_coef                 \
     (coef_type &c1, const coef_type &c2)  \
   { super::name##_coef(c1,c2); }
-
 #define IMPORT_UN_OP(name)                \
   static void name##_coef                 \
     (coef_type &c1)                       \
@@ -46,7 +48,6 @@ struct expairseq_traits<Traits, MonoTraits>::ep
   IMPORT_BIN_OP(sub)
   IMPORT_BIN_OP(mul)
   IMPORT_BIN_OP(div)
-
 
   IMPORT_UN_OP(neg)
   IMPORT_UN_OP(inv)
@@ -118,8 +119,8 @@ template<class Impl, class Mono>
 template<class S>
 void
 expairseq_traits<Impl, Mono>::ep::print_pair
-  (S &os, const coef_type &c, const rest_type &r) {
-
+  (S &os, const coef_type &c, const rest_type &r)
+{
   os << '(';
   super::print_base(os);
   os << ' ' << c;
@@ -140,9 +141,9 @@ expairseq<T,MT>::operator expairseq<T,MT>::impl_t() const
 { return m_impl; }
 
 // ctor
-template<class T, class MT>
-inline
-expairseq<T,MT>::expairseq() {}
+// template<class T, class MT>
+// inline
+// expairseq<T,MT>::expairseq() {}
 
 template<class T, class MT>
 inline

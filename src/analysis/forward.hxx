@@ -18,6 +18,8 @@ class power;
 
 class numeric;
 
+class expr;
+
 }
 
 #endif /* FORWARD_HXX_ */

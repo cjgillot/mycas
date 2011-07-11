@@ -9,7 +9,7 @@
 #define EXPAIRSEQ_HXX_
 
 #include "numeric.hxx"
-#include "utils/pimpl.hxx"
+#include "util/pimpl.hxx"
 
 #include "expair.hxx"
 
@@ -52,12 +52,14 @@ public:
   //! \}
 
 protected:
-  expairseq();
+  //! \brief Copy constructor
   expairseq(const expairseq &o);
+  //! \brief Non-throwing swap
   void swap(expairseq &o);
 
 private:
   // disabled
+  expairseq();
   expairseq &operator=(const expairseq &);
 
 public:
@@ -68,9 +70,6 @@ public:
   ~expairseq();
 
   virtual expairseq* clone() const = 0;
-
-protected:
-  //virtual expairseq* create() const = 0;
 
 protected:
   // shall be called after any modifying operation
@@ -90,10 +89,6 @@ protected:
   bool is_empty() const;
   bool is_mono() const;
   const epair &mono() const;
-
-private:
-  //std::deque<const basic*>*
-  //eval_children(unsigned) const;
 
 public:
   int compare_same_type(const basic &) const;

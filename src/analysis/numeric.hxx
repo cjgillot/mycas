@@ -15,6 +15,8 @@
 #include "analysis/basic.hxx"
 #include "analysis/expr.hxx"
 
+#include "analysis/ptr.ixx"
+
 namespace analysis {
 
 class numeric
@@ -28,30 +30,20 @@ class numeric
   numeric();
 
 public:
-  numeric(const numeric &o)
-  : basic(o), value(o.value) {}
-  numeric &operator=(const numeric &o) {
-    value = o.value;
-    return *this;
-  }
-  void swap(numeric &o) {
-    std::swap(value, o.value);
-  }
+  numeric(const numeric &);
+  numeric &operator=(const numeric &);
+  void swap(numeric &);
 
 public:
-  numeric(double v)
-  : value(v) {}
-  ~numeric() {}
+  numeric(double v);
+  ~numeric();
 
 public:
-  numeric* clone() const
-  { return new numeric(value); }
+  numeric* clone() const;
 
 public:
-  bool null() const
-  { return algebra::null(value); }
-  bool unit() const
-  { return algebra::unit(value); }
+  bool null() const;
+  bool unit() const;
 
 public:
   virtual bool is_numeric() const;
@@ -59,46 +51,23 @@ public:
   virtual const mul* as_mul() const;
 
 public:
-  const numeric* plus()  const { return this; }
-  const numeric* minus() const { return basic::cow<numeric>()->ineg(); }
+  const numeric* plus()  const;
+  const numeric* minus() const;
 
-  numeric* iadd(const numeric* o) {
-    if(o) value += o->value;
-    return this;
-  }
-  numeric* isub(const numeric* o) {
-    if(o) value -= o->value;
-    return this;
-  }
+  numeric* iadd(const numeric*);
+  numeric* isub(const numeric*);
 
-  numeric* ineg() {
-    value = -value;
-    return this;
-  }
+  numeric* ineg();
 
-  numeric* imul(const numeric* o) {
-    if(o) value *= o->value;
-    return this;
-  }
-  numeric* idiv(const numeric* o) {
-    if(o) value /= o->value;
-    return this;
-  }
+  numeric* imul(const numeric*);
+  numeric* idiv(const numeric*);
 
-  numeric* iinv() {
-    value = 1. / value;
-    return this;
-  }
+  numeric* iinv();
 
-  numeric* ipow(const numeric* o) {
-    value = std::pow(value, o->value);
-    return this;
-  }
+  const numeric* pow(const numeric* o) const;
 
 public:
-  void print(std::basic_ostream<char> &os) const
-  { os << value; }
-
+  void print(std::basic_ostream<char> &os) const;
   int compare_same_type(const basic&) const;
 };
 
@@ -113,27 +82,17 @@ class number
   typedef ptr<numeric> super;
 
 public:
-  number(const number &o)
-  : super(o) {}
-  number &operator=(const number &o) {
-    super::operator=(o);
-    return *this;
-  }
-  void swap(number &o) {
-    super::swap(o);
-  }
+  number(const number &);
+  number &operator=(const number &);
+  void swap(number &);
 
-  number(const numeric* n)
-  : super(n) {}
+  number(const numeric*);
+
+  number(double v);
+  ~number();
 
 public:
-  number(double v)
-  : super(new numeric(v)) {}
-  ~number() {}
-
-public:
-  operator expr() const
-  { return expr(super::get()); }
+  operator expr() const;
 
 public:
   using super::null;
@@ -143,70 +102,31 @@ public:
   static const number zero;
   static const number one;
 
-  const numeric* eval(unsigned) const {
-    return get();
-  }
+  number eval(unsigned) const;
 
 public:
   friend number operator+(const number &a)
   { return a; }
   friend number operator-(number a)
-  { return a.cow()->ineg(); }
+  { return a.ineg(); }
 
-  number &operator+=(const number &o) {
-    if(!get()) return *this = o;
-    cow()->iadd(o.get());
-    return *this;
-  }
-  number &operator-=(const number &o) {
-    if(!get()) return (*this = o).ineg();
-    cow()->isub(o.get());
-    return *this;
-  }
+  number &operator+=(const number &);
+  number &operator-=(const number &);
 
-  number &ineg() {
-    if(!get()) return *this;
-    cow()->ineg();
-    return *this;
-  }
+  number &ineg();
 
-  number &operator*=(const number &o) {
-    if(!get()) return *this;
-    cow()->imul(o.get());
-    return *this;
-  }
-  number &operator/=(const number &o) {
-    if(!get()) return *this;
-    cow()->idiv(o.get());
-    return *this;
-  }
+  number &operator*=(const number &);
+  number &operator/=(const number &);
 
-  number &iinv() {
-    assert(get());
-    cow()->iinv();
-    return *this;
-  }
+  number &iinv();
 
-  number &ipow(const number &o) {
-    if(!get()) return *this;
-    cow()->ipow(o.get());
-    return *this;
-  }
-  number  pow (const number &o) {
-    return number(*this).ipow(o);
-  }
-
-protected:
-  virtual int
-  do_compare(const numeric &o) const
-  { return get()->compare_same_type(o); }
+  number  pow (const number &) const;
 
 public:
   using super::print;
 
   static int
-  compare(const number &a, const number &b)
-  { return super::compare(a,b); }
+  compare(const number &, const number &);
 };
 
 }

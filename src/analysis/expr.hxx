@@ -9,7 +9,6 @@
 #define EXPR_HXX_
 
 #include "stdlib.hxx"
-#include "utils/refcounted.hxx"
 #include "operators.hxx"
 
 #include "analysis/basic.hxx"
@@ -18,7 +17,7 @@
 
 namespace analysis {
 
-// uses Copy On Write idiom
+// FIXME : ptr<...> should be a simple member
 class expr
 : private ptr<basic>
 , public boost::field_operators1<expr
@@ -28,8 +27,10 @@ class expr
 
   typedef ptr<basic> super;
 
-public:
+  //! \brief Disabled default construtor
   expr();
+
+public:
   expr(const expr &);
   expr& operator=(const expr &);
 
@@ -77,25 +78,19 @@ public:
 
   expr &ineg();
 
-  expr &operator+=(const expr &);
-  expr &operator-=(const expr &);
+  expr &operator+=(expr);
+  expr &operator-=(expr);
 
-  expr &operator*=(const expr &);
-  expr &operator/=(const expr &);
+  expr &operator*=(expr);
+  expr &operator/=(expr);
 
   expr &iinv();
 
-  expr &ipow(const expr &);
   expr   pow(const expr &) const;
-
-protected:
-  virtual int
-  do_compare(const basic &b) const;
 
 public:
   static int
-  compare(const expr &a, const expr &b)
-  { return super::compare(a,b); }
+  compare(const expr &a, const expr &b);
 };
 
 }

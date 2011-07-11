@@ -9,7 +9,8 @@
 #define BASIC_HXX_
 
 #include "stdlib.hxx"
-#include "utils/refcounted.hxx"
+#include "util/refcounted.hxx"
+#include "util/visitor.hxx"
 
 #include "analysis/forward.hxx"
 
@@ -24,9 +25,13 @@ namespace analysis {
  * for use with \c boost::intrusive_ptr via \c expr or \c ptr.
  */
 class basic
-: public util::refcounted {
+: public util::refcounted
+, public util::base_const_visitable<bool> {
 
-protected:
+  // shall be defined in every derived class
+  DEFINE_CONST_VISITABLE()
+
+public:
   //! \brief Default constructor
   basic();
   //! \brief Copy constructor
@@ -34,10 +39,10 @@ protected:
   //! \brief Virtual destructor
   virtual ~basic();
 
-public:
   //! \brief Virtual clone
   virtual basic* clone() const = 0;
 
+public:
   /*!
    * \brief Evaluation function
    *
@@ -54,7 +59,7 @@ public:
    * @param lv : the recursion level
    * @return the evaluated form
    */
-  virtual const basic* eval(unsigned lv) const;
+  virtual expr eval(unsigned lv) const;
 
   /*!
    * \brief Nullity test
@@ -77,19 +82,19 @@ public:
    *
    * \return \c this if modifiable, a \c clone() otherwise.
    */
-  template<class T>
-  T* cow() const {
-    if(!util::unique(this))
-      return static_cast<T*>(clone());
-    return static_cast<T*>(const_cast<basic*>(this));
-  }
+//  template<class T>
+//  T* cow() const {
+//    if(!util::unique(this))
+//      return static_cast<T*>(clone());
+//    return static_cast<T*>(const_cast<basic*>(this));
+//  }
 
 public:
   //! \brief RTTI
   virtual bool is_numeric() const;
 
   /*!
-   * \defgroup Virtual coercions
+   * \defgroup Coercions
    *
    * These functions return a degenerated form of
    * themselves in the specified format (add/mul/power...).

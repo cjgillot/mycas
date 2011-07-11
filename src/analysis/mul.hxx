@@ -11,6 +11,8 @@
 #include "analysis/expairseq.hxx"
 #include "analysis/power.hxx"
 
+#include "util/final.hxx"
+
 namespace analysis {
 
 class mul;
@@ -37,9 +39,14 @@ struct mul_traits {
   };
 };
 
-class mul
-: public expairseq<mul_traits, power::traits> {
+DECLARE_FINAL_CLASS(mul);
 
+class mul: FINAL_CLASS(mul)
+, public expairseq<mul_traits, power::traits> {
+
+  DEFINE_CONST_VISITABLE()
+
+private:
   typedef expairseq<mul_traits, power::traits> super;
 
 public:
@@ -71,7 +78,7 @@ public:
 public:
   virtual bool null() const;
   virtual bool unit() const;
-  virtual const basic* eval(unsigned) const;
+  virtual expr eval(unsigned) const;
 
 public:
   mul* imul(const mul&);

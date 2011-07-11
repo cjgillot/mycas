@@ -9,7 +9,6 @@
 #define PTR_HXX_
 
 #include "stdlib.hxx"
-#include "utils/refcounted.hxx"
 
 namespace analysis {
 
@@ -18,99 +17,66 @@ template<class T>
 class ptr {
 
 private:
+  //! \invariant m_ptr != 0
   mutable boost::intrusive_ptr<const T> m_ptr;
 
+private:
+  //! \brief Disabled default constructor
+  ptr();
+
 public:
-  ptr(): m_ptr(0) {}
+  //! \brief Copy constructor
+  ptr(const ptr &);
 
-  ptr(const ptr &o)
-  : m_ptr(o.m_ptr) {}
-  ptr &operator=(const ptr &o) {
-    m_ptr=o.m_ptr;
-    return *this;
-  }
+  //! \brief Assignement operator
+  ptr &operator=(const ptr&);
 
-  void swap(ptr &o)
-  { m_ptr.swap(o.m_ptr); }
+  //! \brief Non-throwing swap
+  void swap(ptr &);
 
-  virtual ~ptr() {}
+  //! \brief Destructor
+  ~ptr();
 
+  //! \brief Explicit pointer constructor
   explicit
-  ptr(const T* p)
-  : m_ptr(p) {}
+  ptr(const T*);
 
 protected:
-  // copy before write function
-  T* cow() {
-    if(!util::unique(m_ptr.get()))
-      m_ptr = m_ptr->clone();
-    return const_cast<T*>(m_ptr.get());
-  }
+  /*!
+   * \brief Copy-On-Write function
+   *
+   * This function shall be called before any
+   * modifying operation on the pointed object.
+   * This call is the only way to get a non-const pointer.
+   */
+  T* cow();
 
-  const T* get() const {
-    return m_ptr.get();
-  }
+  //! \brief Pointer access
+  const T* get() const
+  { return m_ptr.get(); }
 
-  void reset(const T* p) const {
-    m_ptr.reset(p);
-  }
+  //! \brief Pointer modification
+  void reset(const T* p) // const
+  { assert(p); m_ptr.reset(p); }
 
 public:
-  bool null() const {
-    if(!m_ptr)
-      return true;
-    if(m_ptr->null()) {
-      m_ptr.reset();
-      return true;
-    }
-    return false;
-  }
-  bool unit() const {
-    return m_ptr && m_ptr->unit();
-  }
+  //! \brief Nullity test
+  bool null() const;
+  //! \brief Unity test
+  bool unit() const;
 
   const T*
-  eval(unsigned lv) const {
-    const T* p = static_cast<const T*>(m_ptr->eval(lv));
-    if(m_ptr.get() != p)
-      m_ptr.reset(p);
-    return p;
-  }
+  eval(unsigned lv) const;
 
 public:
-  void print(std::basic_ostream<char> &os) const {
-    if(m_ptr)
-      m_ptr->print(os);
-    else
-      os << 0;
-  }
+  //! \brief Printing function
+  void print(std::basic_ostream<char> &os) const;
 
 protected:
-  virtual int
-  do_compare(const T&)
-    const = 0;
-
-public:
+  //! \brief Comparison template function
+  template<class Compare>
   static int
-  compare(const ptr &a, const ptr &b) {
-    if(a.m_ptr == b.m_ptr)
-      return 0;
-
-    if(! b.m_ptr)
-      return (bool)a.m_ptr;
-
-    if(! a.m_ptr)
-      return -1;
-
-    int c = a.do_compare(*b.m_ptr);
-
-    if(c) return c;
-
-    // here, a == b
-    util::unify_ptr(a.m_ptr, b.m_ptr);
-
-    return 0;
-  }
+  compare(const ptr &a, const ptr &b, Compare cmp);
 };
 
 }

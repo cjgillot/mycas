@@ -79,16 +79,19 @@ add* add::from_numeric(const numeric* n) {
 }
 
 // eval
-const basic* add::eval(unsigned lv) const {
+expr add::eval(unsigned lv) const {
   const number &c = super::coef().get();
 
   if(super::is_empty())
-    return c.eval(lv);
+    return c;
 
-  if(c.null() && super::is_mono())
-    return new mul(super::mono());
+  if(c.null() && super::is_mono()) {
+    expr m (new mul(super::mono()));
+    m.eval(--lv);
+    return m;
+  }
 
-  return this;
+  return basic::eval(lv);
 }
 
 }

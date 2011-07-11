@@ -99,7 +99,7 @@ mul* mul::from_numeric(const numeric* n) {
 }
 
 // eval
-const basic* mul::eval(unsigned lv) const {
+expr mul::eval(unsigned lv) const {
   const number &c = super::coef();
 
   // (* c) -> c
@@ -108,29 +108,33 @@ const basic* mul::eval(unsigned lv) const {
 
   // (* 0 ...) -> 0
   if(c.null())
-    return 0;
+    return expr(0);
 
   if(lv == 0)
-    return this;
+    return expr(this);
   --lv;
 
   // (* c x) ?
   if(super::is_mono()) {
     const super::epair &m = super::mono();
 
-    const basic* bas = power(m).eval(lv);
+    expr b (new power(m));
+    b.eval(lv);
 
     // (* 1 x) -> x
     if(c.unit())
-      return bas;
+      return b;
 
-    // expand the addition
+    // expand the addition TODO
     // (* c (+ c' a...)) -> (+ cc' ca...)
-    if(dynamic_cast<const add*>(bas))
-      return bas->cow<add>()->imul(super::coef().get());
+//     if(b.is_a<add>()) {
+//       add* a = b.as_a<add>()->cow<add>();
+//       a->imul(super::coef());
+//       return expr(a);
+//     }
   }
 
-  return this;
+  return basic::eval(++lv);
 }
 
 }

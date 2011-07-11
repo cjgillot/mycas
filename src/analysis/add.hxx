@@ -11,6 +11,8 @@
 #include "analysis/expairseq.hxx"
 #include "analysis/mul.hxx"
 
+#include "util/final.hxx"
+
 namespace analysis {
 
 class add;
@@ -45,6 +47,8 @@ struct add_traits {
   };
 };
 
+DECLARE_FINAL_CLASS(add);
+
 /*!
  * \brief Addition class
  *
@@ -54,9 +58,12 @@ struct add_traits {
  *
  * Printing : (+ c m1 m2 m3 ...)
  */
-class add
-: public expairseq<add_traits, mul::traits> {
+class add: FINAL_CLASS(add)
+, public expairseq<add_traits, mul::traits> {
 
+  DEFINE_CONST_VISITABLE()
+
+private:
   //! \brief Base class type
   typedef expairseq<add_traits, mul::traits> super;
 
@@ -90,7 +97,7 @@ public:
 
 public:
   virtual bool null() const;
-  virtual const basic* eval(unsigned) const;
+  virtual expr eval(unsigned) const;
 
 public:
   add* iadd(const add&);

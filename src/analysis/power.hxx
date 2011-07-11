@@ -92,10 +92,7 @@ public: // tests
   bool null() const;
   bool unit() const;
 
-  const basic* eval(unsigned) const;
-
-public: // operation
-  power* ipow(const basic*);
+  expr eval(unsigned) const;
 
 public: // misc.
   int compare_same_type(const basic &) const;

@@ -50,4 +50,8 @@ ident::print(std::basic_ostream<char> &os) const {
   os << m_name;
 }
 
+constant::constant(const std::string &n, const number &v)
+: ident(n), m_value(v) {}
+constant::~constant() {}
+
 }

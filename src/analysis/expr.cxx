@@ -12,11 +12,12 @@
 #include "analysis/mul.hxx"
 #include "analysis/power.hxx"
 
+#include "analysis/ptr.ixx"
+
 namespace analysis {
 
 const unsigned expr::default_eval_depth = 10;
 
-expr::expr() {}
 expr::expr(const expr &o)
 : super(o) {}
 expr &expr::operator=(const expr &o) {
@@ -49,62 +50,62 @@ T* expr::cow() {
     const klass* ap0 =                          \
       dynamic_cast<const klass*>(get());        \
     if(!ap0) ap0 = get()->as_##klass();         \
-    ap = ap0->cow<klass>();                     \
-    reset(ap);                                  \
+    reset(ap0);                                 \
+    ap = cow<klass>();                          \
   } while(0)
 
 #define PREPARE_OTHER(klass)                    \
-  boost::intrusive_ptr<const klass> bp          \
-  = b.get()->as_##klass();
+  const klass* bp = b.get()->as_##klass()       \
 
-expr &expr::operator+=(const expr &b) {
+// take care to cache the {b.get()} pointer _before_ cow'ing
+#define PREPARE(klass)        \
+  PREPARE_OTHER(klass);       \
+  PREPARE_SELF (klass)
+
+expr &expr::operator+=(expr b) {
   if(!b.get()) return *this;
   if(!get())   return *this = b;
 
-  PREPARE_SELF (add);
-  PREPARE_OTHER(add);
+  PREPARE(add);
 
-  ap->iadd(*bp.get());
+  ap->iadd(*bp);
 
   eval();
 
   return *this;
 }
-expr &expr::operator-=(const expr &b) {
+expr &expr::operator-=(expr b) {
   if(!b.get()) return  *this;
   if(!get())   return (*this = b).ineg();
 
-  PREPARE_SELF (add);
-  PREPARE_OTHER(add);
+  PREPARE(add);
 
-  ap->isub(*bp.get());
+  ap->isub(*bp);
 
   eval();
 
   return *this;
 }
 
-expr &expr::operator*=(const expr &b) {
+expr &expr::operator*=(expr b) {
   if(!b.get()) return *this = b;
   if(!get())   return *this;
 
-  PREPARE_SELF (mul);
-  PREPARE_OTHER(mul);
+  PREPARE(mul);
 
-  ap->imul(*bp.get());
+  ap->imul(*bp);
 
   eval();
 
   return *this;
 }
-expr &expr::operator/=(const expr &b) {
+expr &expr::operator/=(expr b) {
   assert(b.get());
   if(!get())   return *this;
 
-  PREPARE_SELF (mul);
-  PREPARE_OTHER(mul);
+  PREPARE(mul);
 
-  ap->idiv(*bp.get());
+  ap->idiv(*bp);
 
   eval();
 
@@ -123,24 +124,36 @@ expr &expr::ineg() {
   return *this;
 }
 
-expr &expr::ipow(const expr &o) {
-  if(!o.get()) return *this = number::one;
+expr &expr::iinv() {
   if(!get()) return *this;
 
-  PREPARE_SELF(power);
+  PREPARE_SELF(mul);
 
-  ap->ipow(o.get());
+  ap->iinv();
 
   eval();
 
   return *this;
 }
 
-expr expr::pow(const expr &o) const
-{ return expr(*this).ipow(o); }
+expr expr::pow(const expr &o) const {
+  expr ret ( power::from_be(get(), o.get()) );
+  ret.eval();
+  return ret;
+}
+
+namespace {
+
+struct comparator {
+  inline int
+  operator()(const basic &a, const basic &b)
+  { return basic::compare(a,b); }
+};
+
+}
 
 int
-expr::do_compare(const basic &b) const
-{ return basic::compare(*get(),b); }
+expr::compare(const expr &a, const expr &b)
+{ return super::compare(a,b, comparator()); }
 
 }

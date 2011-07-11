@@ -9,7 +9,8 @@
 #define SYMBOL_HXX_
 
 #include "stdlib.hxx"
-#include "basic.hxx"
+#include "analysis/basic.hxx"
+#include "analysis/numeric.hxx"
 
 namespace analysis {
 
@@ -54,6 +55,25 @@ public:
 
 public:
   void print(std::basic_ostream<char> &) const;
+};
+
+/*!
+ * \class constant
+ *
+ * \brief Constant symbol class
+ */
+class constant
+: public ident {
+
+  number m_value;
+
+private:
+  constant();
+
+public:
+  //! \brief Constructor from string
+  constant(const std::string &, const number &);
+  ~constant();
 };
 
 }
