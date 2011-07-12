@@ -129,9 +129,17 @@ public:
   expair &iinv();
 
 public:
+  //! \brief Partial hash
+  std::size_t
+  calc_hash() const;
+
   //! \brief Partial rest-ordering
   static int
   compare(const expair &a, const expair &b);
+
+  //! \brief Real deep hash
+  std::size_t
+  deep_hash() const;
 
   //! \brief Real deep ordering
   static int

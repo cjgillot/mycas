@@ -17,15 +17,14 @@
 
 namespace analysis {
 
-// FIXME : ptr<...> should be a simple member
 class expr
-: private ptr<basic>
-, public boost::field_operators1<expr
+: public boost::field_operators1<expr
 , operators::printable<expr
 , operators::ordered<expr
 > > > {
 
-  typedef ptr<basic> super;
+  typedef ptr<basic> impl_t;
+  impl_t m_impl;
 
   //! \brief Disabled default construtor
   expr();
@@ -46,29 +45,45 @@ private:
   template<class T>
   T* cow();
 
+  inline void
+  reset(const basic* p)
+  { return m_impl.reset(p); }
+
 public:
-  using super::null;
-  using super::unit;
-  using super::print;
-  using super::get;
+  inline bool
+  null() const
+  { return m_impl.null(); }
+  inline bool
+  unit() const
+  { return m_impl.unit(); }
+
+  inline void
+  print(std::basic_ostream<char> &os) const
+  { m_impl.print(os); }
+
+  inline const basic*
+  get() const
+  { return m_impl.get(); }
+
+  inline std::size_t
+  get_hash() const
+  { return m_impl.get()->get_hash(); }
 
   static const unsigned default_eval_depth;
   void eval(unsigned = default_eval_depth) const;
 
-  bool is_numeric() const
-  { return super::get() && super::get()->is_numeric(); }
-
+public: // RTTI
   template<class T>
   bool is_a() const
-  { return dynamic_cast<const T*>(super::get()); }
+  { return dynamic_cast<const T*>(get()); }
 
   template<class T>
   bool is_exactly_a() const
-  { return typeid(*super::get()) == typeid(const T); }
+  { return typeid(*get()) == typeid(const T); }
 
   template<class T>
   const T* as_a() const
-  { return static_cast<const T*>(super::get()); }
+  { return static_cast<const T*>(get()); }
 
 public:
   friend expr operator+(const expr &a)

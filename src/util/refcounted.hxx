@@ -26,7 +26,7 @@ namespace util {
 struct refcounter
 : public boost::noncopyable {
   //! \brief Reference count
-  unsigned char m_refc;
+  unsigned long m_refc;
 
   //! \brief Default constructor
   inline

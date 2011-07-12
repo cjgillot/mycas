@@ -41,7 +41,7 @@ public:
   explicit
   ptr(const T*);
 
-protected:
+public:
   /*!
    * \brief Copy-On-Write function
    *
@@ -59,20 +59,21 @@ protected:
   void reset(const T* p) // const
   { assert(p); m_ptr.reset(p); }
 
-public:
+
   //! \brief Nullity test
   bool null() const;
   //! \brief Unity test
   bool unit() const;
 
+  //! \brief Evaluation function
   const T*
   eval(unsigned lv) const;
 
-public:
+
   //! \brief Printing function
   void print(std::basic_ostream<char> &os) const;
 
-protected:
+
   //! \brief Comparison template function
   template<class Compare>
   static int

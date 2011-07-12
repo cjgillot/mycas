@@ -131,6 +131,21 @@ expair<Traits>::deep_compare(const expair &a, const expair &b) {
   : ep::compare_coef(a.m_coef, b.m_coef);
 }
 
+// hashing
+template<class Traits>
+std::size_t
+expair<Traits>::calc_hash() const {
+  return ep::hash_rest(m_rest);
+}
+
+template<class Traits>
+std::size_t
+expair<Traits>::deep_hash() const {
+  std::size_t seed = calc_hash();
+  boost::hash_combine(seed, ep::hash_coef(m_coef));
+  return seed;
+}
+
 // printing
 template<class Traits>
 inline void

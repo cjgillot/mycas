@@ -26,11 +26,14 @@ namespace std_ext = __gnu_cxx;
 #define reverse_foreach BOOST_REVERSE_FOREACH
 
 #include<boost/range.hpp>
+#include<boost/range/combine.hpp>
 #include<boost/range/adaptors.hpp>
 #include<boost/range/algorithm.hpp>
+#include<boost/range/counting_range.hpp>
 #include<boost/range/algorithm_ext/push_back.hpp>
 
 #include<boost/iterator.hpp>
+#include<boost/iterator/zip_iterator.hpp>
 #include<boost/iterator/iterator_facade.hpp>
 #include<boost/iterator/transform_iterator.hpp>
 

@@ -1,4 +1,21 @@
+cmake_minimum_required(VERSION 2.8)
+
 project(mycas)
 
-add_executable(mycas main.cpp)
+add_definitions(-Wall -Wextra -Winline -Winit-self -pedantic -ansi -Wunreachable-code -Wshadow)
+# add_definitions(-O3 -Os -fexpensive-optimizations -pg)
 
+include_directories(src)
+add_subdirectory(src)
+
+file(GLOB_RECURSE doc_file *.hxx)
+
+add_custom_command(
+  OUTPUT doc
+  COMMAND doxygen ARGS -g mycas.doxyfile
+  MAIN_DEPENDENCY mycas.doxyfile
+  DEPENDS ${doc_file}
+)
+
+add_executable(mycas src/main.cxx)
+target_link_libraries(mycas analysis)

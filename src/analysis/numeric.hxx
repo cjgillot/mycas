@@ -25,7 +25,7 @@ class numeric
 , operators::printable<numeric
 > > {
 
-  algebra::real value;
+  algebra::real m_value;
 
   numeric();
 
@@ -69,17 +69,21 @@ public:
 public:
   void print(std::basic_ostream<char> &os) const;
   int compare_same_type(const basic&) const;
+
+private:
+  std::size_t calc_hash() const
+  { return boost::hash<algebra::real>()(m_value); }
 };
 
 
 class number
-: private ptr<numeric>
-, public boost::field_operators1<number
+: public boost::field_operators1<number
 , operators::printable<number
 , operators::ordered<number
 > > > {
 
-  typedef ptr<numeric> super;
+  typedef ptr<numeric> impl_t;
+  impl_t m_impl;
 
 public:
   number(const number &);
@@ -94,10 +98,21 @@ public:
 public:
   operator expr() const;
 
+private:
+  numeric* cow()
+  { return m_impl.cow(); }
+
 public:
-  using super::null;
-  using super::unit;
-  using super::get;
+  inline bool
+  null() const
+  { return m_impl.null(); }
+  inline bool
+  unit() const
+  { return m_impl.unit(); }
+
+  inline const numeric*
+  get() const
+  { return m_impl.get(); }
 
   static const number zero;
   static const number one;
@@ -123,10 +138,16 @@ public:
   number  pow (const number &) const;
 
 public:
-  using super::print;
+  inline void
+  print(std::basic_ostream<char> &os) const
+  { m_impl.print(os); }
 
   static int
   compare(const number &, const number &);
+
+  std::size_t
+  get_hash() const
+  { return m_impl.get()->get_hash(); }
 };
 
 }

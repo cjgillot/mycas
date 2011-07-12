@@ -32,6 +32,8 @@ public:
 public:
   void print(std::basic_ostream<char> &) const;
 
+private:
+  std::size_t calc_hash() const;
   int compare_same_type(const basic&) const;
 };
 

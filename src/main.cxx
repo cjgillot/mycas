@@ -7,9 +7,13 @@
 
 #include <iostream>
 
+#include "algebra/print.hxx"
+
 #include "analysis/expr.hxx"
 #include "analysis/numeric.hxx"
 #include "analysis/symbol.hxx"
+
+#include "analysis/function/function.ixx"
 
 using namespace analysis;
 
@@ -21,17 +25,16 @@ int main() {
   e.print(std::cout);
   std::cout << std::endl;
 
-  for(int i = 0; i < 100; ++i) {
-    for(int j = 0; j < 100; ++j) {
-      expr s (new symbol);
-      e *= s;
-    }
-    e *= e;
-    e.ipow(y);
-  }
+  for(int i = 1; i <= 5000; ++i) {
+    expr f = number(i);
 
-  e.print(std::cout);
-  std::cout << std::endl;
+    for(int j = 0; j < 20; ++j) {
+      expr s ( new symbol );
+      f *= s;
+    }
+
+    e += f;
+  }
 
   return 0;
 }

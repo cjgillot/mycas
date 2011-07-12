@@ -54,8 +54,21 @@ void power_traits::ep::neg_coef
 void power_traits::ep::print_pair
   (std::basic_ostream<char> &os
   , const coef_type &e, const rest_type &b
-  ) {
+  )
+{
   os << "(^ " << b << " " << e << ')';
+}
+
+// expair::*_hash
+std::size_t power_traits::ep::hash_coef
+  (const coef_type &c)
+{
+  return c.get_hash();
+}
+std::size_t power_traits::ep::hash_rest
+  (const rest_type &r)
+{
+  return r.get_hash();
 }
 
 //********** power class implementation ***********//
@@ -111,9 +124,9 @@ expr power::eval(unsigned lv) const {
   // TODO :
   // (^ (^ a b) c) -> (^ a (* b c)) if(x > 0 && c real)
 
-  if(e.is_numeric()) {
+  if(e.is_a<numeric>()) {
 
-    if(b.is_numeric() && e.is_numeric()) {
+    if(b.is_a<numeric>()) {
       const number
         basis = b.as_a<numeric>(),
         expon = e.as_a<numeric>();

@@ -60,30 +60,18 @@ struct expairseq_traits<Traits, MonoTraits>::ep
   mul_rest(rest_type &r1, const rest_type &r2) {
     // the multiplication of rest
     // is a polynomial addition
-    if(! r2) return;
-    if(! r1) {
-      r1 = r2;
-      return;
-    }
     *r1.cow() += *r2;
   }
   static inline void
   div_rest(rest_type &r1, const rest_type &r2) {
     // the division of rest
     // is a polynomial subtraction
-    if(! r2) return;
-    if(! r1) {
-      r1 = r2;
-      inv_rest(r1);
-      return;
-    }
     *r1.cow() -= *r2;
   }
   static inline void
   inv_rest(rest_type &r1) {
     // inversion of rest
     // is a polynomial negation
-    if(! r1) return;
     r1.cow()->ineg();
   }
 
@@ -91,6 +79,17 @@ struct expairseq_traits<Traits, MonoTraits>::ep
   template<class S>
   static void
   print_pair(S &os, const coef_type &e, const rest_type &b);
+
+  // expair::*_hash
+  static std::size_t hash_coef(const coef_type &c)
+  { return c.get_hash(); }
+  static std::size_t hash_rest(const rest_type &r) {
+    std::size_t seed = 0;
+    foreach(const epair &ep, *r) {
+      seed ^= ep.deep_hash();
+    }
+    return seed;
+  }
 };
 
 namespace {
@@ -124,8 +123,7 @@ expairseq_traits<Impl, Mono>::ep::print_pair
   os << '(';
   super::print_base(os);
   os << ' ' << c;
-  if(r)
-    r->transform(printer(os));
+  r->transform(printer(os));
   os << ')';
 }
 
@@ -159,7 +157,7 @@ expairseq<T,MT>::swap(expairseq &o)
 template<class T, class MT>
 inline
 expairseq<T,MT>::expairseq(const coef_type &n)
-: m_impl(n, 0) {}
+: m_impl(n, new poly_t) {}
 
 template<class T, class MT>
 inline
@@ -180,9 +178,7 @@ expairseq<T,MT>::~expairseq() {}
 template<class T, class MT>
 inline void
 expairseq<T,MT>::canonicalize() {
-  const typename traits::poly_t* rp = m_impl.m_rest.get();
-  if(rp && rp->null())
-    m_impl.m_rest.reset();
+  // nothing to do
 }
 
 // operations
@@ -228,16 +224,21 @@ expairseq<T,MT>::coef() const
 template<class T, class MT>
 inline bool
 expairseq<T,MT>::is_empty() const
-{ return !m_impl.m_rest; }
+{ return m_impl.m_rest->null(); }
 template<class T, class MT>
 inline bool
 expairseq<T,MT>::is_mono() const
-{ return m_impl.m_rest && m_impl.m_rest->monome(); }
+{ return m_impl.m_rest->monome(); }
 
 template<class T, class MT>
 inline typename expairseq<T, MT>::epair const&
 expairseq<T,MT>::mono() const
 { assert(is_mono()); return *m_impl.m_rest->begin(); }
+
+template<class T, class MT>
+inline std::size_t
+expairseq<T,MT>::calc_hash() const
+{ return m_impl.deep_hash(); }
 
 template<class T, class MT>
 inline int
@@ -252,98 +253,6 @@ template<class T, class MT>
 inline void
 expairseq<T,MT>::print(std::basic_ostream<char> &os) const
 { m_impl.print(os); }
-
-/*
-
-namespace {
-
-template<class EP>
-struct eval_push
-: std::unary_function<const EP &, void> {
-  std::deque<const basic*> &cont;
-  unsigned lv;
-
-  eval_push(std::deque<const basic*> &c, unsigned l)
-  : cont(c), lv(l) {}
-
-  void
-  operator()(const EP &x)
-  { cont.push_back(x.eval(lv)); }
-};
-
-}
-
-template<class Impl>
-std::vector<const basic*>*
-expairseq<Impl>::eval_children(unsigned lv) const {
-  assert(m_impl.m_rest);
-
-  if(lv == 0)
-    return 0;
-
-  --lv;
-
-  const poly_t &m_poly = *m_impl.m_rest;
-
-  typedef typename poly_t::const_iterator cit;
-  cit b = m_poly.begin(), e = m_poly.end();
-  for(; b != e; ++b) {
-    const EP &ep = *b;
-
-    // something has changed
-    if(ep.eval(lv)) {
-      std::vector<const basic*>* ret = new std::vector<const basic*>;
-      ret->reserve(m_poly.size());
-
-      std::transform(m_poly.begin(), b, std::identity(), std::back_inserter(*ret));
-      ret->push_back(ep);
-      std::for_each(++b, e, eval_push<EP>(*ret, lv));
-      return ret;
-    }
-  }
-
-  return 0;
-}
-
-
-
-template<class EP>
-const basic*
-expairseq<EP>::eval(unsigned lv) const {
-
-  if(! m_impl.m_rest) return m_coef.eval(lv);
-
-  const poly_t &m_poly = *m_impl.m_rest;
-
-  assert(! m_poly.null());
-
-  if(m_coef.unit() && m_poly.monome())
-    return
-
-  if(lv == 0) return this;
-
-  std::auto_ptr<std::deque<const basic*> >
-    children = eval_children(lv);
-
-  if(!children.get())
-    // nothing has changed
-    return this;
-
-  std::auto_ptr<expairseq> p2 ( create() );
-
-  foreach(const basic* b, *children)
-    p2->imul(b->as_mul());
-
-  if(!p2->pimpl || p2->pimpl->empty())
-    return p2->m_coef.eval(lv);
-
-  if(p2->m_coef.unit() && p2->m_poly.monome())
-    return p2->m_poly().eval(lv-1);
-
-  return p2.release();
-}
-
-*/
 
 }
 

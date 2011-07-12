@@ -51,6 +51,15 @@ basic::eval(unsigned) const
 
 int
 basic::compare(const basic &a, const basic &b) {
+  if(&a == &b) return 0;
+
+  {
+    std::size_t hash_a = a.get_hash(), hash_b = b.get_hash();
+
+    int c = hash_a - hash_b;
+    if(c) return c;
+  }
+
   const std::type_info
     &ta = typeid(a)
   , &tb = typeid(b);

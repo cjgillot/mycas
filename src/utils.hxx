@@ -10,10 +10,10 @@
 
 #include<functional>
 
-#include "utils/functor.hxx"
-#include "utils/refcounted.hxx"
-#include "utils/ptr.hxx"
-#include "utils/move.hxx"
+#include "util/functor.hxx"
+#include "util/refcounted.hxx"
+#include "util/ptr.hxx"
+#include "util/move.hxx"
 
 namespace util {
 

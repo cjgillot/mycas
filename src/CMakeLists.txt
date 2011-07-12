@@ -1,0 +1,8 @@
+add_subdirectory(algebra)
+add_subdirectory(analysis)
+add_subdirectory(imperative)
+add_subdirectory(polynomial)
+add_subdirectory(series)
+add_subdirectory(stream)
+add_subdirectory(structures)
+add_subdirectory(util)

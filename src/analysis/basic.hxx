@@ -16,6 +16,11 @@
 
 namespace analysis {
 
+//! \brief Flags used by basic
+enum {
+  Hashed = 1
+};
+
 /*!
  * \brief Base expression class
  *
@@ -116,7 +121,7 @@ public:
   virtual void
   print(std::basic_ostream<char>&) const = 0;
 
-public:
+protected:
   /*!
    * \brief Virtual homogeneous comparison
    *
@@ -128,6 +133,31 @@ public:
   virtual int compare_same_type(const basic&) const = 0;
 
   /*!
+   * \brief Virtual hashing function
+   *
+   * Default implementation in basic :
+   * return a hash of the typeid.
+   *
+   * At overriding, the super class hash should
+   * be used as seed.
+   *
+   * \return a hash value for *this
+   */
+  virtual std::size_t
+  calc_hash() const
+  { return boost::hash_value(typeid(*this).name()); }
+
+public:
+  /*!
+   * \brief Hash value access
+   */
+  std::size_t
+  get_hash() const {
+    if(flags & Hashed) return m_hash;
+    return m_hash = calc_hash();
+  }
+
+  /*!
    * \brief Comparison dispatch function
    *
    * This function compares the \c typeid of the
@@ -137,6 +167,14 @@ public:
    */
   static int
   compare(const basic&, const basic&);
+
+private: // member data
+
+  //! \brief Flags
+  unsigned flags;
+
+  //! \brief Computed hash value
+  mutable std::size_t m_hash;
 };
 
 }

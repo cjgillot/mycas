@@ -33,10 +33,15 @@ symbol::print(std::basic_ostream<char> &os) const {
 }
 
 // all symbols are unique
-// so address comparison is sufficient
+// so address comparison is sufficient
 int
 symbol::compare_same_type(const basic &o) const {
   return this - static_cast<const symbol*>(&o);
+}
+std::size_t symbol::calc_hash() const {
+  std::size_t seed = basic::calc_hash();
+  boost::hash_combine(seed, this);
+  return seed;
 }
 
 ident::ident(const std::string &n)

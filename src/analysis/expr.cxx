@@ -19,28 +19,26 @@ namespace analysis {
 const unsigned expr::default_eval_depth = 10;
 
 expr::expr(const expr &o)
-: super(o) {}
+: m_impl(o.m_impl) {}
 expr &expr::operator=(const expr &o) {
-  super::operator=(o);
+  m_impl = o.m_impl;
   return *this;
 }
 
 expr::expr(const basic* p)
-: super(p) {}
+: m_impl(p) {}
 
 expr::~expr() {}
 
-void
-expr::swap(expr &o) {
-  super::swap(o);
-}
+void expr::swap(expr &o)
+{ m_impl.swap(o.m_impl); }
 
 void expr::eval(unsigned lv) const
-{ super::eval(lv); }
+{ m_impl.eval(lv); }
 
 template<class T>
 T* expr::cow() {
-  return static_cast<T*>(super::cow());
+  return static_cast<T*>(m_impl.cow());
 }
 
 
@@ -154,6 +152,6 @@ struct comparator {
 
 int
 expr::compare(const expr &a, const expr &b)
-{ return super::compare(a,b, comparator()); }
+{ return impl_t::compare(a.m_impl, b.m_impl, comparator()); }
 
 }

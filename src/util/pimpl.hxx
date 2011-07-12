@@ -17,16 +17,20 @@ namespace util {
  *
  * This class implements a Pimpl on top
  * of \c boost::shared_ptr.
+ *
+ * \invariant The pointer can never be null.
+ *
  */
 template<class T>
-class cow_pimpl
-: public operators::testable<cow_pimpl<T> > {
+class cow_pimpl {
+
   boost::shared_ptr<const T> ptr;
 
-public:
-  //! \brief Default contructor : null pointer
+private:
+  // disabled : default constructor
   cow_pimpl() {}
 
+public:
   //! \brief Explicit copy constructor
   explicit
   cow_pimpl(const cow_pimpl &o)
@@ -44,7 +48,8 @@ public:
 
   //! \brief Pointer constructor
   cow_pimpl(const T* p)
-  : ptr(p) {}
+  : ptr(p)
+  { assert( p != 0 ); }
 
   //! \brief Destructor
   ~cow_pimpl() {}
@@ -58,8 +63,8 @@ public:
   const T *get() const { return ptr.get(); }
 
   //! \brief Pointer modification
-  void reset(const T* p = 0)
-  { ptr.reset(p); }
+  void reset(const T* p)
+  { assert(p != 0); ptr.reset(p); }
 
   /*!
    * \brief Copy-on-write function
@@ -73,13 +78,6 @@ public:
       ptr.reset(new T(*ptr));
     return const_cast<T*>(ptr.get());
   }
-
-private:
-  friend class operators::testable<cow_pimpl>;
-
-  //! \brief Safe bool operator
-  bool valid() const
-  { return ptr; }
 };
 
 }

@@ -90,6 +90,9 @@ protected:
   bool is_mono() const;
   const epair &mono() const;
 
+private:
+  std::size_t calc_hash() const;
+
 public:
   int compare_same_type(const basic &) const;
   void print(std::basic_ostream<char> &os) const;

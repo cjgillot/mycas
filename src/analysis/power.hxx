@@ -44,6 +44,10 @@ struct power_traits {
     static void print_pair(std::basic_ostream<char> &
     , const coef_type &, const rest_type &
     );
+
+    // expair::*_hash
+    static std::size_t hash_coef(const coef_type &);
+    static std::size_t hash_rest(const rest_type &);
   };
 };
 

@@ -16,66 +16,66 @@ const number number::zero(0.);
 const number number::one(1.);
 
 numeric::numeric(const numeric &o)
-: basic(o), value(o.value) {}
+: basic(o), m_value(o.m_value) {}
 numeric &numeric::operator=(const numeric &o) {
-  value = o.value;
+  m_value = o.m_value;
   return *this;
 }
 void numeric::swap(numeric &o) {
-  std::swap(value, o.value);
+  std::swap(m_value, o.m_value);
 }
 
 numeric::numeric(double v)
-: value(v) {}
+: m_value(v) {}
 numeric::~numeric() {}
 
 numeric* numeric::clone() const
-{ return new numeric(value); }
+{ return new numeric(m_value); }
 
 bool numeric::null() const
-{ return algebra::null(value); }
+{ return algebra::null(m_value); }
 bool numeric::unit() const
-{ return algebra::unit(value); }
+{ return algebra::unit(m_value); }
 
 const numeric* numeric::plus()  const { return this; }
 const numeric* numeric::minus() const { return clone()->ineg(); }
 
 numeric* numeric::iadd(const numeric* o) {
-  if(o) value += o->value;
+  if(o) m_value += o->m_value;
   return this;
 }
 numeric* numeric::isub(const numeric* o) {
-  if(o) value -= o->value;
+  if(o) m_value -= o->m_value;
   return this;
 }
 
 numeric* numeric::ineg() {
-  value = -value;
+  m_value = -m_value;
   return this;
 }
 
 numeric* numeric::imul(const numeric* o) {
-  if(o) value *= o->value;
+  if(o) m_value *= o->m_value;
   return this;
 }
 numeric* numeric::idiv(const numeric* o) {
-  if(o) value /= o->value;
+  if(o) m_value /= o->m_value;
   return this;
 }
 
 numeric* numeric::iinv() {
-  value = 1. / value;
+  m_value = 1. / m_value;
   return this;
 }
 
 const numeric*
 numeric::pow(const numeric* o) const {
   if(!o) return number::one.get();
-  return new numeric(std::pow(value, o->value));
+  return new numeric(std::pow(m_value, o->m_value));
 }
 
 void numeric::print(std::basic_ostream<char> &os) const
-{ os << value; }
+{ os << m_value; }
 
 bool
 numeric::is_numeric() const
@@ -89,31 +89,31 @@ numeric::as_mul() const
 
 int numeric::compare_same_type(const basic &o) const {
   return algebra::compare(
-    value
-  , static_cast<const numeric&>(o).value
+    m_value
+  , static_cast<const numeric&>(o).m_value
   );
 }
 
-
+// ****** number ****** //
 number::number(const number &o)
-: super(o) {}
+: m_impl(o.m_impl) {}
 number &number::operator=(const number &o) {
-  super::operator=(o);
+  m_impl = o.m_impl;
   return *this;
 }
-void number::swap(number &o) {
-  super::swap(o);
-}
+void number::swap(number &o)
+{ m_impl.swap(o.m_impl); }
+
 
 number::number(const numeric* n)
-: super(n) {}
+: m_impl(n) {}
 
 number::number(double v)
-: super(new numeric(v)) {}
+: m_impl(new numeric(v)) {}
 number::~number() {}
 
 number::operator expr() const
-{ return expr(super::get()); }
+{ return expr(get()); }
 
 number number::eval(unsigned) const
 { return *this; }
@@ -170,6 +170,6 @@ struct comparator {
 
 int
 number::compare(const number &a, const number &b)
-{ return super::compare(a,b, comparator()); }
+{ return impl_t::compare(a.m_impl, b.m_impl, comparator()); }
 
 }

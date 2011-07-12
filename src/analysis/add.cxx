@@ -80,7 +80,7 @@ add* add::from_numeric(const numeric* n) {
 
 // eval
 expr add::eval(unsigned lv) const {
-  const number &c = super::coef().get();
+  const number &c = super::coef();
 
   if(super::is_empty())
     return c;
