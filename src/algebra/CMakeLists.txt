@@ -1,4 +1,4 @@
-file(GLOB src *.cxx)
-file(GLOB hdr *.hxx *.ixx)
+file(GLOB src *.cpp)
+file(GLOB hdr *.hpp *.ipp)
 
 add_library(algebra ${src} ${hdr})

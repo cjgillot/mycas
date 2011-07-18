@@ -8,7 +8,7 @@ add_definitions(-Wall -Wextra -Winline -Winit-self -pedantic -ansi -Wunreachable
 include_directories(src)
 add_subdirectory(src)
 
-file(GLOB_RECURSE doc_file *.hxx)
+file(GLOB_RECURSE doc_file *.hpp)
 
 add_custom_command(
   OUTPUT doc
@@ -17,5 +17,5 @@ add_custom_command(
   DEPENDS ${doc_file}
 )
 
-add_executable(mycas src/main.cxx)
+add_executable(mycas src/main.cpp)
 target_link_libraries(mycas analysis)
