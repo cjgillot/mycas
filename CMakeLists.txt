@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 project(mycas)
 
 add_definitions(-Wall -Wextra -Winline -Winit-self -pedantic -ansi -Wunreachable-code -Wshadow)
-# add_definitions(-O3 -Os -fexpensive-optimizations -pg)
+# add_definitions(-O3 -Os -fexpensive-optimizations -DNDEBUG -fomit-frame-pointer) # -pg)
 
 include_directories(src)
 add_subdirectory(src)

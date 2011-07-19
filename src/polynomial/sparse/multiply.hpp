@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef SPARSE_MULTIPLY_HXX
-#define SPARSE_MULTIPLY_HXX
+#ifndef SPARSE_MULTIPLY_HPP
+#define SPARSE_MULTIPLY_HPP
 
 #include "stdlib.hpp"
 
@@ -38,16 +38,16 @@ do_mul_loop(const Range1 &a, const Range1 &b, RRange &r) {
 template<class Mono, class Range1, class RRange>
 inline void
 do_mul_left (const Range1 &a, const Range1 &b, RRange &r) {
-  typedef functor::multiplies<Mono> mul;
-  typedef muler<Range1, mul> muler;
+  typedef functor::multiplies<Mono> prod;
+  typedef muler<Range1, prod> muler;
 
   do_mul_loop<Mono, muler, Range1, RRange>(a,b,r);
 }
 template<class Mono, class Range1, class RRange>
 inline void
 do_mul_right(const Range1 &a, const Range1 &b, RRange &r) {
-  typedef functor::multiplies_rev<Mono> mul;
-  typedef muler<Range1, mul> muler;
+  typedef functor::multiplies_rev<Mono> prod;
+  typedef muler<Range1, prod> muler;
 
   do_mul_loop<Mono, muler, Range1, RRange>(b,a,r);
 }
@@ -83,4 +83,4 @@ do_mul(const Range1 &a, const Range1 &b, RRange &r) {
 
 }}} // poly::sparse::multiply
 
-#endif // SPARSE_MULTIPLY_HXX
+#endif // SPARSE_MULTIPLY_HPP

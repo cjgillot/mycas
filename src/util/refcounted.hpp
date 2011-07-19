@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef UTILS_REFCOUNTED_HXX_
-#define UTILS_REFCOUNTED_HXX_
+#ifndef UTILS_REFCOUNTED_HPP_
+#define UTILS_REFCOUNTED_HPP_
 
 #include "stdlib.hpp"
 
@@ -86,13 +86,12 @@ struct refcounter
     /*! \brief Ref counter incrementation for boost::intrusive_ptr */ \
     friend inline void \
     intrusive_ptr_add_ref(const klass* it) { \
-      assert(it); it->GET_REFCOUNTED.grab(); \
+      it->GET_REFCOUNTED.grab(); \
     } \
     \
     /*! \brief Ref counter decrementation for boost::intrusive_ptr */ \
     friend void  \
     intrusive_ptr_release(const klass* it) {    \
-      assert(it != 0);  \
       if(! it->GET_REFCOUNTED.drop())       \
         delete it;      \
     }   \
@@ -185,10 +184,21 @@ inline void
 unify_ptr(
   boost::intrusive_ptr<T> &a
 , boost::intrusive_ptr<T> &b
+)
+{ refcount_access::unify(a,b); }
+
+template<class T>
+inline void
+unify_ptr(
+  boost::shared_ptr<T> &a
+, boost::shared_ptr<T> &b
 ) {
-  return refcount_access::unify(a,b);
+  const int ac = a.use_count(), bc = b.use_count();
+  if(ac <= bc)
+    a.reset(b);
+  b.reset(a);
 }
 
 }
 
-#endif /* UTILS_REFCOUNTED_HXX_ */
+#endif /* UTILS_REFCOUNTED_HPP_ */

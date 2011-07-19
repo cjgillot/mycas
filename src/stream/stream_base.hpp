@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef STREAM_BASE_HXX_
-#define STREAM_BASE_HXX_
+#ifndef STREAM_BASE_HPP_
+#define STREAM_BASE_HPP_
 
 #include "utils.hpp"
 #include "stream/streamfwd.hpp"
@@ -67,4 +67,4 @@ protected:
 #include "stream/stream_iterator.hpp"
 
 
-#endif /* STREAM_BASE_HXX_ */
+#endif /* STREAM_BASE_HPP_ */

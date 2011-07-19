@@ -1,96 +1,296 @@
-#ifndef EXPAIRSEQ_IXX_
-#define EXPAIRSEQ_IXX_
+#ifndef EXPAIRSEQ_IPP_
+#define EXPAIRSEQ_IPP_
 
 #include "stdlib.hpp"
+#include "algebra/compare.hpp"
 
 #include "analysis/numeric.hpp"
 #include "analysis/expairseq.hpp"
 
-#include "polynomial/sparse/poly.hpp"
-
-#include "analysis/expair.ipp"
-
 namespace analysis {
 
-template<class Traits, class MonoTraits>
-struct expairseq_traits<Traits, MonoTraits>::ep
-: public Traits::ep {
+template<class I, class M>
+inline
+expairseq<I,M>::expairseq(const expairseq &o)
+: basic(o), m_coef(o.m_coef), m_poly(o.m_poly) {}
 
-  typedef typename Traits::ep super;
+template<class I, class M>
+inline void
+expairseq<I,M>::swap(expairseq &o) {
+  basic::swap(o);
+  m_coef.swap(o.m_coef);
+  m_poly.swap(o.m_poly);
+}
 
-  // expair::null testing
-  static inline bool
-  null_pair(const coef_type &c, const rest_type &)
-  { return super::null_coef(c); }
 
-  // expair::compare and expair::deep_compare
-  static inline int
-  compare_coef(const coef_type &c1, const coef_type &c2)
-  { return coef_type::compare(c1, c2); }
-  static inline int
-  compare_rest(const rest_type &r1, const rest_type &r2)
-  { return poly_t::compare(*r1.get(), *r2.get()); }
+template<class I, class M>
+inline
+expairseq<I,M>::expairseq(const number &n)
+: m_coef(n), m_poly( /* null */ ), m_hash(0) {}
 
-// all coef operations :
+template<class I, class M>
+expairseq<I,M>::expairseq(const number &n, const epair &p)
+: m_coef(n), m_poly(new poly_t(1, p)), m_hash(p.hash()) {}
 
-// using importation doesn't work
-// when a particuliar operation is not defined in super
-#define IMPORT_BIN_OP(name)               \
-  static void name##_coef                 \
-    (coef_type &c1, const coef_type &c2)  \
-  { super::name##_coef(c1,c2); }
-#define IMPORT_UN_OP(name)                \
-  static void name##_coef                 \
-    (coef_type &c1)                       \
-  { super::name##_coef(c1); }
+template<class I, class M>
+expairseq<I,M>::~expairseq() {}
 
-  IMPORT_BIN_OP(add)
-  IMPORT_BIN_OP(sub)
-  IMPORT_BIN_OP(mul)
-  IMPORT_BIN_OP(div)
 
-  IMPORT_UN_OP(neg)
-  IMPORT_UN_OP(inv)
+// operations
+namespace {
 
-#undef IMPORT_BIN_OP
-#undef IMPORT_UN_OP
+template<class T>
+struct neg_hash
+: std::unary_function<T, T> {
+  std::size_t &h;
 
-  // all rest operations :
-  static inline void
-  mul_rest(rest_type &r1, const rest_type &r2) {
-    // the multiplication of rest
-    // is a polynomial addition
-    *r1.cow() += *r2;
-  }
-  static inline void
-  div_rest(rest_type &r1, const rest_type &r2) {
-    // the division of rest
-    // is a polynomial subtraction
-    *r1.cow() -= *r2;
-  }
-  static inline void
-  inv_rest(rest_type &r1) {
-    // inversion of rest
-    // is a polynomial negation
-    r1.cow()->ineg();
-  }
+  neg_hash(std::size_t &h_)
+  : h(h_) {}
 
-  // expair::print
-  template<class S>
-  static void
-  print_pair(S &os, const coef_type &e, const rest_type &b);
-
-  // expair::*_hash
-  static std::size_t hash_coef(const coef_type &c)
-  { return c.get_hash(); }
-  static std::size_t hash_rest(const rest_type &r) {
-    std::size_t seed = 0;
-    foreach(const epair &ep, *r) {
-      seed ^= ep.deep_hash();
-    }
-    return seed;
+  inline T operator()(const T &o) {
+    T ret = - o;
+    h ^= ret.hash();
+    return ret;
   }
 };
+
+template<class T, class Sca>
+struct sca_hash
+: std::unary_function<T, T> {
+  std::size_t &h;
+  const Sca &n;
+
+  sca_hash(std::size_t &h_, const Sca &n_)
+  : h(h_), n(n_) {}
+
+  inline T operator()(const T &o) {
+    T ret = o.sca(n);
+    h ^= ret.hash();
+    return ret;
+  }
+};
+
+template<class Range>
+void do_neg(Range &ret, const Range &a, std::size_t &hash) {
+  ret.reserve( a.size() );
+  typedef typename boost::range_value<const Range>::type epair;
+  boost::transform(a, std::back_inserter(ret), neg_hash<epair>(hash));
+}
+
+template<class Range, class Sca>
+void do_sca(Range &ret, const Range &a, const Sca &n, std::size_t &hash) {
+  ret.reserve( a.size() );
+  typedef typename boost::range_value<const Range>::type epair;
+  boost::transform(a, std::back_inserter(ret), sca_hash<epair, Sca>(hash, n));
+}
+
+template<class Range>
+void do_add(Range &ret, const Range &a, const Range &b, std::size_t &hash) {
+
+  ret.reserve(a.size() + b.size());
+
+  typedef typename boost::range_value<const Range>::type epair;
+
+  typename boost::range_iterator<const Range>::type
+    i1 = a.begin(), e1 = a.end(),
+    i2 = b.begin(), e2 = b.end();
+
+  while(i1 != e1 && i2 != e2) {
+    int c = epair::compare( *i1, *i2 );
+
+    if(c  < 0) {
+      ret.push_back( *i1 );
+      // hashing already done
+      ++i1;
+      continue;
+    }
+    if(c != 0) {
+      ret.push_back( *i2 );
+      // hashing already done
+      ++i2;
+      continue;
+    }
+
+    // cancel hash
+    hash ^= i1->hash() ^ i2->hash();
+
+    ret.push_back( *i1 + *i2 );
+    const epair &e = ret.back();
+
+    if( e.null() )
+      ret.pop_back();
+    else
+      hash ^= e.hash();
+  }
+
+  std::copy(i1, e1, std::back_inserter(ret));
+  std::copy(i2, e2, std::back_inserter(ret));
+}
+
+template<class Range>
+void do_sub(Range &ret, const Range &a, const Range &b, std::size_t &hash) {
+
+  ret.reserve(a.size() + b.size());
+
+  typedef typename boost::range_value<const Range>::type epair;
+
+  typename boost::range_iterator<const Range>::type
+    i1 = a.begin(), e1 = a.end(),
+    i2 = b.begin(), e2 = b.end();
+
+  while(i1 != e1 && i2 != e2) {
+    int c = epair::compare( *i1, *i2 );
+
+    if(c  < 0) {
+      ret.push_back( *i1 );
+      // hashing already done
+      ++i1;
+      continue;
+    }
+    if(c != 0) {
+      ret.push_back( - *i2 );
+      hash ^= ret.back().hash();
+      ++i2;
+      continue;
+    }
+
+    // cancel hash
+    hash ^= i1->hash();
+
+    ret.push_back( *i1 + *i2 );
+    epair &e = ret.back();
+
+    if( e.null() )
+      ret.pop_back();
+    else
+      hash ^= e.hash();
+  }
+
+  std::copy(i1, e1, std::back_inserter(ret));
+  std::transform(i2, e2, std::back_inserter(ret), neg_hash<epair>(hash));
+}
+
+}
+
+template<class I, class M>
+inline
+expairseq<I,M>::expairseq(const expairseq &a, const expairseq &b, add_t)
+: m_coef(I::ep::add(a.m_coef, b.m_coef))
+, m_poly( /* null */ )
+, m_hash(a.m_hash ^ b.m_hash) {
+
+  if( ! a.m_poly )
+    m_poly = b.m_poly;
+
+  else if( ! b.m_poly )
+    m_poly = a.m_poly;
+
+  else {
+    m_poly.reset( new poly_t );
+    do_add(*m_poly, *a.m_poly, *b.m_poly, m_hash);
+  }
+
+}
+
+template<class I, class M>
+inline
+expairseq<I,M>::expairseq(const expairseq &a, const expairseq &b, sub_t)
+: m_coef(I::ep::sub(a.m_coef, b.m_coef))
+, m_poly(new poly_t)
+, m_hash(a.m_hash) {
+
+  if( ! b.m_poly )
+      m_poly = a.m_poly;
+
+  else {
+    m_poly.reset( new poly_t );
+
+    if( ! a.m_poly )
+      do_neg(*m_poly, *b.m_poly, m_hash);
+
+    else
+      do_add(*m_poly, *a.m_poly, *b.m_poly, m_hash);
+  }
+
+}
+
+template<class I, class M>
+inline
+expairseq<I,M>::expairseq(const expairseq &a, neg_t)
+: m_coef( I::ep::neg( a.m_coef ) )
+, m_poly( /* null */ )
+, m_hash(0) {
+
+  if(a.m_poly) {
+    m_poly.reset( new poly_t );
+    do_neg(*m_poly, *a.m_poly, m_hash);
+  }
+}
+
+template<class I, class M>
+inline
+expairseq<I,M>::expairseq(const expairseq &a, const number &n, sca_t)
+: m_coef(I::ep::mul(a.m_coef, n))
+, m_poly( /* null */ )
+, m_hash(0) {
+
+  if(a.m_poly) {
+    m_poly.reset( new poly_t );
+    do_sca(*m_poly, *a.m_poly, n, m_hash);
+  }
+}
+
+// access
+template<class I, class M>
+inline const number&
+expairseq<I,M>::coef() const
+{ return m_coef; }
+
+template<class I, class M>
+inline bool
+expairseq<I,M>::is_empty() const
+{ return m_poly->empty(); }
+template<class I, class M>
+inline bool
+expairseq<I,M>::is_mono() const
+{ return m_poly->size() == 1; }
+
+template<class I, class M>
+inline typename expairseq<I,M>::epair const&
+expairseq<I,M>::mono() const
+{ assert(is_mono()); return *m_poly->begin(); }
+
+template<class I, class M>
+inline std::size_t
+expairseq<I,M>::calc_hash() const {
+  std::size_t seed = basic::calc_hash();
+  boost::hash_combine(seed, m_coef.get_hash());
+  boost::hash_combine(seed, m_hash);
+  return seed;
+}
+
+template<class I, class M>
+inline int
+expairseq<I,M>::partial_compare(const expairseq &o) const {
+  if(m_poly.get() == o.m_poly.get()) return 0;
+
+  int c = m_hash - o.m_hash;
+  if(c) return c;
+
+  c = algebra::range_compare(*m_poly, *o.m_poly, epair::deep_compare);
+
+  // if(c == 0) util::unify_ptr(m_poly, o.m_poly);
+  return c;
+}
+
+template<class I, class M>
+inline int
+expairseq<I,M>::compare_same_type(const basic &o_) const {
+  const expairseq &o = static_cast<const expairseq&>(o_);
+  int c = number::compare(m_coef, o.m_coef);
+  if(c) return c;
+  return partial_compare(o);
+}
 
 namespace {
 
@@ -106,7 +306,7 @@ struct printer {
   template<class T>
   inline void
   operator()(const T &x)
-  { os << " "; x.print(os); }
+  { x.print(os << ' '); }
 
 private:
   printer();
@@ -114,147 +314,17 @@ private:
 
 }
 
-template<class Impl, class Mono>
-template<class S>
-void
-expairseq_traits<Impl, Mono>::ep::print_pair
-  (S &os, const coef_type &c, const rest_type &r)
-{
+template<class I, class M>
+inline void
+expairseq<I,M>::print(std::basic_ostream<char> &os) const {
   os << '(';
-  super::print_base(os);
-  os << ' ' << c;
-  r->transform(printer(os));
+  print_base(os);
+  m_coef.print(os << ' ');
+  boost::for_each(*m_poly, printer(os));
   os << ')';
 }
 
-
-// expair coercion
-template<class T, class MT>
-inline
-expairseq<T,MT>::expairseq(const impl_t &i)
-: m_impl(i) {}
-template<class T, class MT>
-inline
-expairseq<T,MT>::operator expairseq<T,MT>::impl_t() const
-{ return m_impl; }
-
-// ctor
-// template<class T, class MT>
-// inline
-// expairseq<T,MT>::expairseq() {}
-
-template<class T, class MT>
-inline
-expairseq<T,MT>::expairseq(const expairseq &o)
-: basic(o), m_impl(o.m_impl) {}
-
-template<class T, class MT>
-inline void
-expairseq<T,MT>::swap(expairseq &o)
-{ m_impl.swap(o.m_impl); }
-
-
-template<class T, class MT>
-inline
-expairseq<T,MT>::expairseq(const coef_type &n)
-: m_impl(n, new poly_t) {}
-
-template<class T, class MT>
-inline
-expairseq<T,MT>::expairseq(const coef_type &n, const epair &p)
-: m_impl(n, new poly_t(p)) {}
-
-template<class T, class MT>
-inline
-expairseq<T,MT>::expairseq(const coef_type &n, const poly_t* i)
-: m_impl(n, i) {}
-
-template<class T, class MT>
-inline
-expairseq<T,MT>::~expairseq() {}
-
-
-// canonicalize
-template<class T, class MT>
-inline void
-expairseq<T,MT>::canonicalize() {
-  // nothing to do
-}
-
-// operations
-template<class T, class MT>
-inline expairseq<T,MT> &
-expairseq<T,MT>::iadd(const expairseq &o) {
-  // an expairseq addition is an expair multiplication
-  m_impl *= o.m_impl;
-  canonicalize();
-  return *this;
-}
-
-template<class T, class MT>
-inline expairseq<T,MT> &
-expairseq<T,MT>::isub(const expairseq &o) {
-  m_impl /= o.m_impl;
-  canonicalize();
-  return *this;
-}
-
-template<class T, class MT>
-inline expairseq<T,MT> &
-expairseq<T,MT>::ineg() {
-  m_impl.iinv();
-  canonicalize();
-  return *this;
-}
-
-template<class T, class MT>
-inline expairseq<T,MT> &
-expairseq<T,MT>::imul(const coef_type &n) {
-  m_impl *= n;
-  canonicalize();
-  return *this;
-}
-
-// access
-template<class T, class MT>
-inline typename expairseq<T, MT>::coef_type const &
-expairseq<T,MT>::coef() const
-{ return m_impl.m_coef; }
-
-template<class T, class MT>
-inline bool
-expairseq<T,MT>::is_empty() const
-{ return m_impl.m_rest->null(); }
-template<class T, class MT>
-inline bool
-expairseq<T,MT>::is_mono() const
-{ return m_impl.m_rest->monome(); }
-
-template<class T, class MT>
-inline typename expairseq<T, MT>::epair const&
-expairseq<T,MT>::mono() const
-{ assert(is_mono()); return *m_impl.m_rest->begin(); }
-
-template<class T, class MT>
-inline std::size_t
-expairseq<T,MT>::calc_hash() const
-{ return m_impl.deep_hash(); }
-
-template<class T, class MT>
-inline int
-expairseq<T,MT>::compare_same_type(const basic &o) const {
-  return impl_t::deep_compare(
-    m_impl
-  , static_cast<const expairseq &>(o).m_impl
-  );
-}
-
-template<class T, class MT>
-inline void
-expairseq<T,MT>::print(std::basic_ostream<char> &os) const
-{ m_impl.print(os); }
-
 }
 
 
-#endif // EXPAIRSEQ_IXX_
+#endif // EXPAIRSEQ_IPP_

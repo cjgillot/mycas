@@ -7,94 +7,66 @@
 
 #include "utils.hpp"
 
-#include "power.hpp"
-
-#include "expair.ipp"
+#include "analysis/power.hpp"
 
 namespace analysis {
 
-// ************** power traits implementation **********//
+// ************** power handle implementation **********//
 
-// expair::null testing
-bool power_traits::ep::null_pair
-  (const coef_type &e, const rest_type &r)
-{ return e.null() || r.unit(); }
-
-// expair::compare and expair::deep_compare
-int power_traits::ep::compare_coef
-  (const coef_type &e1, const coef_type &e2)
-{ return expr::compare(e1, e2); }
-
-int power_traits::ep::compare_rest
-  (const rest_type &e1, const rest_type &e2)
-{ return expr::compare(e1, e2); }
+int power::handle::compare(const handle &a, const handle &b)
+{ return expr::compare(a.m_ptr->m_base, b.m_ptr->m_base); }
 
 // all operations :
-void power_traits::ep::add_coef
-  (coef_type &e1, const coef_type &e2)
-{ e1 += e2; }
+power::handle
+power::handle::operator+(const handle &o) const {
+  assert(compare(*this, o) == 0);
 
-void power_traits::ep::sub_coef
-  (coef_type &e1, const coef_type &e2)
-{ e1 -= e2; }
-
-void power_traits::ep::mul_coef
-  (coef_type &e1, const coef_type &e2)
-{ e1 *= e2; }
-
-void power_traits::ep::div_coef
-  (coef_type &e1, const coef_type &e2)
-{ e1 /= e2; }
-
-void power_traits::ep::neg_coef
-  (coef_type &e1)
-{ e1.ineg(); }
-
-// expair::print
-void power_traits::ep::print_pair
-  (std::basic_ostream<char> &os
-  , const coef_type &e, const rest_type &b
-  )
-{
-  os << "(^ " << b << " " << e << ')';
+  return new power(
+    m_ptr->m_base
+  , m_ptr->m_expo + m_ptr->m_expo
+  );
 }
+power::handle
+power::handle::operator-(const handle &o) const {
+  assert(compare(*this, o) == 0);
 
-// expair::*_hash
-std::size_t power_traits::ep::hash_coef
-  (const coef_type &c)
-{
-  return c.get_hash();
+  return new power(
+    m_ptr->m_base
+  , m_ptr->m_expo - m_ptr->m_expo
+  );
 }
-std::size_t power_traits::ep::hash_rest
-  (const rest_type &r)
-{
-  return r.get_hash();
+power::handle
+power::handle::operator-() const {
+  return new power(
+    m_ptr->m_base
+  , - m_ptr->m_expo
+  );
 }
 
 //********** power class implementation ***********//
 
 // ctors
 power::power(const power &o)
-: basic(o), m_impl(o.m_impl) {}
+: basic(o), m_base(o.m_base), m_expo(o.m_expo) {}
 
-power::power(const basic* b, const basic* e)
-  // swapped {e} and {b}
-  // because the expair is { coef=e; rest=b }
-: m_impl(expr(e), expr(b)) {}
+power::power(const expr &b, const expr &e)
+: m_base(b), m_expo(e) {}
 
 void
 power::swap(power &o) {
-  m_impl.swap(o.m_impl);
+  basic::swap(o);
+  m_base.swap(o.m_base);
+  m_expo.swap(o.m_expo);
 }
 
 power::~power() {}
 
 // tests
 bool power::null() const {
-  return m_impl.m_rest.null();
+  return m_base.null();
 }
 bool power::unit() const {
-  return m_impl.null();
+  return m_expo.null() | m_base.unit();
 }
 
 expr power::eval(unsigned lv) const {
@@ -102,7 +74,7 @@ expr power::eval(unsigned lv) const {
     return basic::eval(lv);
   --lv;
 
-  const expr &e = m_impl.m_coef, &b = m_impl.m_rest;
+  const expr &e = m_expo, &b = m_base;
   e.eval(lv); b.eval(lv);
 
   bool
@@ -150,20 +122,31 @@ power::as_power() const
 { return this; }
 
 // misc.
-void power::print(std::basic_ostream<char> &os) const
-{ m_impl.print(os); }
+void power::print(std::basic_ostream<char> &os) const {
+  os << '(' << '^';
+  m_base.print(os << ' ');
+  m_expo.print(os << ' ');
+  os << ')';
+}
 
-int power::compare_same_type(const basic &b0) const {
-  return impl_t::deep_compare(
-    m_impl
-  , static_cast<const power&>(b0).m_impl
-  );
+int power::compare_same_type(const basic &o_) const {
+  const power &o = static_cast<const power&>(o_);
+  int c = expr::compare(m_base, o.m_base);
+  return c ? c
+  : expr::compare(m_expo, o.m_expo);
+}
+
+std::size_t power::calc_hash() const {
+  std::size_t seed = basic::calc_hash();
+  boost::hash_combine(seed, m_base.get()->get_hash());
+  boost::hash_combine(seed, m_expo.get()->get_hash());
+  return seed;
 }
 
 // static
 const power*
 power::from_be(const basic* b, const basic* e)
-{ return new power(b, e); }
+{ return new power(expr(b), expr(e)); }
 
 const power*
 power::from_1basic(const basic* b)

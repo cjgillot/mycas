@@ -18,8 +18,8 @@
  *
  */
 
-#ifndef ITERATOR_HXX_
-#define ITERATOR_HXX_
+#ifndef ITERATOR_HPP_
+#define ITERATOR_HPP_
 
 #include "stdlib.hpp"
 #include "utils.hpp"
@@ -228,4 +228,4 @@ adapt(const It &it) {
 
 } // namespace streams
 
-#endif /* ITERATOR_HXX_ */
+#endif /* ITERATOR_HPP_ */

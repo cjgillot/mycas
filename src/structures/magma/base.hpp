@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef MAGMA_BASE_HXX_
-#define MAGMA_BASE_HXX_
+#ifndef MAGMA_BASE_HPP_
+#define MAGMA_BASE_HPP_
 
 #include "stdlib.hpp"
 #include "operators.hpp"
@@ -188,4 +188,4 @@ public:
 
 }} // namespace structures::magma
 
-#endif /* MAGMA_BASE_HXX_ */
+#endif /* MAGMA_BASE_HPP_ */

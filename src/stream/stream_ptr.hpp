@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef STREAM_PTR_HXX_
-#define STREAM_PTR_HXX_
+#ifndef STREAM_PTR_HPP_
+#define STREAM_PTR_HPP_
 
 #include "utils.hpp"
 #include "stream/streamfwd.hpp"
@@ -93,4 +93,4 @@ public:
 } // namespace streams
 
 
-#endif /* STREAM_PTR_HXX_ */
+#endif /* STREAM_PTR_HPP_ */

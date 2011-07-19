@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef TUPLE_IXX_
-#define TUPLE_IXX_
+#ifndef TUPLE_IPP_
+#define TUPLE_IPP_
 
 #include <boost/preprocessor/repetition/enum.hpp>
 #include <boost/preprocessor/repetition/enum_shifted.hpp>
@@ -78,4 +78,4 @@ BOOST_PP_REPEAT_FROM_TO(1, MAX_TUPLE_ARITY, TIE, _)
 
 }
 
-#endif // TUPLE_IXX_
+#endif // TUPLE_IPP_

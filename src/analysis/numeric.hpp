@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef NUMERIC_HXX_
-#define NUMERIC_HXX_
+#ifndef NUMERIC_HPP_
+#define NUMERIC_HPP_
 
 #include "algebra/real.hpp"
 
@@ -47,8 +47,8 @@ public:
 
 public:
   virtual bool is_numeric() const;
-  virtual const add* as_add() const;
-  virtual const mul* as_mul() const;
+  virtual const sum* as_sum() const;
+  virtual const prod* as_prod() const;
 
 public:
   const numeric* plus()  const;
@@ -129,11 +129,15 @@ public:
   number &operator-=(const number &);
 
   number &ineg();
+  number   neg() const
+  { return number(*this).neg(); }
 
   number &operator*=(const number &);
   number &operator/=(const number &);
 
   number &iinv();
+  number   inv() const
+  { return number(*this).inv(); }
 
   number  pow (const number &) const;
 

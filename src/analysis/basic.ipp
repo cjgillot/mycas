@@ -5,27 +5,27 @@
  *      Author: k1000
  */
 
-#ifndef BASIC_IXX_
-#define BASIC_IXX_
+#ifndef BASIC_IPP_
+#define BASIC_IPP_
 
 #include "basic.hpp"
-#include "add.hpp"
-#include "mul.hpp"
+#include "sum.hpp"
+#include "prod.hpp"
 #include "power.hpp"
 
 namespace analysis {
 /*
-inline add*
-basic::as_add() const {
-  return new add(this);
+inline sum*
+basic::as_sum() const {
+  return new sum(this);
 }
 
-inline mul*
-basic::as_mul() const {
-  return new mul(this);
+inline prod*
+basic::as_prod() const {
+  return new prod(this);
 }
 */
 
 }
 
-#endif /* BASIC_IXX_ */
+#endif /* BASIC_IPP_ */

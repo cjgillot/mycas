@@ -1,5 +1,5 @@
-#ifndef UTILS_VISITOR_HXX
-#define UTILs_VISITOR_HXX
+#ifndef UTILS_VISITOR_HPP
+#define UTILs_VISITOR_HPP
 
 namespace util {
 

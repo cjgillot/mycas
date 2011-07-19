@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef STREAM_ITERATOR_HXX_
-#define STREAM_ITERATOR_HXX_
+#ifndef STREAM_ITERATOR_HPP_
+#define STREAM_ITERATOR_HPP_
 
 #include "stream/streamfwd.hpp"
 #include "stream/stream.hpp"
@@ -84,4 +84,4 @@ public:
 
 } // namespace streams
 
-#endif /* STREAM_ITERATOR_HXX_ */
+#endif /* STREAM_ITERATOR_HPP_ */

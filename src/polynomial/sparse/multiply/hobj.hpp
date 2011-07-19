@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef SPARSE_MULTIPLY_HOBJ_HXX_
-#define SPARSE_MULTIPLY_HOBJ_HXX_
+#ifndef SPARSE_MULTIPLY_HOBJ_HPP_
+#define SPARSE_MULTIPLY_HOBJ_HPP_
 
 #include "stdlib.hpp"
 
@@ -114,4 +114,4 @@ public:
 
 }}} // namespace poly::sparse::multiply
 
-#endif /* SPARSE_MULTIPLY_HOBJ_HXX_ */
+#endif /* SPARSE_MULTIPLY_HOBJ_HPP_ */

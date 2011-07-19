@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef MULTIPLY_HXX_
-#define MULTIPLY_HXX_
+#ifndef MULTIPLY_HPP_
+#define MULTIPLY_HPP_
 
 #include "stdlib.hpp"
 
@@ -36,7 +36,7 @@ namespace multiply {
  * the structure algo<K, R1, R2, I3> must implement
  * a static do_mul(const R1 &a, const R2 &b, I3 r) member function.
  * [a] and [b] are RA ranges, [r] and assignable iterator.
- * This one must add the result of [a * b] to the [r] iterator.
+ * This one must sum the result of [a * b] to the [r] iterator.
  */
 template<class K, class R1, class R2, class I3>
 struct mult
@@ -46,7 +46,7 @@ struct mult
 #undef IMPL
 
 /*!
- * \fn void mul(const R1 &a, const R2 &b, I3 ret)
+ * \fn void prod(const R1 &a, const R2 &b, I3 ret)
  * \param a,b : two coefficient ranges representing polynomials,
  *      exponents in increasing order
  * \param ret : iterator to a range storing their product
@@ -54,11 +54,11 @@ struct mult
  */
 template<class R1, class R2, class I3>
 inline void
-mul(const R1 &a, const R2 &b, I3 ret) {
+prod(const R1 &a, const R2 &b, I3 ret) {
   typedef typename boost::range_value<R1>::type K;
   mult<K,R1,R2,I3>::do_mul(a,b,ret);
 }
 
 }}} // poly::dense::multiply
 
-#endif /* MULTIPLY_HXX_ */
+#endif /* MULTIPLY_HPP_ */

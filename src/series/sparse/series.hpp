@@ -5,14 +5,14 @@
  *      Author: k1000
  */
 
-#ifndef SPARSE_SERIES_HXX_
-#define SPARSE_SERIES_HXX_
+#ifndef SPARSE_SERIES_HPP_
+#define SPARSE_SERIES_HPP_
 
 #include "stream.hpp"
 
 #include "polynomial/sparse/monomial.hpp"
 
-#include "series/sparse/add.hpp"
+#include "series/sparse/sum.hpp"
 #include "series/sparse/multiply.hpp"
 
 #include "polynomial/sparse/poly.hpp"
@@ -182,7 +182,7 @@ public:
 
   friend inline series
   operator*(const series &a, const series &b) {
-    return from_iter_base(detail::mul(
+    return from_iter_base(detail::prod(
       a.impl.iter()
     , b.impl.iter()
     ));
@@ -202,4 +202,4 @@ series<K> series<K>::one(
 }} // series::sparse
 
 
-#endif /* SPARSE_SERIES_HXX_ */
+#endif /* SPARSE_SERIES_HPP_ */

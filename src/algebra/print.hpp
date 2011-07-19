@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef PRINT_HXX_
-#define PRINT_HXX_
+#ifndef PRINT_HPP_
+#define PRINT_HPP_
 
 #include "stdlib.hpp"
 
@@ -87,4 +87,4 @@ print_range(const Range &r, S &ios) {
 
 }
 
-#endif /* PRINT_HXX_ */
+#endif /* PRINT_HPP_ */

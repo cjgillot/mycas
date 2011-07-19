@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef BASIC_HXX_
-#define BASIC_HXX_
+#ifndef BASIC_HPP_
+#define BASIC_HPP_
 
 #include "stdlib.hpp"
 #include "util/refcounted.hpp"
@@ -43,6 +43,9 @@ public:
   basic(const basic &);
   //! \brief Virtual destructor
   virtual ~basic();
+
+  //! \brief Non-throwing swap
+  void swap(basic &);
 
   //! \brief Virtual clone
   virtual basic* clone() const = 0;
@@ -102,16 +105,16 @@ public:
    * \defgroup Coercions
    *
    * These functions return a degenerated form of
-   * themselves in the specified format (add/mul/power...).
+   * themselves in the specified format (sum/prod/power...).
    *
    * If they already are, just return \c this.
    *
    * \{
    */
   //! \brief Addition coercion
-  virtual const add* as_add() const;
+  virtual const sum* as_sum() const;
   //! \brief Multiplication coercion
-  virtual const mul* as_mul() const;
+  virtual const prod* as_prod() const;
   //! \brief Power coercion
   virtual const power* as_power() const;
   /*! \} */
@@ -144,8 +147,7 @@ protected:
    * \return a hash value for *this
    */
   virtual std::size_t
-  calc_hash() const
-  { return boost::hash_value(typeid(*this).name()); }
+  calc_hash() const = 0;
 
 public:
   /*!
@@ -153,8 +155,10 @@ public:
    */
   std::size_t
   get_hash() const {
-    if(flags & Hashed) return m_hash;
-    return m_hash = calc_hash();
+    if(m_flags & Hashed) return m_hash;
+    m_hash = calc_hash();
+    m_flags |= Hashed;
+    return m_hash;
   }
 
   /*!
@@ -168,15 +172,31 @@ public:
   static int
   compare(const basic&, const basic&);
 
+protected:
+  /*!
+   * \brief Forget function for the hash value
+   *
+   * This function has to be called each time
+   * a basic is modified after its construction.
+   */
+  void unhash() {
+    m_flags &= ~Hashed;
+  }
+
 private: // member data
 
   //! \brief Flags
-  unsigned flags;
+  mutable unsigned m_flags;
 
   //! \brief Computed hash value
   mutable std::size_t m_hash;
 };
 
+inline std::size_t
+basic::calc_hash() const
+{ return boost::hash_value(typeid(*this).name()); }
+
+
 }
 
-#endif /* BASIC_HXX_ */
+#endif /* BASIC_HPP_ */

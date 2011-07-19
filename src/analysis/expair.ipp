@@ -1,5 +1,5 @@
-#ifndef EXPAIR_IXX_
-#define EXPAIR_IXX_
+#ifndef EXPAIR_IPP_
+#define EXPAIR_IPP_
 
 #include "stdlib.hpp"
 #include "numeric.hpp"
@@ -82,7 +82,7 @@ expair<Traits>::operator-() const {
   return expair(*this).ineg();
 }
 
-// scalar mul/div
+// scalar prod/div
 template<class Traits>
 inline expair<Traits>&
 expair<Traits>::operator*=(const number &o) {
@@ -96,7 +96,7 @@ expair<Traits>::operator/=(const number &o) {
   return *this;
 }
 
-// homogeneous mul/div
+// homogeneous prod/div
 template<class Traits>
 inline expair<Traits>&
 expair<Traits>::operator*=(const expair &o) {
@@ -155,4 +155,4 @@ expair<Traits>::print(std::basic_ostream<char> &os) const
 }
 
 
-#endif // EXPAIR_IXX_
+#endif // EXPAIR_IPP_

@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef UTILS_PTR_HXX_
-#define UTILS_PTR_HXX_
+#ifndef UTILS_PTR_HPP_
+#define UTILS_PTR_HPP_
 
 #include "operators.hpp"
 #include "algebra/compare.hpp"
@@ -100,4 +100,4 @@ public:
 
 } // namespace util
 
-#endif /* UTILS_PTR_HXX_ */
+#endif /* UTILS_PTR_HPP_ */

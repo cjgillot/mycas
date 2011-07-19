@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef PIMPL_HXX_
-#define PIMPL_HXX_
+#ifndef PIMPL_HPP_
+#define PIMPL_HPP_
 
 #include "stdlib.hpp"
 
@@ -82,4 +82,4 @@ public:
 
 }
 
-#endif /* PIMPL_HXX_ */
+#endif /* PIMPL_HPP_ */

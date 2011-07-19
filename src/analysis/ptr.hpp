@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef PTR_HXX_
-#define PTR_HXX_
+#ifndef PTR_HPP_
+#define PTR_HPP_
 
 #include "stdlib.hpp"
 
@@ -83,4 +83,4 @@ public:
 }
 
 
-#endif /* PTR_HXX_ */
+#endif /* PTR_HPP_ */

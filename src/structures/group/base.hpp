@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef GROUP_BASE_HXX_
-#define GROUP_BASE_HXX_
+#ifndef GROUP_BASE_HPP_
+#define GROUP_BASE_HPP_
 
 #include "stdlib.hpp"
 #include "operators.hpp"
@@ -258,4 +258,4 @@ const base<K,T> base<K,T>::zero;
 }} // namespace structures::group
 
 
-#endif /* GROUP_BASE_HXX_ */
+#endif /* GROUP_BASE_HPP_ */

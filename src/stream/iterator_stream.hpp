@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef ITERATOR_STREAM_HXX_
-#define ITERATOR_STREAM_HXX_
+#ifndef ITERATOR_STREAM_HPP_
+#define ITERATOR_STREAM_HPP_
 
 #include "utils.hpp"
 #include "stream/streamfwd.hpp"
@@ -79,4 +79,4 @@ private:
 #include "stream/stream_iterator.hpp"
 
 
-#endif /* ITERATOR_STREAM_HXX_ */
+#endif /* ITERATOR_STREAM_HPP_ */

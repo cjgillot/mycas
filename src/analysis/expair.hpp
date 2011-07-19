@@ -5,8 +5,10 @@
  *      Author: k1000
  */
 
-#ifndef EXPAIR_HXX_
-#define EXPAIR_HXX_
+#define EXPAIR_HPP_
+
+#ifndef EXPAIR_HPP_
+#define EXPAIR_HPP_
 
 #include "stdlib.hpp"
 
@@ -27,9 +29,9 @@ namespace analysis {
  * \li null_pair(const coef_type &, const rest_type &)
  * \li compare_coef(const coer_type &, const coef_type &)
  * \li compare_rest(const rest_type &, const rest_type &)
- * \li add/sub/mul/div _coef(coef_type &, const coef_type &)
+ * \li sum/sub/prod/div _coef(coef_type &, const coef_type &)
  * \li neg/inv _coef(coef_type &)
- * \li mul/div _rest(rest_type &, const rest_type &)
+ * \li prod/div _rest(rest_type &, const rest_type &)
  * \li neg/inv _rest(rest_type &)
  * \li print_pair(const coef_type &, const rest_type &)
  *
@@ -151,6 +153,4 @@ public:
 
 }
 
-#include "expair.ipp"
-
-#endif /* EXPAIR_HXX_ */
+#endif /* EXPAIR_HPP_ */

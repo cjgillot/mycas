@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef UTILS_FUNCTOR_HXX_
-#define UTILS_FUNCTOR_HXX_
+#ifndef UTILS_FUNCTOR_HPP_
+#define UTILS_FUNCTOR_HPP_
 
 #include<functional>
 
@@ -141,7 +141,16 @@ OP_ALL(multiplies, *);
 //! \brief {divides_*} functors around {/}
 OP_ALL(divides, /);
 
+#undef OP_ALL
+#undef OP_TO
+#undef OP_BY
+#undef OP_EQ
+#undef OP_R
+#undef OP_L
+#undef OP_REV
+#undef OP
+
 } // namespace functor
 
 
-#endif /* UTILS_FUNCTOR_HXX_ */
+#endif /* UTILS_FUNCTOR_HPP_ */

@@ -1,26 +1,27 @@
 /*
- * add.hpp
+ * sum.hpp
  *
  *  Created on: 20 juin 2011
  *      Author: k1000
  */
 
-#ifndef ADD_HXX_
-#define ADD_HXX_
+#ifndef ADD_HPP_
+#define ADD_HPP_
 
 #include "analysis/expairseq.hpp"
-#include "analysis/mul.hpp"
+#include "analysis/prod.hpp"
 
 #include "util/final.hpp"
 
 namespace analysis {
 
-class add;
+class sum;
 
+#if 0
 //! \brief Traits structure for addition \c expairseq
 struct add_traits {
   //! \brief Actual implemented type
-  typedef add type;
+  typedef sum type;
 
   //! \brief Addition overall coefficient type
   typedef number coef_type;
@@ -46,8 +47,9 @@ struct add_traits {
 
   };
 };
+#endif
 
-DECLARE_FINAL_CLASS(add);
+DECLARE_FINAL_CLASS(sum)
 
 /*!
  * \brief Addition class
@@ -58,41 +60,49 @@ DECLARE_FINAL_CLASS(add);
  *
  * Printing : (+ c m1 m2 m3 ...)
  */
-class add: FINAL_CLASS(add)
-, public expairseq<add_traits, mul::traits> {
+class sum: FINAL_CLASS(sum)
+, public expairseq<sum, prod> {
 
   DEFINE_CONST_VISITABLE()
 
 private:
   //! \brief Base class type
-  typedef expairseq<add_traits, mul::traits> super;
+  typedef expairseq<sum, prod> super;
 
-private:
-  // disabled
-  add();
-  add &operator=(const add&);
+public:
+  struct ep;
 
 protected:
   //! \brief Copy constructor (for clone)
-  add(const add &);
+  sum(const sum &);
 
 public:
   //! \brief Destructor
-  virtual ~add();
+  virtual ~sum();
 
 protected:
   //! \brief Number constructor
-  explicit add(const number &);
+  explicit sum(const number &);
 
   //! \brief Multiplication constructor
-  add(const number &, const epair &);
+  sum(const number &, const epair &);
+
+  using super::add_t;
+  using super::sub_t;
+  using super::neg_t;
+  using super::sca_t;
+
+  template<class Tag>
+  sum(const sum &a, const sum &b, Tag);
+  sum(const sum &a, neg_t);
+  sum(const sum &a, const number &n, sca_t);
 
 public:
-  add* clone() const
-  { return new add(*this); }
+  sum* clone() const
+  { return new sum(*this); }
 
 public:
-  virtual const add* as_add() const
+  virtual const sum* as_sum() const
   { return this; }
 
 public:
@@ -100,20 +110,24 @@ public:
   virtual expr eval(unsigned) const;
 
 public:
-  add* iadd(const add&);
-  add* isub(const add&);
-  add* ineg();
+  sum* add(const sum &o) const;
+  sum* sub(const sum &o) const;
+  sum* neg() const;
 
-  add* imul(const number&);
+  sum* mul(const number &n);
+
+private:
+  void print_base(std::basic_ostream<char> &os) const
+  { os << '+'; }
 
 public:
-  static add*
+  static sum*
   from_1basic(const basic*);
 
-  static add*
+  static sum*
   from_numeric(const numeric*);
 };
 
 }
 
-#endif /* ADD_HXX_ */
+#endif /* ADD_HPP_ */

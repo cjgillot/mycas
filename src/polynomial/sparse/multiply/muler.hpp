@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef SPARSE_MULTIPLY_MULER_HXX_
-#define SPARSE_MULTIPLY_MULER_HXX_
+#ifndef SPARSE_MULTIPLY_MULER_HPP_
+#define SPARSE_MULTIPLY_MULER_HPP_
 
 #include "stdlib.hpp"
 
@@ -99,4 +99,4 @@ public:
 
 }}} // namespace poly::sparse::muler
 
-#endif /* SPARSE_MULTIPLY_MULER_HXX_ */
+#endif /* SPARSE_MULTIPLY_MULER_HPP_ */

@@ -39,5 +39,9 @@ Use External Terminal=false
 Working Directory=
 isExecutable=false
 
+[MakeBuilder]
+Abort on First Error=false
+Number Of Jobs=1
+
 [Project]
 VersionControlSupport=kdevgit
