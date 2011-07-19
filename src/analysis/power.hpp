@@ -14,8 +14,6 @@
 
 #include "util/final.hpp"
 
-#include "expair.hpp"
-
 namespace analysis {
 
 class power;
