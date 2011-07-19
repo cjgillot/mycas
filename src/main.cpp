@@ -22,19 +22,23 @@ int main() {
   expr x (new ident("x"));
   expr y (new ident("y"));
 
-  e.print(std::cout);
-  std::cout << std::endl;
+  //e.print(std::cout);
+  //std::cout << std::endl;
 
-  for(int i = 1; i <= 5000; ++i) {
+  for(int i = 1; i <= 500; ++i) {
+    //std::cerr << i << std::endl;
+
     expr f = number(i);
 
-    for(int j = 0; j < 20; ++j) {
+    for(int j = 0; j < 200; ++j) {
       expr s ( new symbol );
       f *= s;
     }
 
     e += f;
   }
+
+  //std::cout << e << std::endl;
 
   return 0;
 }

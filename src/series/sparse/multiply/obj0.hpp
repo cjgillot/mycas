@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef SERIES_SPARSE_OBJ0_HXX_
-#define SERIES_SPARSE_OBJ0_HXX_
+#ifndef SERIES_SPARSE_OBJ0_HPP_
+#define SERIES_SPARSE_OBJ0_HPP_
 
 #include "stdlib.hpp"
 #include "utils.hpp"
@@ -84,4 +84,4 @@ obj0_right(iterator_base<M> *fit, const M &g0) {
 
 }}} // namespace series::sparse::multiply
 
-#endif /* SERIES_SPARSE_OBJ0_HXX_ */
+#endif /* SERIES_SPARSE_OBJ0_HPP_ */

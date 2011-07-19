@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef SPARSE_MULTIPLY_FORWARD_HXX_
-#define SPARSE_MULTIPLY_FORWARD_HXX_
+#ifndef SPARSE_MULTIPLY_FORWARD_HPP_
+#define SPARSE_MULTIPLY_FORWARD_HPP_
 
 #include "stdlib.hpp"
 
@@ -49,4 +49,4 @@ struct muler_type {
 
 }}} // namespace poly::sparse::multiply
 
-#endif /* SPARSE_MULTIPLY_FORWARD_HXX_ */
+#endif /* SPARSE_MULTIPLY_FORWARD_HPP_ */

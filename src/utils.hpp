@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef UTILS_HXX_
-#define UTILS_HXX_
+#ifndef UTILS_HPP_
+#define UTILS_HPP_
 
 #include<functional>
 
@@ -26,4 +26,4 @@ pad_boolp(bool a, bool b) {
 
 }
 
-#endif /* UTILS_HXX_ */
+#endif /* UTILS_HPP_ */

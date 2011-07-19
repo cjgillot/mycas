@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef OPERATORS_HXX_
-#define OPERATORS_HXX_
+#ifndef OPERATORS_HPP_
+#define OPERATORS_HPP_
 
 #include "stdlib.hpp"
 
@@ -127,4 +127,4 @@ operator<<(std::basic_ostream<Char, Traits> &ios, T* a) {
   return ios << *a;
 }
 
-#endif /* OPERATORS_HXX_ */
+#endif /* OPERATORS_HPP_ */

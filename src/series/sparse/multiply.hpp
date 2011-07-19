@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef SERIES_SPARSE_MULTIPLY_HXX
-#define SERIES_SPARSE_MULTIPLY_HXX
+#ifndef SERIES_SPARSE_MULTIPLY_HPP
+#define SERIES_SPARSE_MULTIPLY_HPP
 
 #include "stdlib.hpp"
 #include "utils.hpp"
@@ -69,7 +69,7 @@ public:
 
 template<class M>
 inline iterator_base<M>*
-mul(iterator_base<M>* a, iterator_base<M>* b) {
+prod(iterator_base<M>* a, iterator_base<M>* b) {
   if(!a || !b) return 0;
   if(a->empty() || b->empty()) return 0;
   return new mul_iterator<M>(a,b);
@@ -78,4 +78,4 @@ mul(iterator_base<M>* a, iterator_base<M>* b) {
 
 }}} // namespace series::sparse::detail
 
-#endif // SERIES_SPARSE_MULTIPLY_HXX
+#endif // SERIES_SPARSE_MULTIPLY_HPP

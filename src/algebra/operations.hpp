@@ -5,8 +5,8 @@
  *      Author: c.gillot
  */
 
-#ifndef OPERATIONS_HXX_
-#define OPERATIONS_HXX_
+#ifndef OPERATIONS_HPP_
+#define OPERATIONS_HPP_
 
 namespace algebra {
 
@@ -42,4 +42,4 @@ idiv(T &a, const T &b) {
 
 }
 
-#endif /* OPERATIONS_HXX_ */
+#endif /* OPERATIONS_HPP_ */

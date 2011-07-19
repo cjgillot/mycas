@@ -8,15 +8,22 @@
 #include "utils.hpp"
 
 #include "basic.hpp"
-#include "add.hpp"
-#include "mul.hpp"
+#include "sum.hpp"
+#include "prod.hpp"
 #include "power.hpp"
 
 namespace analysis {
 
-basic::basic() {}
-basic::basic(const basic &) {}
+basic::basic()
+: m_flags(0), m_hash(0) {}
+basic::basic(const basic &o)
+: m_flags(o.m_flags), m_hash(o.m_hash) {}
 basic::~basic() {}
+
+void basic::swap(basic &o) {
+  std::swap(m_hash, o.m_hash);
+  std::swap(m_flags, o.m_flags);
+}
 
 bool
 basic::null() const {
@@ -31,13 +38,13 @@ bool
 basic::is_numeric() const {
   return false;
 }
-const add*
-basic::as_add() const {
-  return add::from_1basic(this);
+const sum*
+basic::as_sum() const {
+  return sum::from_1basic(this);
 }
-const mul*
-basic::as_mul() const {
-  return mul::from_1basic(this);
+const prod*
+basic::as_prod() const {
+  return prod::from_1basic(this);
 }
 const power*
 basic::as_power() const {

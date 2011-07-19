@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef STDLIB_HXX_
-#define STDLIB_HXX_
+#ifndef STDLIB_HPP_
+#define STDLIB_HPP_
 
 #include<iostream>
 #include<algorithm>
@@ -56,4 +56,4 @@ using boost::lambda::_3;
 
 #include<boost/intrusive_ptr.hpp>
 
-#endif /* STDLIB_HXX_ */
+#endif /* STDLIB_HPP_ */

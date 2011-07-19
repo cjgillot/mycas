@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef UTILS_MOVE_HXX_
-#define UTILS_MOVE_HXX_
+#ifndef UTILS_MOVE_HPP_
+#define UTILS_MOVE_HPP_
 
 namespace util {
 
@@ -62,4 +62,4 @@ public:
 
 } // namespace util
 
-#endif /* UTILS_MOVE_HXX_ */
+#endif /* UTILS_MOVE_HPP_ */

@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef COMM_HXX_
-#define COMM_HXX_
+#ifndef COMM_HPP_
+#define COMM_HPP_
 
 #include "stdlib.hpp"
 #include "operators.hpp"
@@ -146,4 +146,4 @@ public:
 
 }} // namespace structures::magma
 
-#endif /* COMM_HXX_ */
+#endif /* COMM_HPP_ */

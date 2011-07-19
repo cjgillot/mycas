@@ -5,14 +5,14 @@
  *      Author: k1000
  */
 
-#ifndef DENSE_SERIES_HXX_
-#define DENSE_SERIES_HXX_
+#ifndef DENSE_SERIES_HPP_
+#define DENSE_SERIES_HPP_
 
 #include "stream.hpp"
 
 #include "polynomial/dense/poly.hpp"
 
-#include "series/dense/add.hpp"
+#include "series/dense/sum.hpp"
 
 namespace series {
 namespace dense {
@@ -194,4 +194,4 @@ const series<K> series<K>::one(
 
 #include "series/dense/multiply.hpp"
 
-#endif /* DENSE_SERIES_HXX_ */
+#endif /* DENSE_SERIES_HPP_ */

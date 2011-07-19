@@ -1,5 +1,5 @@
-#ifndef FUNCTION_HXX
-#define FUNCTION_HXX
+#ifndef FUNCTION_HPP
+#define FUNCTION_HPP
 
 #include "stdlib.hpp"
 

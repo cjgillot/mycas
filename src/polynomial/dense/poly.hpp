@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef POLY_HXX_
-#define POLY_HXX_
+#ifndef POLY_HPP_
+#define POLY_HPP_
 
 #include "operators.hpp"
 
@@ -302,7 +302,7 @@ private:
       return;
     }
     r.resize(a.size() + b.size() - 1, algebra::zero<K>());
-    multiply::mul(a,b,r.begin());
+    multiply::prod(a,b,r.begin());
   }
 
 public:
@@ -391,4 +391,4 @@ const poly<K> poly<K>::one(algebra::one<K>());
 
 }} // namespace poly::dense
 
-#endif /* POLY_HXX_ */
+#endif /* POLY_HPP_ */

@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef STREAMFWD_HXX_
-#define STREAMFWD_HXX_
+#ifndef STREAMFWD_HPP_
+#define STREAMFWD_HPP_
 
 namespace streams {
 
@@ -18,4 +18,4 @@ struct stream_iterator;
 
 } // namespace streams
 
-#endif /* STREAMFWD_HXX_ */
+#endif /* STREAMFWD_HPP_ */

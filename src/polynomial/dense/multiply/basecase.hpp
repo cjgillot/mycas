@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef POLY_DENSE_MULTIPLY_BASECASE_HXX_
-#define POLY_DENSE_MULTIPLY_BASECASE_HXX_
+#ifndef POLY_DENSE_MULTIPLY_BASECASE_HPP_
+#define POLY_DENSE_MULTIPLY_BASECASE_HPP_
 
 #include "stdlib.hpp"
 #include "algebra/utils.hpp"
@@ -131,4 +131,4 @@ struct naive {
 
 }}} // namespace poly::dense::multiply
 
-#endif /* POLY_DENSE_MULTIPLY_BASECASE_HXX_ */
+#endif /* POLY_DENSE_MULTIPLY_BASECASE_HPP_ */

@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef RANGE_HXX_
-#define RANGE_HXX_
+#ifndef RANGE_HPP_
+#define RANGE_HPP_
 
 #include "stdlib.hpp"
 
@@ -132,4 +132,4 @@ iterate(const Range &r) {
 }} // imperative::iterator
 
 
-#endif /* RANGE_HXX_ */
+#endif /* RANGE_HPP_ */

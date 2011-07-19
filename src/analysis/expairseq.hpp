@@ -5,51 +5,22 @@
  *      Author: k1000
  */
 
-#ifndef EXPAIRSEQ_HXX_
-#define EXPAIRSEQ_HXX_
+#ifndef EXPAIRSEQ_HPP_
+#define EXPAIRSEQ_HPP_
 
-#include "numeric.hpp"
 #include "util/pimpl.hpp"
 
-#include "expair.hpp"
-
-#include "polynomial/sparsefwd.hpp"
+#include "analysis/numeric.hpp"
 
 namespace analysis {
 
-
-template<class Traits, class MonoTraits>
-struct expairseq_traits;
-
-
-template<class Traits, class MonoTraits>
+template<class Impl, class Mono>
 class expairseq
 : public basic {
 
-public:
-  //! \brief Actual traits class passed to expair
-  typedef expairseq_traits<Traits,MonoTraits> traits;
-
-  //! \brief Pair type
-  typedef expair<traits> impl_t;
-
 protected:
-  typedef typename traits::epair epair;
-  typedef typename traits::coef_type coef_type;
-
-private:
-  //! \brief Pair implementation member
-  impl_t m_impl;
-
-  typedef typename traits::poly_t poly_t;
-
-public:
-  //! \brief Coercion from expair
-  expairseq(const impl_t &i);
-  //! \brief Coercion to expair
-  operator impl_t() const;
-
-  //! \}
+  typedef typename Mono::handle epair;
+  typedef std::vector<epair> poly_t;
 
 protected:
   //! \brief Copy constructor
@@ -57,35 +28,33 @@ protected:
   //! \brief Non-throwing swap
   void swap(expairseq &o);
 
-private:
-  // disabled
-  expairseq();
-  expairseq &operator=(const expairseq &);
+protected:
+  struct handle;
 
 public:
   explicit
-  expairseq(const coef_type &n);
-  expairseq(const coef_type &n, const epair &p);
-  expairseq(const coef_type &n, const poly_t* i);
+  expairseq(const number &n);
+  expairseq(const number &n, const epair &p);
+  //expairseq(const number &n, const poly_t* i);
   ~expairseq();
 
   virtual expairseq* clone() const = 0;
 
 protected:
-  // shall be called after any modifying operation
-  void canonicalize();
+  struct add_t {};
+  struct sub_t {};
+  struct neg_t {};
+  struct sca_t {};
 
-  // for the derived, we're and addition
-  // for expair, we're a multiplication
-  expairseq &iadd(const expairseq &);
-  expairseq &isub(const expairseq &);
-  expairseq &ineg();
+  expairseq(const expairseq &, const expairseq &, add_t);
+  expairseq(const expairseq &, const expairseq &, sub_t);
+  expairseq(const expairseq &, neg_t);
 
-  // scalar multiplication
-  expairseq &imul(const coef_type &);
+  expairseq(const expairseq &, const number &, sca_t);
 
+protected:
   // access
-  const coef_type &coef() const;
+  const number &coef() const;
   bool is_empty() const;
   bool is_mono() const;
   const epair &mono() const;
@@ -94,27 +63,80 @@ private:
   std::size_t calc_hash() const;
 
 public:
+  int partial_compare(const expairseq &) const;
   int compare_same_type(const basic &) const;
   void print(std::basic_ostream<char> &os) const;
+
+  virtual void print_base(std::basic_ostream<char> &) const = 0;
+
+private: // member data
+  number m_coef;
+  boost::shared_ptr<poly_t> m_poly;
+
+  // contains the hash value of {m_poly}
+  std::size_t m_hash;
 };
 
+template<class I, class M>
+struct expairseq<I,M>::handle {
 
-template<class Traits, class MonoTraits>
-struct expairseq_traits {
-  typedef expairseq<Traits, MonoTraits> type;
+  handle(const expairseq* p)
+  : m_ptr(p) { assert(p); }
 
-  typedef expair<MonoTraits> epair;
-  typedef poly::sparse::poly<epair> poly_t;
+  handle(const handle &o)
+  : m_ptr(o.m_ptr) {}
 
-  struct ep;
+  handle &operator=(const handle &o) {
+    m_ptr = o.m_ptr;
+    return *this;
+  }
 
-  typedef typename Traits::coef_type coef_type;
-  typedef util::cow_pimpl<poly_t> rest_type;
+  ~handle() {}
+
+  operator expr() const
+  { return expr(m_ptr.get()); }
+
+  handle operator+(const handle &o) const {
+    assert(compare(*this, o) == 0);
+    return chg_coef(m_ptr->m_coef + o.m_ptr->m_coef);
+  }
+  handle operator-(const handle &o) const {
+    assert(compare(*this, o) == 0);
+    return chg_coef(m_ptr->m_coef - o.m_ptr->m_coef);
+  }
+  handle operator-() const {
+    return chg_coef(- m_ptr->m_coef);
+  }
+  handle sca(const number &n) const {
+    return chg_coef(m_ptr->m_coef * n);
+  }
+
+  bool null() const
+  { return m_ptr->m_coef.null(); }
+
+  static int compare(const handle &a, const handle &b)
+  { return a.m_ptr->partial_compare(*b.m_ptr); }
+  static int deep_compare(const handle &a, const handle &b)
+  { return basic::compare(*a.m_ptr, *b.m_ptr); }
+
+  std::size_t hash() const
+  { return m_ptr->get_hash(); }
+
+  template<class S>
+  void print(S &os) const
+  { m_ptr->print(os); }
+
+private:
+  expairseq* chg_coef(const number &n) const {
+    expairseq* ret = m_ptr->clone();
+    ret->m_coef = n;
+    ret->basic::unhash();
+    return ret;
+  }
+
+  boost::intrusive_ptr<const expairseq> m_ptr;
 };
 
+} // namespace analysis
 
-}
-
-//#include "expairseq.ipp"
-
-#endif /* EXPAIRSEQ_HXX_ */
+#endif /* EXPAIRSEQ_HPP_ */

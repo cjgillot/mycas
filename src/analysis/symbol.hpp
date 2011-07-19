@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef SYMBOL_HXX_
-#define SYMBOL_HXX_
+#ifndef SYMBOL_HPP_
+#define SYMBOL_HPP_
 
 #include "stdlib.hpp"
 #include "analysis/basic.hpp"
@@ -80,4 +80,4 @@ public:
 
 }
 
-#endif /* SYMBOL_HXX_ */
+#endif /* SYMBOL_HPP_ */

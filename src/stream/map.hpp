@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef STREAM_MAP_HXX_
-#define STREAM_MAP_HXX_
+#ifndef STREAM_MAP_HPP_
+#define STREAM_MAP_HPP_
 
 #include "stream/iterator.hpp"
 #include "imperative/iterator/map.hpp"
@@ -36,4 +36,4 @@ map(const stream_ptr<T,Mem> &a, const F &f) {
 } // namespace streams
 
 
-#endif /* STREAM_MAP_HXX_ */
+#endif /* STREAM_MAP_HPP_ */

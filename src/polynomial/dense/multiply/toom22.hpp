@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef POLY_DENSE_MULTIPLY_TOOM22_HXX_
-#define POLY_DENSE_MULTIPLY_TOOM22_HXX_
+#ifndef POLY_DENSE_MULTIPLY_TOOM22_HPP_
+#define POLY_DENSE_MULTIPLY_TOOM22_HPP_
 
 #define TOOM22_THRESHOLD 20
 
@@ -159,4 +159,4 @@ struct toom22 {
 }}} // poly::dense::multiply
 
 
-#endif /* POLY_DENSE_MULTIPLY_TOOM22_HXX_ */
+#endif /* POLY_DENSE_MULTIPLY_TOOM22_HPP_ */

@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef TUPLE_HXX_
-#define TUPLE_HXX_
+#ifndef TUPLE_HPP_
+#define TUPLE_HPP_
 
 #include <boost/fusion/include/cons.hpp>
 
@@ -80,4 +80,4 @@ cons_ref(H &h) {
 
 #include "tuple.ipp"
 
-#endif /* TUPLE_HXX_ */
+#endif /* TUPLE_HPP_ */

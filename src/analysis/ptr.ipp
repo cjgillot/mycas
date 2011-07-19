@@ -1,5 +1,5 @@
-#ifndef PTR_IXX_
-#define PTR_IXX_
+#ifndef PTR_IPP_
+#define PTR_IPP_
 
 #include "stdlib.hpp"
 
@@ -97,4 +97,4 @@ ptr<T>::compare(const ptr &a, const ptr &b, Compare cmp) {
 }
 
 
-#endif /* PTR_HXX_ */
+#endif /* PTR_HPP_ */

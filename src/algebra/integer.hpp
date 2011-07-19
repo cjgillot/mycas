@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef INTEGER_HXX_
-#define INTEGER_HXX_
+#ifndef INTEGER_HPP_
+#define INTEGER_HPP_
 
 #include "algebra/utils.hpp"
 
@@ -43,4 +43,4 @@ ineg<integer>(integer &a)
 
 }
 
-#endif /* INTEGER_HXX_ */
+#endif /* INTEGER_HPP_ */

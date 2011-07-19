@@ -8,16 +8,15 @@
 #include "analysis/expr.hpp"
 #include "analysis/numeric.hpp"
 
-#include "analysis/add.hpp"
-#include "analysis/mul.hpp"
+#include "analysis/sum.hpp"
+#include "analysis/prod.hpp"
 #include "analysis/power.hpp"
-
-#include "analysis/ptr.ipp"
 
 namespace analysis {
 
 const unsigned expr::default_eval_depth = 10;
 
+/*
 expr::expr(const expr &o)
 : m_impl(o.m_impl) {}
 expr &expr::operator=(const expr &o) {
@@ -32,106 +31,92 @@ expr::~expr() {}
 
 void expr::swap(expr &o)
 { m_impl.swap(o.m_impl); }
+*/
 
-void expr::eval(unsigned lv) const
-{ m_impl.eval(lv); }
+// tests
+bool expr::null() const {
+  if( m_impl->null() ) {
+    expr( number::zero ).m_impl.swap(m_impl);
+    return true;
+  }
+  return false;
+}
+bool expr::unit() const {
+  if( m_impl->unit() ) {
+    expr( number::one ).m_impl.swap(m_impl);
+    return true;
+  }
+  return false;
+}
 
-template<class T>
-T* expr::cow() {
-  return static_cast<T*>(m_impl.cow());
+void expr::eval(unsigned lv) const {
+  m_impl->eval(lv).m_impl.swap(m_impl);
 }
 
 
 #define PREPARE_SELF(klass)                     \
-  klass* ap = 0;                                \
-  do {                                          \
-    const klass* ap0 =                          \
-      dynamic_cast<const klass*>(get());        \
-    if(!ap0) ap0 = get()->as_##klass();         \
-    reset(ap0);                                 \
-    ap = cow<klass>();                          \
-  } while(0)
+  const klass* ap =   get()->as_##klass()
 
 #define PREPARE_OTHER(klass)                    \
-  const klass* bp = b.get()->as_##klass()       \
+  const klass* bp = b.get()->as_##klass()
 
 // take care to cache the {b.get()} pointer _before_ cow'ing
 #define PREPARE(klass)        \
   PREPARE_OTHER(klass);       \
   PREPARE_SELF (klass)
 
-expr &expr::operator+=(expr b) {
-  if(!b.get()) return *this;
-  if(!get())   return *this = b;
+#define OPERATE_SELF(op)      \
+  expr ret ( ap->op() );      \
+  ret.eval();                 \
+  return ret
 
-  PREPARE(add);
+#define OPERATE(op)           \
+  expr ret ( ap->op(*bp) );   \
+  ret.eval();                 \
+  return ret
 
-  ap->iadd(*bp);
+expr expr::operator+(const expr &b) const {
+//   if(!b.get()) return *this;
+//   if(!get())   return b;
 
-  eval();
-
-  return *this;
+  PREPARE(sum);
+  OPERATE(add);
 }
-expr &expr::operator-=(expr b) {
-  if(!b.get()) return  *this;
-  if(!get())   return (*this = b).ineg();
+expr expr::operator-(const expr &b) const {
+//   if(!b.get()) return *this;
+//   if(!get())   return b.neg();
 
-  PREPARE(add);
-
-  ap->isub(*bp);
-
-  eval();
-
-  return *this;
-}
-
-expr &expr::operator*=(expr b) {
-  if(!b.get()) return *this = b;
-  if(!get())   return *this;
-
-  PREPARE(mul);
-
-  ap->imul(*bp);
-
-  eval();
-
-  return *this;
-}
-expr &expr::operator/=(expr b) {
-  assert(b.get());
-  if(!get())   return *this;
-
-  PREPARE(mul);
-
-  ap->idiv(*bp);
-
-  eval();
-
-  return *this;
+  PREPARE(sum);
+  OPERATE(sub);
 }
 
-expr &expr::ineg() {
-  if(!get()) return *this;
+expr expr::operator*(const expr &b) const {
+//   if(!b.get()) return b;
+//   if(!get())   return *this;
 
-  PREPARE_SELF(add);
+  PREPARE(prod);
+  OPERATE(mul);
+}
+expr expr::operator/(const expr &b) const {
+//   assert(b.get());
+//   if(!get())   return *this;
 
-  ap->ineg();
-
-  eval();
-
-  return *this;
+  PREPARE(prod);
+  OPERATE(div);
 }
 
-expr &expr::iinv() {
-  if(!get()) return *this;
+expr expr::neg() const {
+//   if(!get()) return *this;
 
-  PREPARE_SELF(mul);
+  PREPARE_SELF(sum);
+  OPERATE_SELF(neg);
+}
 
-  ap->iinv();
+expr expr::inv() const {
+//   if(!get()) return *this;
 
-  eval();
-
-  return *this;
+  PREPARE_SELF(prod);
+  OPERATE_SELF(inv);
 }
 
 expr expr::pow(const expr &o) const {
@@ -140,18 +125,17 @@ expr expr::pow(const expr &o) const {
   return ret;
 }
 
-namespace {
-
-struct comparator {
-  inline int
-  operator()(const basic &a, const basic &b)
-  { return basic::compare(a,b); }
-};
-
-}
-
 int
-expr::compare(const expr &a, const expr &b)
-{ return impl_t::compare(a.m_impl, b.m_impl, comparator()); }
+expr::compare(const expr &a, const expr &b) {
+  if(a.m_impl == b.m_impl)
+    return 0;
 
+  int c = basic::compare(*a.m_impl, *b.m_impl);
+  if(c) return c;
+
+  // here, a == b
+  util::unify_ptr(a.m_impl, b.m_impl);
+  return 0;
 }
+
+} // namespace analysis

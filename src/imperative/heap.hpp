@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef HEAP_HXX_
-#define HEAP_HXX_
+#ifndef HEAP_HPP_
+#define HEAP_HPP_
 
 #include "stdlib.hpp"
 #include "operators.hpp"
@@ -489,4 +489,4 @@ public:
 
 }} // namespace imperative::heap
 
-#endif /* HEAP_HXX_ */
+#endif /* HEAP_HPP_ */

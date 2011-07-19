@@ -7,8 +7,8 @@
  * This implementation follows [VDH97], see issac97.pdf
  */
 
-#ifndef SERIES_DENSE_MULTIPLY_HXX
-#define SERIES_DENSE_MULTIPLY_HXX
+#ifndef SERIES_DENSE_MULTIPLY_HPP
+#define SERIES_DENSE_MULTIPLY_HPP
 
 #include "stdlib.hpp"
 #include "utils.hpp"
@@ -68,7 +68,7 @@ sub_range(const Range &r, unsigned begin) {
 
 } // namespace detail
 
-using poly::dense::multiply::mul;
+using poly::dense::multiply::prod;
 
 template<class K, class Mem>
 class multiplier
@@ -162,8 +162,8 @@ private:
     if(n < 2 || !detail::is_power(n)) return;
     // now, exists p verifying n == 2^(p+1)
 
-    // add a[n/2 : n) * b[n/2 : n) to ret[n : 2*n-1)
-    mul(
+    // sum a[n/2 : n) * b[n/2 : n) to ret[n : 2*n-1)
+    prod(
       detail::sub_range(a.values(), (n>>1), n)
     , detail::sub_range(b.values(), (n>>1), n)
     , m_val.begin() + n
@@ -192,8 +192,8 @@ private:
         //algebra::print_range(detail::sub_range(a.values(), ep, ep << 1), std::cerr); std::cerr << std::endl;
         //algebra::print_range(detail::sub_range(b.values(), kp, n), std::cerr); std::cerr << std::endl;
 
-        // add a[p : 2*p) * b[n-p : n) to ret[n : 2*n-1)
-        mul(
+        // sum a[p : 2*p) * b[n-p : n) to ret[n : 2*n-1)
+        prod(
           detail::sub_range(a.values(), p, p << 1)
         , detail::sub_range(b.values(), kp, n)
         , m_val.begin() + n
@@ -208,8 +208,8 @@ private:
         //algebra::print_range(detail::sub_range(a.values(), kp, n), std::cerr); std::cerr << std::endl;
         //algebra::print_range(detail::sub_range(b.values(), ep, ep << 1), std::cerr); std::cerr << std::endl;
 
-        // add a[n-p : n) * b[p : 2*p) to ret[n : 2*n-1)
-        mul(
+        // sum a[n-p : n) * b[p : 2*p) to ret[n : 2*n-1)
+        prod(
           detail::sub_range(a.values(), kp, n)
         , detail::sub_range(b.values(), p, p << 1)
         , m_val.begin() + n
@@ -239,4 +239,4 @@ do_mul(const series<K> &a, const series<K> &b) {
 
 }}} // namespace series::dense::multiply
 
-#endif // SERIES_DENSE_MULTIPLY_HXX
+#endif // SERIES_DENSE_MULTIPLY_HPP

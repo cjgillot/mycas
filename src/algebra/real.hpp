@@ -1,5 +1,5 @@
-#ifndef REAL_HXX_
-#define REAL_HXX_
+#ifndef REAL_HPP_
+#define REAL_HPP_
 
 #include "algebra/utils.hpp"
 
@@ -35,4 +35,4 @@ ineg<real>(real &a)
 
 }
 
-#endif // REAL_HXX_
+#endif // REAL_HPP_

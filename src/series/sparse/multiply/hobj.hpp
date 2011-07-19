@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef SERIES_SPARSE_HOBJ_HXX_
-#define SERIES_SPARSE_HOBJ_HXX_
+#ifndef SERIES_SPARSE_HOBJ_HPP_
+#define SERIES_SPARSE_HOBJ_HPP_
 
 #include "stdlib.hpp"
 #include "utils.hpp"
@@ -54,4 +54,4 @@ public:
 
 }}} // namespace series::sparse::multiply
 
-#endif /* SERIES_SPARSE_HOBJ_HXX_ */
+#endif /* SERIES_SPARSE_HOBJ_HPP_ */

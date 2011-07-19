@@ -1,12 +1,12 @@
 /*
- * add.hpp
+ * sum.hpp
  *
  *  Created on: 11 juin 2011
  *      Author: k1000
  */
 
-#ifndef SERIES_ADD_HXX_
-#define SERIES_ADD_HXX_
+#ifndef SERIES_ADD_HPP_
+#define SERIES_ADD_HPP_
 
 #include "stream.hpp"
 
@@ -186,4 +186,4 @@ combine(
 }}} // series::sparse::detail
 
 
-#endif /* SERIES_ADD_HXX_ */
+#endif /* SERIES_ADD_HPP_ */

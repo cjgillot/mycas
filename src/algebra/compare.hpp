@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef COMPARE_HXX_
-#define COMPARE_HXX_
+#ifndef COMPARE_HPP_
+#define COMPARE_HPP_
 
 #include "operators.hpp"
 
@@ -41,4 +41,4 @@ range_compare(const Range1 &a, const Range2 &b, Cmp f) {
 
 }
 
-#endif /* COMPARE_HXX_ */
+#endif /* COMPARE_HPP_ */

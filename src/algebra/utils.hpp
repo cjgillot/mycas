@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef ALGEBRA_UTILS_HXX_
-#define ALGEBRA_UTILS_HXX_
+#ifndef ALGEBRA_UTILS_HPP_
+#define ALGEBRA_UTILS_HPP_
 
 #include "stdlib.hpp"
 #include "operators.hpp"
@@ -45,4 +45,4 @@ iinv(S &o)
 
 } // namespace algebra
 
-#endif /* ALGEBRA_UTILS_HXX_ */
+#endif /* ALGEBRA_UTILS_HPP_ */

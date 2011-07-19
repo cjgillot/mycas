@@ -5,11 +5,11 @@
  *      Author: k1000
  */
 
-#ifndef STREAM_HXX_
-#define STREAM_HXX_
+#ifndef STREAM_HPP_
+#define STREAM_HPP_
 
 #include "stream/iterator.hpp"
 #include "stream/stream.hpp"
 #include "stream/map.hpp"
 
-#endif /* STREAM_HXX_ */
+#endif /* STREAM_HPP_ */

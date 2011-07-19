@@ -8,8 +8,8 @@
 // TODO:
 // - polynomial division
 
-#ifndef SPARSE_POLY_HXX_
-#define SPARSE_POLY_HXX_
+#ifndef SPARSE_POLY_HPP_
+#define SPARSE_POLY_HPP_
 
 #include "stdlib.hpp"
 #include "utils.hpp"
@@ -407,4 +407,4 @@ const poly<M> poly<M>::one(algebra::one<M>());
 
 }} // poly::sparse
 
-#endif /* SPARSE_POLY_HXX_ */
+#endif /* SPARSE_POLY_HPP_ */

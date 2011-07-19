@@ -5,51 +5,20 @@
  *      Author: k1000
  */
 
-#ifndef POWER_HXX_
-#define POWER_HXX_
+#ifndef POWER_HPP_
+#define POWER_HPP_
 
 #include "basic.hpp"
 #include "expr.hpp"
 #include "numeric.hpp"
 
-#include "expair.hpp"
+#include "util/final.hpp"
 
 namespace analysis {
 
 class power;
 
-struct power_traits {
-  typedef power type;
-
-  typedef expr coef_type;
-  typedef expr rest_type;
-
-  struct ep {
-    // expair::null testing
-    static bool null_pair(const coef_type &, const rest_type &);
-
-    // expair::compare and expair::deep_compare
-    static int  compare_coef(const coef_type &, const coef_type &);
-    static int  compare_rest(const rest_type &, const rest_type &);
-
-    // all operations :
-    static void add_coef(coef_type &, const coef_type &);
-    static void sub_coef(coef_type &, const coef_type &);
-    static void mul_coef(coef_type &, const coef_type &);
-    static void div_coef(coef_type &, const coef_type &);
-
-    static void neg_coef(coef_type &);
-
-    // expair::print
-    static void print_pair(std::basic_ostream<char> &
-    , const coef_type &, const rest_type &
-    );
-
-    // expair::*_hash
-    static std::size_t hash_coef(const coef_type &);
-    static std::size_t hash_rest(const rest_type &);
-  };
-};
+DECLARE_FINAL_CLASS(power)
 
 /*!
  * \brief This is the main power representation class
@@ -57,32 +26,15 @@ struct power_traits {
  * This structure represents the power {b^e}
  * using the expair { coef=e; rest=b }.
  */
-class power
-: public basic {
+class power: FINAL_CLASS(power)
+, public basic {
 
 public:
-  typedef power_traits traits;
-
-  // actual expair member type
-  typedef expair<traits> impl_t;
-
-private:
-  impl_t m_impl;
-
-public:
-  // coercion with expair
-  power(const impl_t &i)
-  : m_impl(i) {}
-  operator impl_t() const
-  { return m_impl; }
-
-private: // disabled
-  power();
-  power& operator=(const power &);
+  struct handle;
 
 private: // ctors
   power(const power &);
-  power(const basic*, const basic*);
+  power(const expr&, const expr&);
 
 public:
   void swap(power &);
@@ -102,6 +54,9 @@ public: // misc.
   int compare_same_type(const basic &) const;
   void print(std::basic_ostream<char> &) const;
 
+private:
+  std::size_t calc_hash() const;
+
 public: // static
   static const power*
   from_be(const basic* b, const basic* e);
@@ -111,8 +66,47 @@ public: // static
 
   static const power*
   from_numeric(const numeric*);
+
+private:
+  expr m_base, m_expo;
+};
+
+struct power::handle {
+
+  handle(const power* p)
+  : m_ptr(p) { assert(p); }
+  ~handle() {}
+
+  operator expr() const
+  { return expr(m_ptr.get()); }
+
+
+  handle operator+(const handle &) const;
+  handle operator-(const handle &) const;
+  handle operator-() const;
+
+
+  bool null() const
+  { return m_ptr->unit(); }
+
+  static int compare(const handle &a, const handle &b);
+  static int deep_compare(const handle &a, const handle &b) {
+    int c = a.hash() - b.hash();
+    if(c) return c;
+    return a.m_ptr->power::compare_same_type(*b.m_ptr);
+  }
+
+  std::size_t hash() const
+  { return m_ptr->get_hash(); }
+
+  template<class S>
+  void print(S &os) const
+  { m_ptr->print(os); }
+
+private:
+  boost::intrusive_ptr<const power> m_ptr;
 };
 
 }
 
-#endif /* POWER_HXX_ */
+#endif /* POWER_HPP_ */

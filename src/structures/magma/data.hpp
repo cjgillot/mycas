@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef MAGMA_DATA_HXX_
-#define MAGMA_DATA_HXX_
+#ifndef MAGMA_DATA_HPP_
+#define MAGMA_DATA_HPP_
 
 #include "utils/refcounted.hpp"
 
@@ -73,4 +73,4 @@ public:
 
 }} // namespace structures::magma
 
-#endif /* MAGMA_DATA_HXX_ */
+#endif /* MAGMA_DATA_HPP_ */

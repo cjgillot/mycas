@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef MONOMIAL_HXX_
-#define MONOMIAL_HXX_
+#ifndef MONOMIAL_HPP_
+#define MONOMIAL_HPP_
 
 #include "stdlib.hpp"
 #include "operators.hpp"
@@ -267,4 +267,4 @@ const monomial<K> monomial<K>::one (algebra::one<K>());
 
 }} // poly::sparse
 
-#endif /* MONOMIAL_HXX_ */
+#endif /* MONOMIAL_HPP_ */

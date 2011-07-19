@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef MONOID_BASE_HXX_
-#define MONOID_BASE_HXX_
+#ifndef MONOID_BASE_HPP_
+#define MONOID_BASE_HPP_
 
 #include "stdlib.hpp"
 #include "operators.hpp"
@@ -168,4 +168,4 @@ public:
 }} // namespace structures::monoid
 
 
-#endif /* MONOID_BASE_HXX_ */
+#endif /* MONOID_BASE_HPP_ */

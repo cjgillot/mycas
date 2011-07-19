@@ -7,8 +7,8 @@
 
 #include "numeric.hpp"
 
-#include "add.hpp"
-#include "mul.hpp"
+#include "sum.hpp"
+#include "prod.hpp"
 
 namespace analysis {
 
@@ -80,12 +80,12 @@ void numeric::print(std::basic_ostream<char> &os) const
 bool
 numeric::is_numeric() const
 { return true; }
-const add*
-numeric::as_add() const
-{ return add::from_numeric(this); }
-const mul*
-numeric::as_mul() const
-{ return mul::from_numeric(this); }
+const sum*
+numeric::as_sum() const
+{ return sum::from_numeric(this); }
+const prod*
+numeric::as_prod() const
+{ return prod::from_numeric(this); }
 
 int numeric::compare_same_type(const basic &o) const {
   return algebra::compare(

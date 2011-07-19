@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef ITERATOR_MAP_HXX_
-#define ITERATOR_MAP_HXX_
+#ifndef ITERATOR_MAP_HPP_
+#define ITERATOR_MAP_HPP_
 
 #include "stdlib.hpp"
 #include<boost/type_traits/remove_reference.hpp>
@@ -144,4 +144,4 @@ map(const It &it, const F &f) {
 }} // imperative::iterator
 
 
-#endif /* ITERATOR_MAP_HXX_ */
+#endif /* ITERATOR_MAP_HPP_ */

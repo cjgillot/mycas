@@ -5,21 +5,21 @@
  *      Author: k1000
  */
 
-#ifndef FORWARD_HXX_
-#define FORWARD_HXX_
+#ifndef FORWARD_HPP_
+#define FORWARD_HPP_
 
 namespace analysis {
 
 class basic;
 
-class add;
-class mul;
+class sum;
+class prod;
 class power;
 
-class numeric;
+class number;
 
 class expr;
 
 }
 
-#endif /* FORWARD_HXX_ */
+#endif /* FORWARD_HPP_ */

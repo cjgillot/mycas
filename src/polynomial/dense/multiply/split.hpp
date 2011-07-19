@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef POLY_DENSE_MULTIPLY_SPLIT_HXX_
-#define POLY_DENSE_MULTIPLY_SPLIT_HXX_
+#ifndef POLY_DENSE_MULTIPLY_SPLIT_HPP_
+#define POLY_DENSE_MULTIPLY_SPLIT_HPP_
 
 #include "stdlib.hpp"
 #include "tuple.hpp"
@@ -82,4 +82,4 @@ split(Range &r, int step) {
 
 }}}} // namespace poly::dense::multiply::split
 
-#endif /* POLY_DENSE_MULTIPLY_SPLIT_HXX_ */
+#endif /* POLY_DENSE_MULTIPLY_SPLIT_HPP_ */

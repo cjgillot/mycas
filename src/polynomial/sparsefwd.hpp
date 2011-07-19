@@ -1,5 +1,5 @@
-#ifndef SPARSEFWD_HXX
-#define SPARSEFWD_HXX
+#ifndef SPARSEFWD_HPP
+#define SPARSEFWD_HPP
 
 namespace poly {
 namespace sparse {
@@ -8,4 +8,4 @@ template<class> class poly;
 
 }}
 
-#endif /* SPARSEFWD_HXX */
+#endif /* SPARSEFWD_HPP */

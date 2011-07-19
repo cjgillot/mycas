@@ -5,8 +5,8 @@
  *      Author: k1000
  */
 
-#ifndef GENERATOR_HXX_
-#define GENERATOR_HXX_
+#ifndef GENERATOR_HPP_
+#define GENERATOR_HPP_
 
 #include "stdlib.hpp"
 
@@ -125,4 +125,4 @@ generate(F f) {
 }} // imperative::iterator
 
 
-#endif /* GENERATOR_HXX_ */
+#endif /* GENERATOR_HPP_ */
