@@ -8,7 +8,9 @@
 #ifndef UTILS_REFCOUNTED_HPP_
 #define UTILS_REFCOUNTED_HPP_
 
-#include "stdlib.hpp"
+#include<boost/shared_ptr.hpp>
+#include<boost/noncopyable.hpp>
+#include<boost/intrusive_ptr.hpp>
 
 namespace util {
 
