@@ -12,19 +12,23 @@
 
 namespace util {
 
+class refcount_access;
+
 /*!
  * \struct refcounter
  *
- * \brief A simple reference counter class
+ * \brief A simple reference counter class
  *
  * This class handles the internal
  * integer counter.
  *
  * \invariant \c m_refc == 0 at construction and destruction
  *
+ * \todo Implement atomic operations
+ *
  */
 struct refcounter
-: public boost::noncopyable {
+: private boost::noncopyable {
   //! \brief Reference count
   unsigned long m_refc;
 
@@ -68,19 +72,17 @@ struct refcounter
   _m_refcount_
 
 /*!
- * \def MAKE_REFCOUNTED(klass)
- *
- * Macro implementing the refcounting in the class {klass}
+ * \brief Macro implementing the refcounting in the class \c klass
  *
  * This adds a reference counter and
- * defines the two {intrusive_ptr_*} functions used
- * by boost::intrusive_ptr.
+ * defines the two \c intrusive_ptr_* functions used
+ * by \c boost::intrusive_ptr.
  *
- * The {refcounter} structure cares for itself.
+ * The \c refcounter structure cares for itself.
  */
 #define MAKE_REFCOUNTED(klass)   \
   private: \
-    mutable refcounter GET_REFCOUNTED; \
+    mutable ::util::refcounter GET_REFCOUNTED; \
     \
   public: \
     /*! \brief Ref counter incrementation for boost::intrusive_ptr */ \
@@ -97,44 +99,15 @@ struct refcounter
     }   \
     \
     /*! \brief Test whether pointer is unique (ie. {refcount == 1}) */ \
-    friend class refcount_access // missing ";"
+    friend class ::util::refcount_access // missing ";"
 
 /*!
- * \class refcounted
- *
- * \brief Abstract base class for reference counted objects.
- *
- * Constructor semantic :
- *   all constructors initialize {refcount} to 0
- *   since they create a new object.
- *
- * Destructor semantic : (pure virtual)
- *   the {refcount} must be 0 : no handler
- */
-class refcounted
-: public boost::noncopyable {
-  MAKE_REFCOUNTED(refcounted);
-
-protected:
-  //! \brief Default constructor
-  inline   refcounted() {}
-
-  //! \brief Pure virtual destructor
-  virtual ~refcounted() = 0;
-};
-
-inline
-refcounted::~refcounted() {}
-
-/*!
- * \struct refcount_access
- *
  * \brief Implementation of unique
  *
  * This class is used as friend by
- * the MAKE_REFCOUNTED(...) macro,
+ * the \c MAKE_REFCOUNTED(...) macro,
  * and enables the implementation of
- * {unique(const T*)}.
+ * \c unique().
  */
 struct refcount_access {
   //! \brief Pointer uniqueness test \see util::unique
@@ -177,7 +150,7 @@ unique(const T* it) {
  * value, they can be unified by this function.
  * It cares for getting rid of the less referenced.
  *
- * \param a,b : boost::intrusive_ptr's
+ * \param a,b : \c boost::intrusive_ptr to be unified
  */
 template<class T>
 inline void

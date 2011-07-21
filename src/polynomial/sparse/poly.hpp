@@ -85,7 +85,7 @@ public:
 
 public:
   /*!
-   * \defgroup Range operations
+   * \name Range operations
    * \{
    */
 
@@ -205,7 +205,7 @@ private:
 
 public:
   /*!
-   * \defgroup Linear operations
+   * \name Linear operations
    * \{
    */
 

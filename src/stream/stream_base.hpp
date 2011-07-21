@@ -16,8 +16,9 @@ namespace streams {
 
 template<class T, class Mem>
 class stream_base
-: public util::refcounted
-, protected boost::noncopyable {
+: private boost::noncopyable {
+
+  MAKE_REFCOUNTED(stream_base);
 
 public:
   typedef Mem list_t;

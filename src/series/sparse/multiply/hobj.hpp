@@ -23,7 +23,7 @@ using poly::sparse::multiply::heap;
 // abstract base class for obj0 and obj1
 template<class M>
 class hobj
-: boost::noncopyable {
+: private boost::noncopyable {
 protected:
   M cur;
 

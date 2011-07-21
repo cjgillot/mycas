@@ -31,7 +31,7 @@ namespace multiply {
 template<class P, class Mul>
 struct hobj
 : operators::ordered<hobj<P, Mul> >
-, boost::noncopyable
+, private boost::noncopyable
 , private Mul {
 
 private:
