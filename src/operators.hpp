@@ -8,7 +8,7 @@
 #ifndef OPERATORS_HPP_
 #define OPERATORS_HPP_
 
-#include "stdlib.hpp"
+#include<boost/operators.hpp>
 
 /*!
  * \namespace operators
@@ -48,7 +48,7 @@ compare(S *a, S *b)
  * \struct ordered
  * \brief Ordering operator facility
  *
- * Provided a static member {compare()} function,
+ * Provided a static member \c compare() function,
  * this class creates all the ordering operators.
  */
 template<class T, class B = ::boost::detail::empty_base<T> >
@@ -70,8 +70,8 @@ struct ordered
  * \struct printable
  * \brief Stream operator facility
  *
- * Provided a member {print()} function,
- * this class creates the ostream {<<} operator.
+ * Provided a member \c print() function,
+ * this class creates the ostream \c operator<<.
  */
 template<class T, class B = ::boost::detail::empty_base<T> >
 struct printable
@@ -85,29 +85,36 @@ struct printable
   }
 };
 
+//! \brief Detail structure for safe bool
+struct safe_bool {
+  int fnc(const void** &);
+
+  typedef int (safe_bool::*bool_type)(const void** &);
+
+  static bool_type to_bool(bool pred) {
+    return pred ? &safe_bool::fnc : 0;
+  }
+};
+
 /*!
  * \struct testable
  * \brief Safe bool operator facility
  *
- * Provided a member {valid()} function,
+ * Provided a member \c valid() function,
  * this class creates the safe bool operator
- * and the unary not (!) operator.
+ * and the unary not \c operator!.
  */
 template<class T, class B = ::boost::detail::empty_base<T> >
-class testable
+struct testable
 : public B {
-  typedef boost::range_detail::safe_bool<bool(T::*)()const> safe_bool;
-
-public:
   //! Safe bool type
-  typedef typename safe_bool::unspecified_bool_type bool_t;
+  typedef typename safe_bool::bool_type bool_t;
 
   //! \brief Safe bool operator
   inline
   operator bool_t() const {
-    return safe_bool::to_unspecified_bool(
+    return safe_bool::to_bool(
       static_cast<const T*>(this)->valid()
-    , &T::valid
     );
   }
   //! \brief Negation operator
@@ -119,7 +126,7 @@ public:
 
 } // namespace operators
 
-//! \brief operator<< specialization for pointers
+//! \brief operator\<\< specialization for pointers
 
 template<class T, class Char, class Traits>
 inline std::basic_ostream<Char, Traits> &
