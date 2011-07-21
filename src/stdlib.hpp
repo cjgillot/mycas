@@ -56,4 +56,6 @@ using boost::lambda::_3;
 
 #include<boost/intrusive_ptr.hpp>
 
+#include<boost/variant.hpp>
+
 #endif /* STDLIB_HPP_ */

@@ -5,6 +5,9 @@ project(mycas)
 add_definitions(-Wall -Wextra -Winline -Winit-self -pedantic -ansi -Wunreachable-code -Wshadow)
 # add_definitions(-O3 -Os -fexpensive-optimizations -DNDEBUG -fomit-frame-pointer) # -pg)
 
+include_directories(gmpfrxx)
+add_subdirectory(gmpfrxx)
+
 include_directories(src)
 add_subdirectory(src)
 
@@ -19,3 +22,4 @@ add_custom_command(
 
 add_executable(mycas src/main.cpp)
 target_link_libraries(mycas analysis)
+target_link_libraries(mycas numeric)
