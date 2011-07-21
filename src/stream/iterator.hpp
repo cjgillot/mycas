@@ -29,8 +29,11 @@ namespace streams {
 // abstract base class for iterators
 template<class T>
 struct iterator_base
-: util::refcounted
-, boost::noncopyable {
+: private boost::noncopyable {
+
+  MAKE_REFCOUNTED(iterator_base);
+
+public:
   typedef T value_type;
 
   inline

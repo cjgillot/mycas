@@ -8,13 +8,15 @@
 #ifndef MAGMA_DATA_HPP_
 #define MAGMA_DATA_HPP_
 
-#include "utils/refcounted.hpp"
+#include "util/refcounted.hpp"
 
 namespace structures {
 namespace magma {
 
 class tree
-: public util::refcounted {
+: private boost::noncopyable {
+
+  MAKE_REFCOUNTED(tree);
 
 protected:
   tree() {}

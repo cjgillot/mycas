@@ -30,8 +30,10 @@ enum {
  * for use with \c boost::intrusive_ptr via \c expr or \c ptr.
  */
 class basic
-: public util::refcounted
-, public util::base_const_visitable<bool> {
+: public util::base_const_visitable<bool>
+, private boost::noncopyable {
+
+  MAKE_REFCOUNTED(basic);
 
   // shall be defined in every derived class
   DEFINE_CONST_VISITABLE()
@@ -102,7 +104,7 @@ public:
   virtual bool is_numeric() const;
 
   /*!
-   * \defgroup Coercions
+   * \name Coercions
    *
    * These functions return a degenerated form of
    * themselves in the specified format (sum/prod/power...).
