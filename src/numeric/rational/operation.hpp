@@ -1,7 +1,7 @@
 #ifndef OPERATION_HPP
 #define OPERATION_HPP
 
-#include "repr.hpp"
+#include "real_t.hpp"
 
 namespace numeric {
 
@@ -12,10 +12,10 @@ namespace {
 
 template<class OP>
 struct una_op_v
-: boost::static_visitor<repr_t*> {
+: boost::static_visitor<real_t*> {
 
   template<class T>
-  repr_t*
+  real_t*
   operator()(const T &a) const
   { return OP::template do_it<T>(a); }
 };
@@ -24,9 +24,9 @@ struct una_op_v
   struct name {             \
                             \
     template<class T>       \
-    static repr_t*          \
+    static real_t*          \
     do_it(const T &a) {     \
-      return new repr_t(    \
+      return new real_t(    \
         op( a )             \
       );                    \
     }                       \
@@ -35,8 +35,8 @@ struct una_op_v
 }
 
 template<class OP>
-inline repr_t*
-repr_t::una_op(const repr_t &a)
+inline real_t*
+real_t::una_op(const real_t &a)
 { return boost::apply_visitor( una_op_v<OP>() , a.m_impl ); }
 
 // bin_op_v
@@ -44,10 +44,10 @@ namespace {
 
 template<class OP>
 struct bin_op_v
-: boost::static_visitor<repr_t*> {
+: boost::static_visitor<real_t*> {
 
   template<class T, class U>
-  repr_t*
+  real_t*
   operator()(const T &a, const U &b) const
   { return OP::template do_it<T,U>(a, b); }
 };
@@ -56,12 +56,12 @@ struct bin_op_v
   struct name {                     \
                                     \
     template<class T, class U>      \
-    static repr_t*                  \
+    static real_t*                  \
     do_it(                          \
       const T &a                    \
     , const U &b                    \
     ) {                             \
-      return new repr_t(            \
+      return new real_t(            \
         a op b                      \
       );                            \
     }                               \
@@ -70,8 +70,8 @@ struct bin_op_v
 }
 
 template<class OP>
-inline repr_t*
-repr_t::bin_op(const repr_t &a, const repr_t &b)
+inline real_t*
+real_t::bin_op(const real_t &a, const real_t &b)
 { return boost::apply_visitor( bin_op_v<OP>() , a.m_impl, b.m_impl ); }
 
 } // namespace numeric

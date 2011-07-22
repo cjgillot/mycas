@@ -1,7 +1,6 @@
-#ifndef NUMERIC_POW_HPP
-#define NUMERIC_POW_HPP
+#include "numeric/real/real_t.hpp"
 
-#include "repr.hpp"
+#include "pow.hpp"
 
 namespace numeric {
 
@@ -63,13 +62,13 @@ pow_q_m(mpq_ptr r, mpq_srcptr b, mpz_srcptr e)
 }
 
 template<class T, class U>
-static inline repr_t*
+static inline real_t*
 floatpow(const T &b, const U &e)
 {
   mpfr_class r = pow(b,e);
   if( mpfr_nan_p( r.get_mpfr_t() ) )
     return 0;
-  return new repr_t( r );
+  return new real_t( r );
 }
 
 namespace ratpow {
@@ -157,9 +156,9 @@ pow_q_m(mpq_ptr r, mpq_srcptr b, mpq_srcptr e)
 namespace {
 
 struct power_v
-: boost::static_visitor<repr_t*> {
+: boost::static_visitor<real_t*> {
 
-  typedef repr_t ret_t;
+  typedef real_t ret_t;
 
   // floating exponent case (the easy one)
   template<class T>
@@ -189,14 +188,14 @@ struct power_v
     {
       mpq_class r;
       intpow::pow_z_m( r.get_mpq_t(), b.get_mpz_t(), e.get_mpz_t() );
-      return new repr_t( r );
+      return new real_t( r );
     }
 
     //( s >  0 )
     {
       mpz_class r;
       intpow::pow_z_p( r.get_mpz_t(), b.get_mpz_t(), e.get_mpz_t() );
-      return new repr_t( r );
+      return new real_t( r );
     }
   }
 
@@ -213,12 +212,12 @@ struct power_v
       if( b.get_num() == 1 ) {
         mpz_class r, me = - e;
         intpow::pow_z_p( r.get_mpz_t(), b.get_den_mpz_t(), me.get_mpz_t() );
-        return new repr_t( r );
+        return new real_t( r );
       }
 
       mpq_class r;
       intpow::pow_q_m( r.get_mpq_t(), b.get_mpq_t(), e.get_mpz_t() );
-      return new repr_t( r );
+      return new real_t( r );
     }
 
     //( s >  0 )
@@ -226,12 +225,12 @@ struct power_v
       if( b.get_den() == 1 ) {
         mpz_class r;
         intpow::pow_z_p( r.get_mpz_t(), b.get_num_mpz_t(), e.get_mpz_t() );
-        return new repr_t( r );
+        return new real_t( r );
       }
 
       mpq_class r;
       intpow::pow_q_p( r.get_mpq_t(), b.get_mpq_t(), e.get_mpz_t() );
-      return new repr_t( r );
+      return new real_t( r );
     }
   }
 
@@ -249,7 +248,7 @@ struct power_v
       mpq_class r;
       if( ! ratpow::pow_z_m( r.get_mpq_t(), b.get_mpz_t(), e.get_mpq_t() ) )
         return 0;
-      return new repr_t( r );
+      return new real_t( r );
     }
 
     //( s >  0 )
@@ -257,7 +256,7 @@ struct power_v
       mpz_class r;
       if( ! ratpow::pow_z_p( r.get_mpz_t(), b.get_mpz_t(), e.get_mpq_t() ) )
         return 0;
-      return new repr_t( r );
+      return new real_t( r );
     }
   }
 
@@ -278,39 +277,145 @@ struct power_v
         if(! ratpow::pow_z_p( r.get_mpz_t(), b.get_den_mpz_t(), me.get_mpq_t() ) )
           return 0;
 
-        return new repr_t( r );
+        return new real_t( r );
       }
 
       mpq_class r;
-      ratpow::pow_q_m( r.get_mpq_t(), b.get_mpq_t(), e.get_mpq_t() );
-      return new repr_t( r );
+      if( ! ratpow::pow_q_m( r.get_mpq_t(), b.get_mpq_t(), e.get_mpq_t() ) )
+        return 0;
+      return new real_t( r );
     }
 
     //( s >  0 )
     {
       if( b.get_den() == 1 ) {
         mpz_class r;
-        ratpow::pow_z_p( r.get_mpz_t(), b.get_num_mpz_t(), e.get_mpq_t() );
-        return new repr_t( r );
+        if( ! ratpow::pow_z_p( r.get_mpz_t(), b.get_num_mpz_t(), e.get_mpq_t() ) )
+          return 0;
+        return new real_t( r );
       }
 
       mpq_class r;
-      ratpow::pow_q_p( r.get_mpq_t(), b.get_mpq_t(), e.get_mpq_t() );
-      return new repr_t( r );
+      if( ! ratpow::pow_q_p( r.get_mpq_t(), b.get_mpq_t(), e.get_mpq_t() ) )
+        return 0;
+      return new real_t( r );
     }
   }
 };
 
 }
 
-inline const repr_t*
-repr_t::pow(const repr_t &b, const repr_t &e)
+inline const real_t*
+real_t::pow(const real_t &b, const real_t &e)
 {
   if( e.unit() ) return &b;
-  if( e.null() || b.unit() ) return number::one.m_repr.get();
+  if( b.null() ) return real_t::zero();
+  if( e.null() || b.unit() ) return real_t::one();
+
   return boost::apply_visitor( power_v(), b.m_impl, e.m_impl );
 }
 
-} // namespace numeric
 
-#endif
+// integer exponent case
+mpq_class pow(const mpz_class &b, const mpz_class &e) throw(bad_pow)
+{
+  const int s = sgn( e );
+
+  if( s == 0 )
+    return 1;
+
+  if( ! e.fits_ulong_p() )
+    throw bad_pow();
+
+  mpq_class ret;
+
+  if( s <  0 )
+    intpow::pow_z_m( ret.get_mpq_t(), b.get_mpz_t(), e.get_mpz_t() );
+
+  else //( s >  0 )
+    intpow::pow_z_p( ret.get_num_mpz_t(), b.get_mpz_t(), e.get_mpz_t() );
+
+  return ret;
+}
+
+mpq_class pow(const mpq_class &b, const mpz_class &e) throw(bad_pow)
+{
+  const int s = sgn( e );
+
+  if( s == 0 )
+    return 1;
+
+  if( ! e.fits_ulong_p() )
+    throw bad_pow();
+
+  mpq_class ret;
+
+  if( s <  0 )
+    intpow::pow_q_m( ret.get_mpq_t(), b.get_mpq_t(), e.get_mpz_t() );
+
+  else//( s >  0 )
+    intpow::pow_q_p( ret.get_mpq_t(), b.get_mpq_t(), e.get_mpz_t() );
+
+  return ret;
+}
+
+// rational exponent case (the hard one)
+mpq_class pow(const mpz_class &b, const mpq_class &e) throw(bad_pow)
+{
+  const int s = sgn( e );
+
+  if( s == 0 )
+    return 1;
+
+  if( e.get_den() == 1 )
+    return pow( b, e.get_num() );
+
+  mpq_class ret;
+
+  if( s <  0 )  {
+    if( ! ratpow::pow_z_m( ret.get_mpq_t(), b.get_mpz_t(), e.get_mpq_t() ) )
+      throw bad_pow();
+  }
+
+  else { //( s >  0 )
+    if( ! ratpow::pow_z_p( ret.get_num_mpz_t(), b.get_mpz_t(), e.get_mpq_t() ) )
+      throw bad_pow();
+  }
+
+  return ret;
+}
+
+mpq_class pow(const mpq_class &b, const mpq_class &e) throw(bad_pow)
+{
+  if( e.get_den() == 1 )
+    return pow( b, e.get_num() );
+
+  const int s = sgn( e );
+
+  mpq_class ret;
+
+  if( s <  0 ) {
+    if( ! ratpow::pow_q_m( ret.get_mpq_t(), b.get_mpq_t(), e.get_mpq_t() ) )
+      throw bad_pow();
+  }
+
+  else { //( s >  0 )
+    if( ! ratpow::pow_q_p( ret.get_mpq_t(), b.get_mpq_t(), e.get_mpq_t() ) )
+      throw bad_pow();
+  }
+
+  return ret;
+}
+
+mpfr_class pow(const mpfr_class &b, const mpq_class &e) throw(bad_pow)
+{
+  if( e.get_den() == 1 )
+    return pow( b, e.get_num() );
+
+  if( ! e.get_den().fits_ulong_p() )
+    return pow(b, mpfr_class(e));
+
+  return pow( root( b, e.get_den().get_ui() ), e.get_num() );
+}
+
+} // namespace numeric
