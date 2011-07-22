@@ -8,6 +8,7 @@
 #ifndef COMPARE_HPP_
 #define COMPARE_HPP_
 
+#include <boost/range.hpp>
 #include <boost/range/iterator.hpp>
 
 #include "operators.hpp"
