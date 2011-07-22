@@ -1,6 +1,6 @@
-file(GLOB src *.cpp)
-file(GLOB hdr *.hpp *.ipp)
+file(GLOB_RECURSE src *.cpp)
+file(GLOB_RECURSE hdr *.hpp *.ipp)
 
-add_library(numeric number.cpp)
+add_library(numeric ${src} ${hdr})
 
 target_link_libraries(numeric gmpfrxx mpfr gmp)

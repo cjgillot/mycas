@@ -1,7 +1,4 @@
-#ifndef NUMERIC_POW_HPP
-#define NUMERIC_POW_HPP
-
-#include "repr.hpp"
+#include "numeric/real/real_t.hpp"
 
 namespace numeric {
 
@@ -63,13 +60,13 @@ pow_q_m(mpq_ptr r, mpq_srcptr b, mpz_srcptr e)
 }
 
 template<class T, class U>
-static inline repr_t*
+static inline real_t*
 floatpow(const T &b, const U &e)
 {
   mpfr_class r = pow(b,e);
   if( mpfr_nan_p( r.get_mpfr_t() ) )
     return 0;
-  return new repr_t( r );
+  return new real_t( r );
 }
 
 namespace ratpow {
@@ -157,9 +154,9 @@ pow_q_m(mpq_ptr r, mpq_srcptr b, mpq_srcptr e)
 namespace {
 
 struct power_v
-: boost::static_visitor<repr_t*> {
+: boost::static_visitor<real_t*> {
 
-  typedef repr_t ret_t;
+  typedef real_t ret_t;
 
   // floating exponent case (the easy one)
   template<class T>
@@ -189,14 +186,14 @@ struct power_v
     {
       mpq_class r;
       intpow::pow_z_m( r.get_mpq_t(), b.get_mpz_t(), e.get_mpz_t() );
-      return new repr_t( r );
+      return new real_t( r );
     }
 
     //( s >  0 )
     {
       mpz_class r;
       intpow::pow_z_p( r.get_mpz_t(), b.get_mpz_t(), e.get_mpz_t() );
-      return new repr_t( r );
+      return new real_t( r );
     }
   }
 
@@ -213,12 +210,12 @@ struct power_v
       if( b.get_num() == 1 ) {
         mpz_class r, me = - e;
         intpow::pow_z_p( r.get_mpz_t(), b.get_den_mpz_t(), me.get_mpz_t() );
-        return new repr_t( r );
+        return new real_t( r );
       }
 
       mpq_class r;
       intpow::pow_q_m( r.get_mpq_t(), b.get_mpq_t(), e.get_mpz_t() );
-      return new repr_t( r );
+      return new real_t( r );
     }
 
     //( s >  0 )
@@ -226,12 +223,12 @@ struct power_v
       if( b.get_den() == 1 ) {
         mpz_class r;
         intpow::pow_z_p( r.get_mpz_t(), b.get_num_mpz_t(), e.get_mpz_t() );
-        return new repr_t( r );
+        return new real_t( r );
       }
 
       mpq_class r;
       intpow::pow_q_p( r.get_mpq_t(), b.get_mpq_t(), e.get_mpz_t() );
-      return new repr_t( r );
+      return new real_t( r );
     }
   }
 
@@ -249,7 +246,7 @@ struct power_v
       mpq_class r;
       if( ! ratpow::pow_z_m( r.get_mpq_t(), b.get_mpz_t(), e.get_mpq_t() ) )
         return 0;
-      return new repr_t( r );
+      return new real_t( r );
     }
 
     //( s >  0 )
@@ -257,7 +254,7 @@ struct power_v
       mpz_class r;
       if( ! ratpow::pow_z_p( r.get_mpz_t(), b.get_mpz_t(), e.get_mpq_t() ) )
         return 0;
-      return new repr_t( r );
+      return new real_t( r );
     }
   }
 
@@ -278,12 +275,12 @@ struct power_v
         if(! ratpow::pow_z_p( r.get_mpz_t(), b.get_den_mpz_t(), me.get_mpq_t() ) )
           return 0;
 
-        return new repr_t( r );
+        return new real_t( r );
       }
 
       mpq_class r;
       ratpow::pow_q_m( r.get_mpq_t(), b.get_mpq_t(), e.get_mpq_t() );
-      return new repr_t( r );
+      return new real_t( r );
     }
 
     //( s >  0 )
@@ -291,26 +288,26 @@ struct power_v
       if( b.get_den() == 1 ) {
         mpz_class r;
         ratpow::pow_z_p( r.get_mpz_t(), b.get_num_mpz_t(), e.get_mpq_t() );
-        return new repr_t( r );
+        return new real_t( r );
       }
 
       mpq_class r;
       ratpow::pow_q_p( r.get_mpq_t(), b.get_mpq_t(), e.get_mpq_t() );
-      return new repr_t( r );
+      return new real_t( r );
     }
   }
 };
 
 }
 
-inline const repr_t*
-repr_t::pow(const repr_t &b, const repr_t &e)
+inline const real_t*
+real_t::pow(const real_t &b, const real_t &e)
 {
   if( e.unit() ) return &b;
-  if( e.null() || b.unit() ) return number::one.m_repr.get();
+  if( b.null() ) return real_t::zero();
+  if( e.null() || b.unit() ) return real_t::one();
+
   return boost::apply_visitor( power_v(), b.m_impl, e.m_impl );
 }
 
 } // namespace numeric
-
-#endif

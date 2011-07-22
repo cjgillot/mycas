@@ -1,8 +1,6 @@
-#ifndef COMPARE_HPP
-#define COMPARE_HPP
+#include<boost/functional/hash.hpp>
 
-#include "number.hpp"
-#include "repr.hpp"
+#include "real_t.hpp"
 
 namespace numeric {
 
@@ -21,12 +19,10 @@ struct value_test_v
 
 }
 
-inline bool
-repr_t::null() const
+bool real_t::null() const
 { return boost::apply_visitor( value_test_v<0>(), m_impl ); }
 
-inline bool
-repr_t::unit() const
+bool real_t::unit() const
 { return boost::apply_visitor( value_test_v<1>(), m_impl ); }
 
 // compare_v
@@ -43,8 +39,7 @@ struct compare_v
 
 }
 
-inline int
-repr_t::compare(const repr_t &a, const repr_t &b)
+int real_t::compare(const real_t &a, const real_t &b)
 { return boost::apply_visitor( compare_v(), a.m_impl, b.m_impl ); }
 
 // hash_v
@@ -101,21 +96,19 @@ struct hash_v
 
 }
 
-inline std::size_t
-repr_t::hash() const
+std::size_t real_t::hash() const
 { return boost::apply_visitor( hash_v(), m_impl ); }
 
 
 // print_v
 namespace {
 
-template<class S>
 struct print_v
 : boost::static_visitor<> {
 
-  S &os;
+  std::ostream &os;
 
-  print_v(S &s)
+  print_v(std::ostream &s)
   : os(s) {}
 
   template<class T>
@@ -127,11 +120,7 @@ struct print_v
 
 }
 
-template<class S>
-inline void
-repr_t::print(S &os) const
-{ boost::apply_visitor( print_v<S>(os), m_impl ); }
+void real_t::print(std::ostream &os) const
+{ boost::apply_visitor( print_v(os), m_impl ); }
 
 }
-
-#endif
