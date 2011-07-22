@@ -1,0 +1,6 @@
+# Ignore kate backup files
+*~
+
+# Ignore build and doc folders
+/build
+/doc
