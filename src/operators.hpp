@@ -126,12 +126,4 @@ struct testable
 
 } // namespace operators
 
-//! \brief operator\<\< specialization for pointers
-
-template<class T, class Char, class Traits>
-inline std::basic_ostream<Char, Traits> &
-operator<<(std::basic_ostream<Char, Traits> &ios, T* a) {
-  return ios << *a;
-}
-
 #endif /* OPERATORS_HPP_ */
