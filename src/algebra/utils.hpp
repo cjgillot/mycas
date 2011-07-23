@@ -16,12 +16,12 @@ namespace algebra {
 template<class S>
 inline S
 zero()
-{ return S::zero; }
+{ return S::zero(); }
 
 template<class S>
 inline S
 one()
-{ return S::one; }
+{ return S::one(); }
 
 template<class S>
 inline bool
@@ -42,6 +42,31 @@ template<class S>
 inline S &
 iinv(S &o)
 { return o.iinv(); }
+
+/*!\brief Unit roots access
+ *
+ * This class is a template meant to be specialized
+ * for each type \c K providing unit roots.
+ *
+ * \code
+ * template<>
+ * struct unit_root<K> {
+ *   // we have unit roots
+ *   enum { value = 1 };
+ *
+ *   // and provide them
+ *   static K get(unsigned n)
+ *   { return the first nth root }
+ * };
+ * \endcode
+ *
+ * \todo In practical cases (ie. FFT), you can assume \c n
+ * is always a power of 2.
+ */
+template<class K>
+struct unit_root {
+  enum { value = 0 };
+};
 
 } // namespace algebra
 

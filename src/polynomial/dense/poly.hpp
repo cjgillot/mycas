@@ -16,6 +16,9 @@
 
 #include "polynomial/dense/multiply.hpp"
 
+#include <vector>
+#include <algorithm>
+
 namespace poly {
 namespace dense {
 
@@ -36,15 +39,12 @@ class poly
   impl_t impl;
 
 public:
-  /*!
-   * \brief Integer ring type
-   */
+  //! \brief Integer ring type
   typedef algebra::integer Z;
 
 
 private:
-  /*!
-   * \brief Invariant guard function
+  /*!\brief Invariant guard function
    *
    * Call after any modification
    * modifying the degree.
@@ -58,6 +58,10 @@ private:
         impl.pop_back();
       else
         return;
+
+    // shrink to fit
+    if( impl.capacity() > 2 * impl.size() )
+      impl_t(impl).swap(impl);
   }
 
 public:
@@ -68,24 +72,17 @@ public:
   inline
   poly() {}
 
-  /*!
-   * \brief Copy constructor
-   */
+  //! \brief Copy constructor
   inline
   poly(const poly &o)
   : impl(o.impl) {}
-  /*!
-   * \brief Assignement operator
-   */
+  //! \brief Assignement operator
   inline poly &
   operator=(const poly &o) {
     impl = o.impl;
     return *this;
   }
-  /*!
-   * \brief Non-throwing swap
-   * @param o
-   */
+  //! \brief Non-throwing swap
   inline void
   swap(poly &o) {
     std::swap(impl, o.impl);
@@ -101,13 +98,15 @@ public:
   : impl(1,c)
   { if(algebra::null(c)) impl.clear(); }
 
-  /*!
-   * \brief Destructor
-   */
+  //! \brief Destructor
   inline
   ~poly() {}
 
 public:
+  /*!\name Range operations
+   * \{
+   */
+  //@{
   //! \brief Iterator traversing the underlying container
   typedef typename impl_t::iterator iterator;
   //! \brief Const iterator traversing the underlying container
@@ -139,27 +138,31 @@ public:
   inline const_iterator
   end() const
   { return impl.end(); }
+  //@}
+  /*! \} */
 
 public:
-  /*!
-   * \brief static zero polynomial
-   */
-  static const poly zero;
-  /*!
-   * \brief static unity polynomial
-   */
-  static const poly one;
+  //! \brief static zero polynomial
+  static const poly &zero()
+  {
+    static const poly value;
+    return value;
+  }
+  //! \brief static unity polynomial
+  static const poly &one()
+  {
+    static const poly value ( algebra::one<K>() );
+    return value;
+  }
 
-  /*!
-   * \brief nullity test
+  /*!\brief nullity test
    *
    * constant time
    */
   inline bool
   null() const
   { return impl.empty(); }
-  /*!
-   * \brief unity test
+  /*!\brief unity test
    *
    * constant time
    */
@@ -169,8 +172,7 @@ public:
         && algebra::unit(impl.front());
   }
 
-  /*!
-   * \brief Polynomial degree
+  /*!\brief Polynomial degree
    *
    * constant time
    */
@@ -178,8 +180,7 @@ public:
   deg() const
   { return impl.size() - 1; }
 
-  /*!
-   * \brief Monomial test
+  /*!\brief Monomial test
    *
    * \return true if the polynomial has the form [a * X^p]
    *    where [a != 0].
@@ -199,8 +200,7 @@ public:
   }
 
 private:
-  /*!
-   * \brief polynomial combination
+  /*!\brief polynomial combination
    *
    * Implementation of += and -= operators
    *   requirement : m != 0 implies f1(m) != 0
@@ -209,7 +209,8 @@ private:
    */
   template<class Fnc1, class Fnc2>
   static inline void
-  combine(poly &a, const poly &b, Fnc1 f1, Fnc2 f2) {
+  combine(poly &a, const poly &b, Fnc1 f1, Fnc2 f2)
+  {
     a.impl.reserve(std::max(a.impl.size(), b.impl.size()));
 
     iterator
@@ -223,33 +224,30 @@ private:
       f2(*i1, *i2);
 
     /* if terms remain in o */
-    for(; i2 != e2; ++i2)
-      a.impl.push_back(f1(*i2));
+    std::transform(i2, e2, std::back_inserter(a.impl), f1);
 
     a.reduce();
   }
 
 public:
-  /*!
-   * \brief in-place addition operator
-   *
-   * linear time
+  /*!\name Inplace linear operations
+   * \{
    */
+  //@{
+  //! \brief Addition
   inline poly &
-  operator+=(const poly &o) {
+  operator+=(const poly &o)
+  {
     combine(*this, o,
         functor::identity<K>(),
         functor::plus_eq<K>()
     );
     return *this;
   }
-  /*!
-   * \brief in-place subtraction operator
-   *
-   * linear time
-   */
+  //! \brief Subtraction
   inline poly &
-  operator-=(const poly &o) {
+  operator-=(const poly &o)
+  {
     combine(*this, o,
         functor::negate<K>(),
         functor::minus_eq<K>()
@@ -257,50 +255,46 @@ public:
     return *this;
   }
 
-  /*!
-   * \brief in-place negation
-   *
-   * linear time
-   */
+  //! \brief Negation
   inline poly &
-  ineg() {
-    boost::for_each(*this, algebra::ineg<K>);
+  ineg()
+  {
+    std::for_each(begin(), end(), algebra::ineg<K>);
     return *this;
   }
 
-  /*!
-   * \brief in-place scalar multiplication
-   *
-   * linear time
-   */
+  //! \brief Scalar multiplication
   inline poly &
-  operator*=(const K &o) {
-    if(algebra::null(o)) {
-      impl.clear();
+  operator*=(const K &o)
+  {
+    if(algebra::null(o))
+    {
+      impl_t().swap(*this);
       return *this;
     }
     std::for_each(begin(), end(), functor::multiplies_by<K>(o));
     return *this;
   }
-  /*!
-   * \brief in-place scalar division
-   *
-   * linear time
-   */
+  //! \brief Scalar division
   inline poly &
-  operator/=(const K &o) {
+  operator/=(const K &o)
+  {
     assert(! algebra::null(o));
     std::for_each(begin(), end(), functor::divides_by<K>(o));
     return *this;
   }
 
+  //@}
+  /*! \} */
+
 private:
   static inline void
-  do_mul(const impl_t &a, const impl_t &b, impl_t &r) {
-    if(a.empty() || b.empty()) {
-      r.clear();
+  do_mul(const impl_t &a, const impl_t &b, impl_t &r)
+  {
+    assert( r.empty() );
+    if( a.empty() || b.empty() )
       return;
-    }
+    // resize range for storing the product
     r.resize(a.size() + b.size() - 1, algebra::zero<K>());
     multiply::prod(a,b,r.begin());
   }
@@ -315,7 +309,8 @@ public:
    * \return their product [a*b]
    */
   friend inline poly
-  operator*(const poly &a, const poly &b) {
+  operator*(const poly &a, const poly &b)
+  {
     poly ret;
     poly::do_mul(a.impl, b.impl, ret.impl);
     ret.reduce();
@@ -327,8 +322,9 @@ public:
    * time : see multiply.hpp
    */
   inline poly &
-  operator*=(const poly &o) {
-    (*this * o).swap(*this);
+  operator*=(const poly &o)
+  {
+    operator*(*this, o).swap(*this);
     return *this;
   }
 
@@ -344,11 +340,12 @@ public:
    */
   template<class Range>
   static inline poly
-  from_coefs(const Range &r) {
+  from_coefs(const Range &r)
+  {
     poly ret;
     int sz = boost::size(r);
     ret.impl.reserve(sz);
-    boost::copy(r, std::back_inserter(ret.impl));
+    std::copy(r.begin(), r.end(), std::back_inserter(ret.impl));
     return ret;
   }
 
@@ -362,7 +359,8 @@ public:
    */
   template<class S>
   inline void
-  print(S &ios) const {
+  print(S &ios) const
+  {
     algebra::print_range(impl, ios);
   }
 
@@ -382,12 +380,6 @@ public:
     );
   }
 };
-
-template<class K>
-const poly<K> poly<K>::zero;
-
-template<class K>
-const poly<K> poly<K>::one(algebra::one<K>());
 
 }} // namespace poly::dense
 

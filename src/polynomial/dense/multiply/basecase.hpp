@@ -8,44 +8,41 @@
 #ifndef POLY_DENSE_MULTIPLY_BASECASE_HPP_
 #define POLY_DENSE_MULTIPLY_BASECASE_HPP_
 
-#include "stdlib.hpp"
-#include "algebra/utils.hpp"
+#include "common.hpp"
 
 namespace poly {
 namespace dense {
 namespace multiply {
 
 /*!
- * \struct scalar
- *
  * \brief scalar multiplication
  *
- * Given \f$ A \in K[X]\f$, \f$ k \in K\f$,
- * \f$ Left = k A\f$ and \f$ Right = A k \f$
- * Then \f$ Left[i] = k A[i]\f$ and \f$ Right[i] = A[i] k\f$
+ * Given \f$ A \in K[X]\f$, \f$ k \in K \f$,
+ * \f$ Left = k A \f$ and \f$ Right = A k \f$
+ * Then \f$ Left_i = k A_i \f$ and \f$ Right_i = A_i k \f$
  *
  */
-template<class K, class R1, class I3>
+template<class K, class I1, class I3>
 struct scalar {
   /*!
    * \brief Right scalar multiplication
    *
    * [ret] becomes [ret + p * k]
    *
-   * \param p : a range
+   * \param pb,pe : an input iterator pair
    * \param k : a non-null scalar
    * \param ret : an iterator
    */
   static inline void
-  right(const R1 &p, const K &k, I3 ret) {
-    assert(! algebra::null(k));
+  right(const I1 &pb, const I1 &pe, const K &k, I3 ret) {
+    if(algebra::null(k))
+      return;
 
-    typename boost::range_iterator<const R1>::type
-      it = boost::begin(p),
-      end= boost::end(p);
-
-    for(; it != end; ++it, ++ret)
-      *ret += *it * k;
+    std::transform(
+      pb, pe // input range
+    , detail::make_func_applier(ret, functor::plus_eq<K>()) // output iterator
+    , functor::multiplies_right<K>(k) // functor
+    );
   }
 
   /*!
@@ -58,74 +55,84 @@ struct scalar {
    * \param ret : an iterator
    */
   static inline void
-  left(const K &k, const R1 &p, I3 ret) {
-    assert(! algebra::null(k));
+  left(const K &k, const I1 &pb, const I1 &pe, I3 ret) {
+    if(algebra::null(k))
+      return;
 
-    typename boost::range_iterator<const R1>::type
-      it = boost::begin(p),
-      end= boost::end(p);
-
-    for(; it != end; ++it, ++ret)
-      *ret += k * *it;
+    std::transform(
+      pb, pe // input range
+    , detail::make_func_applier(ret, functor::plus_eq<K>()) // output iterator
+    , functor::multiplies_left<K>(k) // functor
+    );
   }
 };
 
 /*!
- * \struct naive
- *
  * \brief Simple multiplication based on the convolution rule.
  *
- * Given \f$(A, B) \in K[X]^2\f$, \f$ C = A B \f$
- * Then \f$ C[k] = \sum_{i+j=k} A[i] B[j] \f$
+ * Given \f$ (A, B) \in K[X]^2 \f$, \f$ C = A B \f$
+ * Then \f$ C_k = \sum_{i+j=k} A_i B_j \f$
  */
-template<class K, class R1, class R2, class I3>
+template<class K, class I1, class I2, class I3>
 struct naive {
+  //! \brief Currification functor of \c scalar<>::left
+  struct fe_lambda {
+    const I2 &b, &e;
+    I3 r;
+
+    fe_lambda(const I2 &b_, const I2 &e_, const I3 &r_)
+    : b(b_), e(e_), r(r_) {}
+
+    fe_lambda(const fe_lambda &o)
+    : b(o.b), e(o.e), r(o.r) {}
+
+    fe_lambda&
+    operator=(const fe_lambda &o)
+    {
+      b = o.b; e = o.e; r = o.r;
+      return *this;
+    }
+
+    void operator()(const K &k)
+    { scalar<K,I2,I3>::left(k, b, e, r); ++r; }
+  };
+
   /*!
-   * \brief algorithm function
-   *
-   * \param a,b : ranges
-   * \param ret : an iterator
+   * \param (ab,ae),(bb,be) : input iterator pairs
+   * \param ret : output iterator
    */
   static inline void
-  convolution(const R1 &a, const R2 &b, I3 ret) {
-    typename boost::range_iterator<const R1>::type
-      i1 = boost::begin(a),
-      e1 = boost::end(a);
-    typename boost::range_iterator<const R2>::type
-      i20= boost::begin(b),
-      e2 = boost::end(b),
-      i2 = i20;
-    I3 ir = ret;
-
-    for(        ; i1 != e1; ++i1, ir = ++ret)
-    for(i2 = i20; i2 != e2; ++i2, ++ir)
-      *ir += *i1 * *i2;
+  convolution(const I1 &ab, const I1 &ae, const I2 &bb, const I2 &be, const I3 &ret) {
+    std::for_each(
+      ab, ae // input range
+    , fe_lambda(bb, be, ret) // functor
+    );
   }
 
   /*!
    * \brief main function
    *
-   * \param a,b : ranges
-   * \param ret : an iterator
+   * \param (ab,ae),(bb,be) : input iterator pairs
+   * \param ret : output iterator
    */
   static inline void
-  do_mul(const R1 &a, const R2 &b, I3 &ret) {
+  do_mul(const I1 &ab, const I1 &ae, const I2 &bb, const I2 &be, I3 ret) {
     {
-      int s1 = boost::size(a),
-          s2 = boost::size(b);
+      int s1 = ae - ab,
+          s2 = be - bb;
       if(s1 == 0 || s2 == 0)
         return;
       if(s1 == 1) {
-        scalar<K,R2,I3>::left (*boost::begin(a), b, ret);
+        scalar<K,I2,I3>::left (*ab, bb, be, ret);
         return;
       }
       if(s2 == 1) {
-        scalar<K,R1,I3>::right(a, *boost::begin(b), ret);
+        scalar<K,I1,I3>::right(ab, ae, *bb, ret);
         return;
       }
     }
 
-    convolution(a,b,ret);
+    convolution(ab, ae, bb, be, ret);
   }
 };
 

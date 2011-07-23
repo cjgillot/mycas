@@ -30,7 +30,7 @@ namespace functor {
  */
 template<class T>
 struct identity
-: std::unary_function<T, T> {
+: std::unary_function<const T&, const T&> {
   /*!
    * \brief Call operator
    */

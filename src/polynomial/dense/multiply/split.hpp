@@ -24,60 +24,48 @@ namespace multiply {
  */
 namespace split {
 
-/*!
- * \brief split helper function
- */
+//! \brief split helper structure
 template<unsigned N, class It>
 struct split_help {
-  /*!
-   * \brief actual function
-   */
+  //! \brief actual recursive function
   static inline
   typename tuple::tuple_t<N+1, It>::type
-  do_it(const It &b, const It &e, int step) {
-    return tuple::cons(b
-    , split_help<N-1,It>::do_it(b+step, e, step)
+  do_it(const It &b, const It &e, int step)
+  {
+    return tuple::cons( b
+    , split_help<N-1,It>::do_it( b + step, e, step )
     );
   }
 };
 
-/*!
- * \brief split helper function
- */
+//! \brief split helper structure
 template<class It>
 struct split_help<0,It> {
-  /*!
-   * \brief actual function
-   */
+  //! \brief actual base-case function
   static inline
   typename tuple::tuple_t<1, It>::type
-  do_it(const It &, const It &e, int) {
+  do_it(const It &, const It &e, int)
+  {
     return tuple::cons(e);
   }
 };
 
 /*!
- * \fn tuple<N, It> split (Range &r, int step)
- *
  * \brief Splitting function
  *
- * \param r : the range to be split
+ * \param b,e : an iterator pair
  * \param step : the splitting step
  *
  * \return a (N+1)-tuple of iterators,
  *      last one being the end iterator.
+ *
+ * \invariant The distance between two adjacent iterators is less-eq step.
  */
-template<unsigned N, class Range>
-typename tuple::tuple_t<N+1,
-  typename boost::range_iterator<Range>::type
->::type
-split(Range &r, int step) {
-  typedef typename boost::range_iterator<Range>::type It;
-  return split_help<N, It>::do_it(
-    boost::begin(r)
-  , boost::end(r)
-  , step
-  );
+template<unsigned N, class It>
+typename tuple::tuple_t<N+1, It>::type
+split(const It &b, const It &e, int step)
+{
+  return split_help<N, It>::do_it( b, e, step );
 }
 
 }}}} // namespace poly::dense::multiply::split

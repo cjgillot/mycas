@@ -140,9 +140,17 @@ public:
 
 public:
   //! \brief static zero polynomial
-  static const poly zero;
+  static const poly &zero()
+  {
+    static const poly value;
+    return value;
+  }
   //! \brief static unity polynomial
-  static const poly one;
+  static const poly &one()
+  {
+    static const poly value ( algebra::one<K>() );
+    return value;
+  }
 
   /*!
    * \brief nullity test
@@ -397,13 +405,6 @@ void poly<M>::combine(
     ++i2;
   }
 }
-
-
-template<class M>
-const poly<M> poly<M>::zero;
-
-template<class M>
-const poly<M> poly<M>::one(algebra::one<M>());
 
 }} // poly::sparse
 
