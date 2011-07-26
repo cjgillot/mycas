@@ -25,7 +25,7 @@ struct prod::ep {
 
 //************* prod class implementation ************//
 prod::prod()
-: super(number::one) {}
+: super(number::one()) {}
 
 prod::prod(const prod &o)
 : super(o) {}
@@ -71,7 +71,7 @@ bool prod::unit() const {
 // static members
 prod* prod::from_1basic(const basic* a) {
   boost::intrusive_ptr<const power> pa = a->as_power();
-  return new prod(number::one, pa.get()); // TODO
+  return new prod(number::one(), pa.get()); // TODO
 }
 prod* prod::from_numeric(const numeric* n) {
   return new prod(n);
@@ -87,7 +87,7 @@ expr prod::eval(unsigned lv) const {
 
   // (* 0 ...) -> 0
   if(c.null())
-    return expr(0);
+    return number::zero();
 
   if(lv == 0)
     return expr(this);
@@ -104,14 +104,62 @@ expr prod::eval(unsigned lv) const {
 
     // expand the addition TODO
     // (* c (+ c' a...)) -> (+ cc' ca...)
-//     if(b.is_a<sum>()) {
-//       sum* a = b.as_a<sum>()->cow<sum>();
-//       a->imul(super::coef());
-//       return expr(a);
-//     }
+    if(b.is_a<sum>()) {
+      const sum* a = b.as_a<sum>();
+      return expr( a->mul( c ) );
+    }
   }
 
   return basic::eval(++lv);
 }
+
+
+expr prod::diff(const symbol &s, unsigned n) const
+{
+  if( n == 0 )
+    return expr(this);
+
+  //! now, n >= 1
+  const number &c = super::coef();
+
+  //! d^n(* c) -> 0
+  if(super::is_empty())
+    return number::zero();
+
+  //! d^n(* 0 ...) -> 0
+  if(c.null())
+    return number::zero();
+
+  //! d^n(* c x) -> (* c d^n(x))
+  if(super::is_mono()) {
+    expr b ( super::mono() );
+
+    return expr(c) * b.diff(s, n);
+  }
+
+  if( n > 1 )
+    return diff(s).diff(s, n-1);
+
+  //! now, n == 1
+
+  //! We use logarithmic differentiation :
+  //!   \f[ e = \Pi_i p_i \f]
+  //! \f[ ln(e) = \sum_i ln(p_i) --> dln(e) = de/e = \sum_i dln(p_i) \f]
+  //! so, \f[ de = e * \sum_i dln(p_i) \f]
+  //!
+  //! Since \c p_i is a \c power, and that power differentiation
+  //! needs logarithm, \c epair { aka. \c power::handle }
+  //! provides it gently.
+
+  expr ret;
+
+  foreach(const epair &e, *this)
+    if( e.has(s) )
+      ret += e.diff_log(s);
+
+  ret *= expr(this);
+  return ret;
+}
+
 
 }

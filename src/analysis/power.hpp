@@ -29,6 +29,8 @@ DECLARE_FINAL_CLASS(power)
 class power: FINAL_CLASS(power)
 , public basic {
 
+  DEFINE_CONST_VISITABLE()
+
 public:
   struct handle;
 
@@ -49,6 +51,8 @@ public: // tests
   bool unit() const;
 
   expr eval(unsigned) const;
+  expr diff(const symbol&, unsigned=1) const;
+  bool has(const symbol&) const;
 
 public: // misc.
   int compare_same_type(const basic &) const;
@@ -56,6 +60,16 @@ public: // misc.
 
 private:
   std::size_t calc_hash() const;
+
+  /*!
+   * \brief Logarithmic differentiation
+   *
+   * This method is used internally by \c prod::diff()
+   * and \c power::diff().
+   *
+   * It returns the logarithmic derivative with respect to \c s.
+   */
+  expr diff_log(const symbol &s) const;
 
 public: // static
   static const power*
@@ -87,7 +101,7 @@ struct power::handle {
 
 
   bool null() const
-  { return m_ptr->unit(); }
+  { return m_ptr->m_expo.null(); }
 
   static int compare(const handle &a, const handle &b);
   static int deep_compare(const handle &a, const handle &b) {
@@ -97,11 +111,20 @@ struct power::handle {
   }
 
   std::size_t hash() const
-  { return m_ptr->get_hash(); }
+  { return m_ptr->power::get_hash(); }
 
   template<class S>
   void print(S &os) const
-  { m_ptr->print(os); }
+  { m_ptr->power::print(os); }
+
+  const power* ptr() const
+  { return m_ptr.get(); }
+
+  bool has(const symbol &s) const
+  { return m_ptr->power::has(s); }
+
+  expr diff_log(const symbol &s) const
+  { return m_ptr->power::diff_log(s); }
 
 private:
   boost::intrusive_ptr<const power> m_ptr;

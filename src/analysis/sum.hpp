@@ -17,38 +17,6 @@ namespace analysis {
 
 class sum;
 
-#if 0
-//! \brief Traits structure for addition \c expairseq
-struct add_traits {
-  //! \brief Actual implemented type
-  typedef sum type;
-
-  //! \brief Addition overall coefficient type
-  typedef number coef_type;
-
-  /*!
-   * \brief Operations with addition
-   *
-   * In the traits class, the \c expair is considered
-   * as a multiplication.
-   */
-  struct ep {
-
-    //! \brief Add the coefs
-    static void mul_coef(coef_type &, const coef_type &);
-    //! \brief Subtract the coefs
-    static void div_coef(coef_type &, const coef_type &);
-
-    //! \brief Negate the coef
-    static void inv_coef(coef_type &);
-
-    //! \brief Print the tree root '+'
-    static void print_base(std::basic_ostream<char> &);
-
-  };
-};
-#endif
-
 DECLARE_FINAL_CLASS(sum)
 
 /*!
@@ -106,15 +74,16 @@ public:
   { return this; }
 
 public:
-  virtual bool null() const;
-  virtual expr eval(unsigned) const;
+  bool null() const;
+  expr eval(unsigned) const;
+  expr diff(const symbol&, unsigned=1) const;
 
 public:
   sum* add(const sum &o) const;
   sum* sub(const sum &o) const;
   sum* neg() const;
 
-  sum* mul(const number &n);
+  sum* mul(const number &n) const;
 
 private:
   void print_base(std::basic_ostream<char> &os) const

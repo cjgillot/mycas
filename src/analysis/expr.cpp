@@ -36,14 +36,14 @@ void expr::swap(expr &o)
 // tests
 bool expr::null() const {
   if( m_impl->null() ) {
-    expr( number::zero ).m_impl.swap(m_impl);
+    expr( number::zero() ).m_impl.swap(m_impl);
     return true;
   }
   return false;
 }
 bool expr::unit() const {
   if( m_impl->unit() ) {
-    expr( number::one ).m_impl.swap(m_impl);
+    expr( number::one() ).m_impl.swap(m_impl);
     return true;
   }
   return false;
@@ -52,6 +52,12 @@ bool expr::unit() const {
 void expr::eval(unsigned lv) const {
   m_impl->eval(lv).m_impl.swap(m_impl);
 }
+
+bool expr::has(const symbol &s) const
+{ return m_impl->has(s); }
+
+expr expr::diff(const symbol &s, unsigned n) const
+{ eval(); return m_impl->diff(s,n); }
 
 
 #define PREPARE_SELF(klass)                     \

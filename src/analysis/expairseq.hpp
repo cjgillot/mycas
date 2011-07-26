@@ -10,7 +10,7 @@
 
 #include "util/pimpl.hpp"
 
-#include "analysis/numeric.hpp"
+#include "analysis/number.hpp"
 
 namespace analysis {
 
@@ -18,9 +18,14 @@ template<class Impl, class Mono>
 class expairseq
 : public basic {
 
+  DEFINE_CONST_VISITABLE()
+
 protected:
   typedef typename Mono::handle epair;
   typedef std::vector<epair> poly_t;
+
+  //! \brief Handle class
+  struct handle;
 
 protected:
   //! \brief Copy constructor
@@ -28,19 +33,29 @@ protected:
   //! \brief Non-throwing swap
   void swap(expairseq &o);
 
-protected:
-  struct handle;
-
-public:
+  //! \brief Constant construction
   explicit
   expairseq(const number &n);
+
+  //! \brief Constant-monomial construction
   expairseq(const number &n, const epair &p);
-  //expairseq(const number &n, const poly_t* i);
+
+  //! \brief Detructor
   ~expairseq();
 
+private:
+  //! \brief Virtual constructor
   virtual expairseq* clone() const = 0;
 
 protected:
+  /*!\name Operation constructors
+   *
+   * Given two \c expairseq, these constructors build
+   * a merge depending on the call tag.
+   *
+   * \{
+   */
+  //@{
   struct add_t {};
   struct sub_t {};
   struct neg_t {};
@@ -51,6 +66,8 @@ protected:
   expairseq(const expairseq &, neg_t);
 
   expairseq(const expairseq &, const number &, sca_t);
+  //@}
+  /*!\}*/
 
 protected:
   // access
@@ -58,6 +75,22 @@ protected:
   bool is_empty() const;
   bool is_mono() const;
   const epair &mono() const;
+
+public:
+  /*!\name Range operations
+   * \{
+   */
+  //@{
+  typedef typename poly_t::const_iterator         const_iterator;
+  typedef typename poly_t::const_reverse_iterator const_reverse_iterator;
+
+  const_iterator begin() const { return m_poly ? m_poly->begin() : const_iterator(); }
+  const_iterator end()   const { return m_poly ? m_poly->end()   : const_iterator(); }
+
+  const_reverse_iterator rbegin() const { return m_poly ? m_poly->rbegin() : const_reverse_iterator(); }
+  const_reverse_iterator rend()   const { return m_poly ? m_poly->rend()   : const_reverse_iterator(); }
+  //@}
+  /*!\}*/
 
 private:
   std::size_t calc_hash() const;
@@ -68,6 +101,8 @@ public:
   void print(std::basic_ostream<char> &os) const;
 
   virtual void print_base(std::basic_ostream<char> &) const = 0;
+
+  bool has(const symbol &) const;
 
 private: // member data
   number m_coef;
@@ -125,6 +160,9 @@ struct expairseq<I,M>::handle {
   template<class S>
   void print(S &os) const
   { m_ptr->print(os); }
+
+  const expairseq* ptr() const
+  { return m_ptr.get(); }
 
 private:
   expairseq* chg_coef(const number &n) const {

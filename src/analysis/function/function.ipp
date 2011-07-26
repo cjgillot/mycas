@@ -1,7 +1,7 @@
 #ifndef FUNCTION_IPP
 #define FUNCTION_IPP
 
-#include "stdlib.hpp"
+#include <algorithm>
 
 #include "analysis/function/function.hpp"
 
@@ -18,7 +18,7 @@ function<N>::function(const std::string &n,
 
 template<unsigned N>
 function<N>::function(const function &o)
-: m_name(o.m_name), m_args(o.m_args) {}
+: basic(o), m_name(o.m_name), m_args(o.m_args) {}
 
 template<unsigned N>
 function<N> &

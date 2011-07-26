@@ -8,12 +8,11 @@
 #ifndef EXPR_HPP_
 #define EXPR_HPP_
 
-#include "stdlib.hpp"
 #include "operators.hpp"
 
 #include "analysis/basic.hpp"
 
-#include "analysis/ptr.hpp"
+#include "analysis/numeric.hpp"
 
 namespace analysis {
 
@@ -35,6 +34,10 @@ class expr
   mutable boost::intrusive_ptr<const basic> m_impl;
 
 public:
+  //! \brief Zero constructor
+  expr()
+  : m_impl(numeric::zero()) {}
+
   //! \brief Copy constructor
   expr(const expr &o)
   : m_impl(o.m_impl) {}
@@ -50,8 +53,7 @@ public:
   }
 
   //! \brief Non-virtual destructor
-  ~expr()
-  {}
+  ~expr() {}
 
   //! \brief Explicit creation from basic
   explicit
@@ -75,6 +77,9 @@ public:
 
   static const unsigned default_eval_depth;
   void eval(unsigned = default_eval_depth) const;
+
+  bool has(const symbol&) const;
+  expr diff(const symbol&, unsigned=1) const;
 
 public: // RTTI
   //! \brief \c basic pointer access
@@ -138,11 +143,18 @@ public:
 public:
   static int
   compare(const expr &a, const expr &b);
+
+  std::size_t hash() const
+  { return m_impl->get_hash(); }
 };
 
 inline std::basic_ostream<char> &
 operator<<(std::basic_ostream<char> &os, const expr &e)
 { e.print(os); return os; }
+
+inline expr
+pow(const expr &a, const expr &b)
+{ return a.pow(b); }
 
 } // namespace analysis
 

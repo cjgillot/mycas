@@ -1,11 +1,13 @@
 #ifndef EXPAIRSEQ_IPP_
 #define EXPAIRSEQ_IPP_
 
-#include "stdlib.hpp"
 #include "algebra/compare.hpp"
 
 #include "analysis/numeric.hpp"
 #include "analysis/expairseq.hpp"
+
+#include <boost/foreach.hpp>
+#define foreach BOOST_FOREACH
 
 namespace analysis {
 
@@ -121,6 +123,8 @@ void do_add(Range &ret, const Range &a, const Range &b, std::size_t &hash) {
       ret.pop_back();
     else
       hash ^= e.hash();
+
+    ++i1; ++i2;
   }
 
   std::copy(i1, e1, std::back_inserter(ret));
@@ -157,13 +161,15 @@ void do_sub(Range &ret, const Range &a, const Range &b, std::size_t &hash) {
     // cancel hash
     hash ^= i1->hash();
 
-    ret.push_back( *i1 + *i2 );
+    ret.push_back( *i1 - *i2 );
     epair &e = ret.back();
 
     if( e.null() )
       ret.pop_back();
     else
       hash ^= e.hash();
+
+    ++i1; ++i2;
   }
 
   std::copy(i1, e1, std::back_inserter(ret));
@@ -196,7 +202,7 @@ template<class I, class M>
 inline
 expairseq<I,M>::expairseq(const expairseq &a, const expairseq &b, sub_t)
 : m_coef(I::ep::sub(a.m_coef, b.m_coef))
-, m_poly(new poly_t)
+, m_poly( /* null */ )
 , m_hash(a.m_hash) {
 
   if( ! b.m_poly )
@@ -209,7 +215,7 @@ expairseq<I,M>::expairseq(const expairseq &a, const expairseq &b, sub_t)
       do_neg(*m_poly, *b.m_poly, m_hash);
 
     else
-      do_add(*m_poly, *a.m_poly, *b.m_poly, m_hash);
+      do_sub(*m_poly, *a.m_poly, *b.m_poly, m_hash);
   }
 
 }
@@ -249,11 +255,11 @@ expairseq<I,M>::coef() const
 template<class I, class M>
 inline bool
 expairseq<I,M>::is_empty() const
-{ return m_poly->empty(); }
+{ return ! m_poly || m_poly->empty(); }
 template<class I, class M>
 inline bool
 expairseq<I,M>::is_mono() const
-{ return m_poly->size() == 1; }
+{ return m_poly && m_poly->size() == 1; }
 
 template<class I, class M>
 inline typename expairseq<I,M>::epair const&
@@ -263,7 +269,7 @@ expairseq<I,M>::mono() const
 template<class I, class M>
 inline std::size_t
 expairseq<I,M>::calc_hash() const {
-  std::size_t seed = basic::calc_hash();
+  std::size_t seed = 0;
   boost::hash_combine(seed, m_coef.get_hash());
   boost::hash_combine(seed, m_hash);
   return seed;
@@ -273,6 +279,9 @@ template<class I, class M>
 inline int
 expairseq<I,M>::partial_compare(const expairseq &o) const {
   if(m_poly.get() == o.m_poly.get()) return 0;
+
+  if( ! m_poly | ! o.m_poly )
+    return m_poly.get() - o.m_poly.get();
 
   int c = m_hash - o.m_hash;
   if(c) return c;
@@ -320,8 +329,20 @@ expairseq<I,M>::print(std::basic_ostream<char> &os) const {
   os << '(';
   print_base(os);
   m_coef.print(os << ' ');
-  boost::for_each(*m_poly, printer(os));
+  if(m_poly) boost::for_each(*m_poly, printer(os));
   os << ')';
+}
+
+template<class I, class M>
+inline bool
+expairseq<I,M>::has(const symbol &s) const {
+  if(! m_poly) return false;
+
+  foreach(const epair &e, *m_poly)
+    if( e.ptr()->has(s) )
+      return true;
+
+  return false;
 }
 
 }

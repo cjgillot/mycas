@@ -1,9 +1,11 @@
 #ifndef PTR_IPP_
 #define PTR_IPP_
 
-#include "stdlib.hpp"
-
 #include "analysis/ptr.hpp"
+
+#include "util/refcounted.hpp"
+
+#include "analysis/expr.hpp"
 
 namespace analysis {
 

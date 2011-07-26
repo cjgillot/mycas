@@ -20,30 +20,43 @@ get_name(const std::string &orig) {
 
 }
 
-symbol::symbol() {}
-symbol::~symbol() {}
+symbol_::symbol_() {}
+symbol_::~symbol_() {}
 
-symbol* symbol::clone() const {
-  return const_cast<symbol*>(this);
+symbol_* symbol_::clone() const {
+  return const_cast<symbol_*>(this);
 }
 
 void
-symbol::print(std::basic_ostream<char> &os) const {
+symbol_::print(std::basic_ostream<char> &os) const {
   os << '_' << static_cast<const void*>(this);
 }
 
 // all symbols are unique
 // so address comparison is sufficient
-int
-symbol::compare_same_type(const basic &o) const {
-  return this - static_cast<const symbol*>(&o);
-}
-std::size_t symbol::calc_hash() const {
-  std::size_t seed = basic::calc_hash();
-  boost::hash_combine(seed, this);
-  return seed;
+int symbol_::compare_same_type(const basic &o) const
+{ return this - static_cast<const symbol_*>(&o); }
+
+std::size_t symbol_::calc_hash() const
+{ return boost::hash_value(this); }
+
+
+bool symbol_::has(const symbol &s) const
+{ return s.m_value.get() == this; }
+
+expr symbol_::diff(const symbol &s, unsigned n) const
+{
+  if( n == 0 )
+    return expr(this);
+
+  if( n == 1 && has(s) )
+    return number::one();
+
+  return number::zero();
 }
 
+
+// ident class
 ident::ident(const std::string &n)
 : m_name(get_name(n)) {}
 ident::~ident() {

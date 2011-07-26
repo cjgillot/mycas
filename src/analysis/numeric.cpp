@@ -12,9 +12,6 @@
 
 namespace analysis {
 
-const number number::zero(0.);
-const number number::one(1.);
-
 numeric::numeric(const numeric &o)
 : basic(o), m_value(o.m_value) {}
 numeric &numeric::operator=(const numeric &o) {
@@ -70,7 +67,7 @@ numeric* numeric::iinv() {
 
 const numeric*
 numeric::pow(const numeric* o) const {
-  if(!o) return number::one.get();
+  if(!o) return number::one().get();
   return new numeric(std::pow(m_value, o->m_value));
 }
 
@@ -93,6 +90,13 @@ int numeric::compare_same_type(const basic &o) const {
   , static_cast<const numeric&>(o).m_value
   );
 }
+
+
+bool numeric::has(const symbol&) const
+{ return false; }
+expr numeric::diff(const symbol&, unsigned n) const
+{ return n == 0 ? number(this) : number::zero(); }
+
 
 // ****** number ****** //
 number::number(const number &o)
@@ -154,7 +158,7 @@ number &number::iinv() {
 
 number number::pow(const number &o) const {
   if(!get())
-    return number::zero;
+    return number::zero();
   return get()->pow(o.get());
 }
 

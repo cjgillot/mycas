@@ -8,26 +8,23 @@
 #ifndef NUMERIC_HPP_
 #define NUMERIC_HPP_
 
-#include "algebra/real.hpp"
-
-#include "operators.hpp"
-
 #include "analysis/basic.hpp"
-#include "analysis/expr.hpp"
 
-#include "analysis/ptr.ipp"
+#include "algebra/real.hpp"
+#include "util/final.hpp"
+
+#include<boost/intrusive_ptr.hpp>
 
 namespace analysis {
 
-class numeric
-: public basic
-, public boost::field_operators1<numeric
-, operators::printable<numeric
-> > {
+class numeric;
 
-  algebra::real m_value;
+DECLARE_FINAL_CLASS(numeric)
 
-  numeric();
+class numeric: FINAL_CLASS(numeric)
+, public basic {
+
+  DEFINE_CONST_VISITABLE()
 
 public:
   numeric(const numeric &);
@@ -38,12 +35,25 @@ public:
   numeric(double v);
   ~numeric();
 
+  static const numeric* zero()
+  {
+    static boost::intrusive_ptr<const numeric> value ( new numeric( 0. ) );
+    return value.get();
+  }
+  static const numeric* one()
+  {
+    static boost::intrusive_ptr<const numeric> value ( new numeric( 1. ) );
+    return value.get();
+  }
+
 public:
   numeric* clone() const;
 
 public:
   bool null() const;
   bool unit() const;
+  expr diff(const symbol&,unsigned) const;
+  bool has(const symbol&) const;
 
 public:
   virtual bool is_numeric() const;
@@ -73,86 +83,11 @@ public:
 private:
   std::size_t calc_hash() const
   { return boost::hash<algebra::real>()(m_value); }
-};
-
-
-class number
-: public boost::field_operators1<number
-, operators::printable<number
-, operators::ordered<number
-> > > {
-
-  typedef ptr<numeric> impl_t;
-  impl_t m_impl;
-
-public:
-  number(const number &);
-  number &operator=(const number &);
-  void swap(number &);
-
-  number(const numeric*);
-
-  number(double v);
-  ~number();
-
-public:
-  operator expr() const;
 
 private:
-  numeric* cow()
-  { return m_impl.cow(); }
-
-public:
-  inline bool
-  null() const
-  { return m_impl.null(); }
-  inline bool
-  unit() const
-  { return m_impl.unit(); }
-
-  inline const numeric*
-  get() const
-  { return m_impl.get(); }
-
-  static const number zero;
-  static const number one;
-
-  number eval(unsigned) const;
-
-public:
-  friend number operator+(const number &a)
-  { return a; }
-  friend number operator-(number a)
-  { return a.ineg(); }
-
-  number &operator+=(const number &);
-  number &operator-=(const number &);
-
-  number &ineg();
-  number   neg() const
-  { return number(*this).neg(); }
-
-  number &operator*=(const number &);
-  number &operator/=(const number &);
-
-  number &iinv();
-  number   inv() const
-  { return number(*this).inv(); }
-
-  number  pow (const number &) const;
-
-public:
-  inline void
-  print(std::basic_ostream<char> &os) const
-  { m_impl.print(os); }
-
-  static int
-  compare(const number &, const number &);
-
-  std::size_t
-  get_hash() const
-  { return m_impl.get()->get_hash(); }
+  algebra::real m_value;
 };
+
 
 }
 

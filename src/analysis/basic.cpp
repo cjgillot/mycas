@@ -71,9 +71,23 @@ basic::compare(const basic &a, const basic &b) {
     &ta = typeid(a)
   , &tb = typeid(b);
 
+#if defined( __GXX_MERGED_TYPEINFO_NAMES )
+# if __GXX_MERGED_TYPEINFO_NAMES
+  {
+    int c = ta.name() - tb.name();
+    if(c) return c;
+  }
+# else
+  {
+    int c = std::strcmp(ta.name(), tb.name());
+    if(c) return c;
+  }
+# endif
+#else
   // shall be optimized
   if(ta.before(tb)) return -1;
   if(tb.before(ta)) return 1;
+#endif
 
   return a.compare_same_type(b);
 

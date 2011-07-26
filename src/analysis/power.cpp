@@ -8,6 +8,9 @@
 #include "utils.hpp"
 
 #include "analysis/power.hpp"
+#include "analysis/number.hpp"
+
+#include "analysis/stdfunc.hpp"
 
 namespace analysis {
 
@@ -23,7 +26,7 @@ power::handle::operator+(const handle &o) const {
 
   return new power(
     m_ptr->m_base
-  , m_ptr->m_expo + m_ptr->m_expo
+  , m_ptr->m_expo + o.m_ptr->m_expo
   );
 }
 power::handle
@@ -32,7 +35,7 @@ power::handle::operator-(const handle &o) const {
 
   return new power(
     m_ptr->m_base
-  , m_ptr->m_expo - m_ptr->m_expo
+  , m_ptr->m_expo - o.m_ptr->m_expo
   );
 }
 power::handle
@@ -84,7 +87,7 @@ expr power::eval(unsigned lv) const {
     bu = b.unit();
 
   if(en | bu)
-    return number::one;
+    return number::one();
 
   if(eu)
     return b;
@@ -113,6 +116,46 @@ expr power::eval(unsigned lv) const {
   return basic::eval(++lv);
 }
 
+bool power::has(const symbol &s) const
+{ return m_base.has(s) || m_expo.has(s); }
+
+expr power::diff(const symbol &s, unsigned n) const
+{
+  if( n == 0 )
+    return expr(this);
+
+  bool bh = m_base.has(s)
+  ,    eh = m_expo.has(s);
+
+  if( !bh & !eh )
+    return number::zero();
+
+  if( m_expo.unit() )
+    return m_base.diff(s,n);
+
+  if( n > 1 )
+    return diff(s).diff(s, n-1);
+
+  if( !eh )
+    return m_expo * m_base.diff(s) * m_base.pow( m_expo - number::one() );
+
+  return diff_log(s) * expr(this);
+}
+
+expr power::diff_log(const symbol &s) const
+{
+  expr ret ( number::zero() );
+
+  if( m_base.has(s) )
+    ret  = m_expo * m_base.diff(s) / m_base;
+
+  if( m_expo.has(s) )
+    ret += log( m_base ) * m_expo.diff(s);
+
+  return ret;
+}
+
+
 // coercion
 power* power::clone() const
 { return new power(*this); }
@@ -137,7 +180,7 @@ int power::compare_same_type(const basic &o_) const {
 }
 
 std::size_t power::calc_hash() const {
-  std::size_t seed = basic::calc_hash();
+  std::size_t seed = 0;
   boost::hash_combine(seed, m_base.get()->get_hash());
   boost::hash_combine(seed, m_expo.get()->get_hash());
   return seed;
@@ -150,7 +193,7 @@ power::from_be(const basic* b, const basic* e)
 
 const power*
 power::from_1basic(const basic* b)
-{ return from_be(b, number::one.get()); }
+{ return from_be(b, number::one().get()); }
 
 const power*
 power::from_numeric(const numeric* n)

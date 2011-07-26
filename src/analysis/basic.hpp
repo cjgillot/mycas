@@ -16,6 +16,9 @@
 
 namespace analysis {
 
+class expr;
+class symbol;
+
 //! \brief Flags used by basic
 enum {
   Hashed = 1
@@ -54,6 +57,18 @@ public:
 
 public:
   /*!
+   * \brief Nullity test
+   * \return \c true if the expression is exactly 0,
+   *    \c false otherwise (if unknown)
+   */
+  virtual bool null() const;
+  /*!
+   * \brief Unity test
+   * \see basic::null()
+   */
+  virtual bool unit() const;
+
+  /*!
    * \brief Evaluation function
    *
    * This function is meant to be overridden by all
@@ -66,38 +81,27 @@ public:
    *
    * All recursive calls must ba made with parameter \a lv - 1.
    *
-   * @param lv : the recursion level
-   * @return the evaluated form
+   * \param lv : the recursion level
+   * \return the evaluated form
    */
   virtual expr eval(unsigned lv) const;
 
   /*!
-   * \brief Nullity test
-   * \return true if the expression is exactly 0,
-   *    false otherwise (if unknown)
+   * \brief Has function
+   *
+   * \param s : a symbol
+   * \return \c true if \c s is contained in the expression
    */
-  virtual bool null() const;
-  /*!
-   * \brief Unity test
-   * \see basic::null()
-   */
-  virtual bool unit() const;
+  virtual bool has(const symbol &s) const = 0;
 
-public:
   /*!
-   * \brief Copy on write function
+   * \brief Differentiation function
    *
-   * Calling this function allows to get
-   * a modifiable version of the current object.
-   *
-   * \return \c this if modifiable, a \c clone() otherwise.
+   * \param s : the symbol with respect to which we differentiate
+   * \param nth : the number of differentiations
+   * \return the evaluated nth derivative of \c *this
    */
-//  template<class T>
-//  T* cow() const {
-//    if(!util::unique(this))
-//      return static_cast<T*>(clone());
-//    return static_cast<T*>(const_cast<basic*>(this));
-//  }
+  virtual expr diff(const symbol &s, unsigned nth = 1) const = 0;
 
 public:
   //! \brief RTTI
@@ -126,7 +130,7 @@ public:
   virtual void
   print(std::basic_ostream<char>&) const = 0;
 
-protected:
+private:
   /*!
    * \brief Virtual homogeneous comparison
    *
@@ -152,9 +156,7 @@ protected:
   calc_hash() const = 0;
 
 public:
-  /*!
-   * \brief Hash value access
-   */
+  //! \brief Hash value access
   std::size_t
   get_hash() const {
     if(m_flags & Hashed) return m_hash;
@@ -166,10 +168,16 @@ public:
   /*!
    * \brief Comparison dispatch function
    *
+   * The comparison template is the following :
+   * - first compare hash values : if different, return according to these
+   * - then compare
+   *
    * This function compares the \c typeid of the
    * two \c basic objects, and orders according to
    * these types.
-   * If equal, compare_same_type is called.
+   * If equal, \c compare_same_type() is called.
+   *
+   * \see compare_same_type()
    */
   static int
   compare(const basic&, const basic&);
@@ -193,11 +201,6 @@ private: // member data
   //! \brief Computed hash value
   mutable std::size_t m_hash;
 };
-
-inline std::size_t
-basic::calc_hash() const
-{ return boost::hash_value(typeid(*this).name()); }
-
 
 }
 

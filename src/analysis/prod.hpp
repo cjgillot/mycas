@@ -57,9 +57,10 @@ public:
   { return this; }
 
 public:
-  virtual bool null() const;
-  virtual bool unit() const;
-  virtual expr eval(unsigned) const;
+  bool null() const;
+  bool unit() const;
+  expr eval(unsigned) const;
+  expr diff(const symbol&, unsigned=1) const;
 
 public:
   prod* mul(const prod &o) const;
