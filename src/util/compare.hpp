@@ -1,7 +1,7 @@
 #ifndef UTIL_COMPARE_HPP
 #define UTIL_COMPARE_HPP
 
-#include <boost/enable_if.hpp>
+#include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_integral.hpp>
 #include <boost/type_traits/make_signed.hpp>
 
@@ -41,6 +41,28 @@ compare(T a, T b) {
   BOOST_STATIC_ASSERT( boost::is_integral<T>::value );
   typedef typename boost::make_signed<T>::type ST;
   return detail::sign( static_cast<ST>(a) - static_cast<ST>(b) );
+}
+
+/*!
+ * \brief Pointer comparison function
+ *
+ * The pointers are compared, not the pointees.
+ *
+ * \return
+ *   -1 if \c a  < \c b
+ *    0 if \c a == \c b
+ *   +1 if \c a  > \c b
+ */
+template<class T>
+inline cmp_t
+compare(T* a, T* b) {
+  return detail::sign( a - b );
+}
+
+template<class T>
+inline cmp_t
+compare(const T* a, const T* b) {
+  return detail::sign( a - b );
 }
 
 
