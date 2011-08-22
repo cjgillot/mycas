@@ -8,24 +8,51 @@
 #ifndef EXPAIRSEQ_HPP_
 #define EXPAIRSEQ_HPP_
 
-#include "util/pimpl.hpp"
+#include<boost/intrusive_ptr.hpp>
 
 #include "analysis/number.hpp"
 
 namespace analysis {
 
+template<class, class>
+class expairseq;
+
+}
+
+#include "analysis/expairseq/handle.hpp"
+#include "analysis/expairseq/poly.hpp"
+
+namespace analysis {
+
+/*!
+ * \brief Implementation class for \c sum and \c mul
+ *
+ * This CRTP abstract class is used as a common implementation for
+ * both \c sum and \c mul.
+ *
+ * The object is represented as a pair coefficient-polynomial,
+ * with a scalar coefficient and a polynomial of \c Mono over the scalar ring.
+ *
+ * The polynomial is shared and its hash value is computed during
+ * construction, in order to save comparison times.
+ *
+ * \param Impl : the implemented class
+ * \param Mono : the monomial class
+ */
 template<class Impl, class Mono>
 class expairseq
 : public basic {
 
-  DEFINE_CONST_VISITABLE()
+  // expairseq is an implemetation base class -> not registered
+  // REGISTER_CLASS( expairseq, basic )
 
 protected:
   typedef typename Mono::handle epair;
-  typedef std::vector<epair> poly_t;
+  typedef epseq::detail::unsafe_vector<epair> poly_t;
 
   //! \brief Handle class
-  struct handle;
+  typedef epseq::handle<Impl, Mono> handle;
+  friend class epseq::handle<Impl, Mono>;
 
 protected:
   //! \brief Copy constructor
@@ -93,88 +120,32 @@ public:
   /*!\}*/
 
 private:
-  std::size_t calc_hash() const;
+  std::size_t hash() const;
 
-public:
-  int partial_compare(const expairseq &) const;
-  int compare_same_type(const basic &) const;
-  void print(std::basic_ostream<char> &os) const;
+  util::cmp_t partial_compare(const expairseq &) const;
+  util::cmp_t compare_same_type(const basic &) const;
 
   virtual void print_base(std::basic_ostream<char> &) const = 0;
+
+public:
+  void print(std::basic_ostream<char> &os) const;
 
   bool has(const symbol &) const;
 
 private: // member data
+  //! \brief Constant coefficient
   number m_coef;
-  boost::shared_ptr<poly_t> m_poly;
 
-  // contains the hash value of {m_poly}
+  //! \brief Shared polynomial vector
+  //! \invariant an empty polynomial is represented by \c nullptr
+  boost::intrusive_ptr<const poly_t> m_poly;
+
+  //! \brief Hash value of \c m_poly
   std::size_t m_hash;
 };
 
-template<class I, class M>
-struct expairseq<I,M>::handle {
-
-  handle(const expairseq* p)
-  : m_ptr(p) { assert(p); }
-
-  handle(const handle &o)
-  : m_ptr(o.m_ptr) {}
-
-  handle &operator=(const handle &o) {
-    m_ptr = o.m_ptr;
-    return *this;
-  }
-
-  ~handle() {}
-
-  operator expr() const
-  { return expr(m_ptr.get()); }
-
-  handle operator+(const handle &o) const {
-    assert(compare(*this, o) == 0);
-    return chg_coef(m_ptr->m_coef + o.m_ptr->m_coef);
-  }
-  handle operator-(const handle &o) const {
-    assert(compare(*this, o) == 0);
-    return chg_coef(m_ptr->m_coef - o.m_ptr->m_coef);
-  }
-  handle operator-() const {
-    return chg_coef(- m_ptr->m_coef);
-  }
-  handle sca(const number &n) const {
-    return chg_coef(m_ptr->m_coef * n);
-  }
-
-  bool null() const
-  { return m_ptr->m_coef.null(); }
-
-  static int compare(const handle &a, const handle &b)
-  { return a.m_ptr->partial_compare(*b.m_ptr); }
-  static int deep_compare(const handle &a, const handle &b)
-  { return basic::compare(*a.m_ptr, *b.m_ptr); }
-
-  std::size_t hash() const
-  { return m_ptr->get_hash(); }
-
-  template<class S>
-  void print(S &os) const
-  { m_ptr->print(os); }
-
-  const expairseq* ptr() const
-  { return m_ptr.get(); }
-
-private:
-  expairseq* chg_coef(const number &n) const {
-    expairseq* ret = m_ptr->clone();
-    ret->m_coef = n;
-    ret->basic::unhash();
-    return ret;
-  }
-
-  boost::intrusive_ptr<const expairseq> m_ptr;
-};
-
 } // namespace analysis
+
+#include "analysis/expairseq/handle.ipp"
 
 #endif /* EXPAIRSEQ_HPP_ */

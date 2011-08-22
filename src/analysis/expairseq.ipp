@@ -1,6 +1,8 @@
 #ifndef EXPAIRSEQ_IPP_
 #define EXPAIRSEQ_IPP_
 
+#include "util/null.hpp"
+
 #include "algebra/compare.hpp"
 
 #include "analysis/numeric.hpp"
@@ -8,6 +10,8 @@
 
 #include <boost/foreach.hpp>
 #define foreach BOOST_FOREACH
+
+#include "analysis/expairseq/operation.hpp"
 
 namespace analysis {
 
@@ -28,156 +32,22 @@ expairseq<I,M>::swap(expairseq &o) {
 template<class I, class M>
 inline
 expairseq<I,M>::expairseq(const number &n)
-: m_coef(n), m_poly( /* null */ ), m_hash(0) {}
+: m_coef( n )
+, m_poly( /* null */ )
+, m_hash( 0ul )
+{}
 
 template<class I, class M>
 expairseq<I,M>::expairseq(const number &n, const epair &p)
-: m_coef(n), m_poly(new poly_t(1, p)), m_hash(p.hash()) {}
+: m_coef( n )
+, m_poly( new poly_t(1, p) )
+, m_hash( p.hash() )
+{}
 
 template<class I, class M>
 expairseq<I,M>::~expairseq() {}
 
-
-// operations
-namespace {
-
-template<class T>
-struct neg_hash
-: std::unary_function<T, T> {
-  std::size_t &h;
-
-  neg_hash(std::size_t &h_)
-  : h(h_) {}
-
-  inline T operator()(const T &o) {
-    T ret = - o;
-    h ^= ret.hash();
-    return ret;
-  }
-};
-
-template<class T, class Sca>
-struct sca_hash
-: std::unary_function<T, T> {
-  std::size_t &h;
-  const Sca &n;
-
-  sca_hash(std::size_t &h_, const Sca &n_)
-  : h(h_), n(n_) {}
-
-  inline T operator()(const T &o) {
-    T ret = o.sca(n);
-    h ^= ret.hash();
-    return ret;
-  }
-};
-
-template<class Range>
-void do_neg(Range &ret, const Range &a, std::size_t &hash) {
-  ret.reserve( a.size() );
-  typedef typename boost::range_value<const Range>::type epair;
-  boost::transform(a, std::back_inserter(ret), neg_hash<epair>(hash));
-}
-
-template<class Range, class Sca>
-void do_sca(Range &ret, const Range &a, const Sca &n, std::size_t &hash) {
-  ret.reserve( a.size() );
-  typedef typename boost::range_value<const Range>::type epair;
-  boost::transform(a, std::back_inserter(ret), sca_hash<epair, Sca>(hash, n));
-}
-
-template<class Range>
-void do_add(Range &ret, const Range &a, const Range &b, std::size_t &hash) {
-
-  ret.reserve(a.size() + b.size());
-
-  typedef typename boost::range_value<const Range>::type epair;
-
-  typename boost::range_iterator<const Range>::type
-    i1 = a.begin(), e1 = a.end(),
-    i2 = b.begin(), e2 = b.end();
-
-  while(i1 != e1 && i2 != e2) {
-    int c = epair::compare( *i1, *i2 );
-
-    if(c  < 0) {
-      ret.push_back( *i1 );
-      // hashing already done
-      ++i1;
-      continue;
-    }
-    if(c != 0) {
-      ret.push_back( *i2 );
-      // hashing already done
-      ++i2;
-      continue;
-    }
-
-    // cancel hash
-    hash ^= i1->hash() ^ i2->hash();
-
-    ret.push_back( *i1 + *i2 );
-    const epair &e = ret.back();
-
-    if( e.null() )
-      ret.pop_back();
-    else
-      hash ^= e.hash();
-
-    ++i1; ++i2;
-  }
-
-  std::copy(i1, e1, std::back_inserter(ret));
-  std::copy(i2, e2, std::back_inserter(ret));
-}
-
-template<class Range>
-void do_sub(Range &ret, const Range &a, const Range &b, std::size_t &hash) {
-
-  ret.reserve(a.size() + b.size());
-
-  typedef typename boost::range_value<const Range>::type epair;
-
-  typename boost::range_iterator<const Range>::type
-    i1 = a.begin(), e1 = a.end(),
-    i2 = b.begin(), e2 = b.end();
-
-  while(i1 != e1 && i2 != e2) {
-    int c = epair::compare( *i1, *i2 );
-
-    if(c  < 0) {
-      ret.push_back( *i1 );
-      // hashing already done
-      ++i1;
-      continue;
-    }
-    if(c != 0) {
-      ret.push_back( - *i2 );
-      hash ^= ret.back().hash();
-      ++i2;
-      continue;
-    }
-
-    // cancel hash
-    hash ^= i1->hash();
-
-    ret.push_back( *i1 - *i2 );
-    epair &e = ret.back();
-
-    if( e.null() )
-      ret.pop_back();
-    else
-      hash ^= e.hash();
-
-    ++i1; ++i2;
-  }
-
-  std::copy(i1, e1, std::back_inserter(ret));
-  std::transform(i2, e2, std::back_inserter(ret), neg_hash<epair>(hash));
-}
-
-}
-
+// operation constructors
 template<class I, class M>
 inline
 expairseq<I,M>::expairseq(const expairseq &a, const expairseq &b, add_t)
@@ -191,10 +61,8 @@ expairseq<I,M>::expairseq(const expairseq &a, const expairseq &b, add_t)
   else if( ! b.m_poly )
     m_poly = a.m_poly;
 
-  else {
-    m_poly.reset( new poly_t );
-    do_add(*m_poly, *a.m_poly, *b.m_poly, m_hash);
-  }
+  else
+    m_poly.reset( epseq::detail::do_add( *a.m_poly, *b.m_poly, m_hash ) );
 
 }
 
@@ -209,13 +77,11 @@ expairseq<I,M>::expairseq(const expairseq &a, const expairseq &b, sub_t)
       m_poly = a.m_poly;
 
   else {
-    m_poly.reset( new poly_t );
-
     if( ! a.m_poly )
-      do_neg(*m_poly, *b.m_poly, m_hash);
+      m_poly.reset( epseq::detail::do_neg( *b.m_poly, m_hash ) );
 
     else
-      do_sub(*m_poly, *a.m_poly, *b.m_poly, m_hash);
+      m_poly.reset( epseq::detail::do_sub( *a.m_poly, *b.m_poly, m_hash ) );
   }
 
 }
@@ -227,10 +93,9 @@ expairseq<I,M>::expairseq(const expairseq &a, neg_t)
 , m_poly( /* null */ )
 , m_hash(0) {
 
-  if(a.m_poly) {
-    m_poly.reset( new poly_t );
-    do_neg(*m_poly, *a.m_poly, m_hash);
-  }
+  if(a.m_poly)
+    m_poly.reset( epseq::detail::do_neg(*a.m_poly, m_hash) );
+
 }
 
 template<class I, class M>
@@ -240,10 +105,9 @@ expairseq<I,M>::expairseq(const expairseq &a, const number &n, sca_t)
 , m_poly( /* null */ )
 , m_hash(0) {
 
-  if(a.m_poly) {
-    m_poly.reset( new poly_t );
-    do_sca(*m_poly, *a.m_poly, n, m_hash);
-  }
+  if(a.m_poly)
+    m_poly.reset( epseq::detail::do_sca(*a.m_poly, n, m_hash) );
+
 }
 
 // access
@@ -255,7 +119,7 @@ expairseq<I,M>::coef() const
 template<class I, class M>
 inline bool
 expairseq<I,M>::is_empty() const
-{ return ! m_poly || m_poly->empty(); }
+{ return ! m_poly; }
 template<class I, class M>
 inline bool
 expairseq<I,M>::is_mono() const
@@ -268,40 +132,65 @@ expairseq<I,M>::mono() const
 
 template<class I, class M>
 inline std::size_t
-expairseq<I,M>::calc_hash() const {
+expairseq<I,M>::hash() const {
   std::size_t seed = 0;
-  boost::hash_combine(seed, m_coef.get_hash());
+  boost::hash_combine(seed, m_coef.hash());
   boost::hash_combine(seed, m_hash);
   return seed;
 }
 
 template<class I, class M>
-inline int
+inline util::cmp_t
 expairseq<I,M>::partial_compare(const expairseq &o) const {
-  if(m_poly.get() == o.m_poly.get()) return 0;
+  if( m_poly.get() == o.m_poly.get() ) return 0;
 
-  if( ! m_poly | ! o.m_poly )
-    return m_poly.get() - o.m_poly.get();
+  if( ! m_poly )
+    return o.m_poly ? -1 : 0;
+  else if( ! o.m_poly )
+    return 1;
 
-  int c = m_hash - o.m_hash;
+  util::cmp_t c
+    = util::compare( m_hash, o.m_hash );
   if(c) return c;
 
-  c = algebra::range_compare(*m_poly, *o.m_poly, epair::deep_compare);
+  const poly_t
+    &a = *  m_poly
+  , &b = *o.m_poly;
 
-  // if(c == 0) util::unify_ptr(m_poly, o.m_poly);
-  return c;
+  std::size_t
+    d1 = a.size()
+  , d2 = b.size();
+
+  c = util::compare( d1, d2 );
+  if(c) return c;
+
+  typename poly_t::const_iterator
+    i1 = a.begin(), i2 = b.begin();
+
+  for(; d1 != 0; --d1) {
+    c = epair::deep_compare( *i1, *i2 );
+    if(c)
+      return c;
+  }
+
+  util::unify_ptr(
+    const_cast<expairseq&>(*this).m_poly
+  , const_cast<expairseq&>(o)    .m_poly
+  );
+  return 0;
 }
 
 template<class I, class M>
-inline int
+inline util::cmp_t
 expairseq<I,M>::compare_same_type(const basic &o_) const {
   const expairseq &o = static_cast<const expairseq&>(o_);
-  int c = number::compare(m_coef, o.m_coef);
+  util::cmp_t c
+    = number::compare(m_coef, o.m_coef);
   if(c) return c;
   return partial_compare(o);
 }
 
-namespace {
+namespace detail {
 
 struct printer {
   std::basic_ostream<char> &os;
@@ -329,7 +218,7 @@ expairseq<I,M>::print(std::basic_ostream<char> &os) const {
   os << '(';
   print_base(os);
   m_coef.print(os << ' ');
-  if(m_poly) boost::for_each(*m_poly, printer(os));
+  if(m_poly) boost::for_each(*m_poly, detail::printer(os));
   os << ')';
 }
 

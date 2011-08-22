@@ -1,3 +1,4 @@
+add_subdirectory(expairseq)
 add_subdirectory(function)
 add_subdirectory(stdfunc)
 
