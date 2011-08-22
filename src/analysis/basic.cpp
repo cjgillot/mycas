@@ -1,12 +1,3 @@
-/*
- * basic.cpp
- *
- *  Created on: 21 juin 2011
- *      Author: k1000
- */
-
-#include "utils.hpp"
-
 #include "basic.hpp"
 #include "sum.hpp"
 #include "prod.hpp"
@@ -14,30 +5,6 @@
 
 namespace analysis {
 
-basic::basic()
-: m_flags(0), m_hash(0) {}
-basic::basic(const basic &o)
-: m_flags(o.m_flags), m_hash(o.m_hash) {}
-basic::~basic() {}
-
-void basic::swap(basic &o) {
-  std::swap(m_hash, o.m_hash);
-  std::swap(m_flags, o.m_flags);
-}
-
-bool
-basic::null() const {
-  return false;
-}
-bool
-basic::unit() const {
-  return false;
-}
-
-bool
-basic::is_numeric() const {
-  return false;
-}
 const sum*
 basic::as_sum() const {
   return sum::from_1basic(this);
@@ -56,63 +23,28 @@ basic::eval(unsigned) const
 { return expr(this); }
 
 
-int
+util::cmp_t
 basic::compare(const basic &a, const basic &b) {
+  // obvious case
   if(&a == &b) return 0;
 
-  {
-    std::size_t hash_a = a.get_hash(), hash_b = b.get_hash();
+  // compare types
+  util::cmp_t c
+    = rtti::rtti_compare( RTTI_ID( a ), RTTI_ID( b ) );
+  if( c ) return c;
 
-    int c = hash_a - hash_b;
-    if(c) return c;
-  }
+  // we have same type
+  // compare hash
+  c = util::compare( a.hash(), b.hash() );
+  if(c) return c;
 
-  const std::type_info
-    &ta = typeid(a)
-  , &tb = typeid(b);
+  // same type and hash collision
 
-#if defined( __GXX_MERGED_TYPEINFO_NAMES )
-# if __GXX_MERGED_TYPEINFO_NAMES
-  {
-    int c = ta.name() - tb.name();
-    if(c) return c;
-  }
-# else
-  {
-    int c = std::strcmp(ta.name(), tb.name());
-    if(c) return c;
-  }
-# endif
-#else
-  // shall be optimized
-  if(ta.before(tb)) return -1;
-  if(tb.before(ta)) return 1;
-#endif
+  // reaching this point should be
+  // as rare as possible
 
+  // deep compare
   return a.compare_same_type(b);
-
-/*
-  switch(util::pad_boolp(a.is_numeric(), b.is_numeric())) {
-  case 1: // b is numeric, a isn't
-    return 1;
-  case 2: // a is numeric, b isn't
-    return -1;
-
-  case 0: // both are non-numeric
-    if(ta.before(tb))
-      return -1;
-    if(tb.before(ta))
-      return 1;
-
-  // fallback :
-  case 3: // both have same type
-    return a.compare_same_type(b);
-
-  default:
-    assert(false);
-    return *reinterpret_cast<int*>(0);
-  }
-*/
 }
 
 }

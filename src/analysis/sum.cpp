@@ -7,7 +7,9 @@
 
 #include "analysis/sum.hpp"
 
-#include "expairseq.ipp"
+#include "analysis/expr.ipp"
+#include "analysis/basic.ipp"
+#include "analysis/expairseq.ipp"
 
 namespace analysis {
 
@@ -16,27 +18,22 @@ namespace analysis {
 struct sum::ep {
   static number add(const number &c1, const number &c2)
   { return c1 + c2; }
+
   static number sub(const number &c1, const number &c2)
   { return c1 - c2; }
+
   static number neg(const number &c1)
   { return c1.neg(); }
+
   static number mul(const number &c1, const number &c2)
   { return c1 * c2; }
 };
 
 //************* sum class implementation ************//
-//sum::sum()
-//: super(number::zero) {}
-
-sum::sum(const sum &o)
-: super(o) {}
-
-sum::~sum() {}
-
 sum::sum(const number &n)
 : super(n) {}
 
-sum::sum(const number &n, const epair &p)
+sum::sum(const number &n, const prod* p)
 : super(n, p) {}
 
 // operating ctors
@@ -88,20 +85,6 @@ expr sum::eval(unsigned lv) const {
   }
 
   return basic::eval(lv);
-}
-
-// diff
-expr sum::diff(const symbol &s, unsigned n) const {
-  if( n == 0 )
-    return expr(this);
-
-  expr ret ( number::zero() );
-
-  foreach( const epair &e, *this )
-    if( e.ptr()->has(s) )
-      ret += e.ptr()->diff( s, n );
-
-  return ret;
 }
 
 }

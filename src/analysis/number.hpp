@@ -89,12 +89,11 @@ public:
   print(std::basic_ostream<char> &os) const
   { m_impl.print(os); }
 
-  static int
+  static util::cmp_t
   compare(const number &, const number &);
 
-  std::size_t
-  get_hash() const
-  { return m_impl.get()->get_hash(); }
+  std::size_t hash() const
+  { return m_impl.get()->numeric::hash(); }
 };
 
 

@@ -17,20 +17,6 @@ namespace analysis {
 
 template<class I, class M>
 inline
-expairseq<I,M>::expairseq(const expairseq &o)
-: basic(o), m_coef(o.m_coef), m_poly(o.m_poly) {}
-
-template<class I, class M>
-inline void
-expairseq<I,M>::swap(expairseq &o) {
-  basic::swap(o);
-  m_coef.swap(o.m_coef);
-  m_poly.swap(o.m_poly);
-}
-
-
-template<class I, class M>
-inline
 expairseq<I,M>::expairseq(const number &n)
 : m_coef( n )
 , m_poly( /* null */ )
@@ -216,7 +202,7 @@ template<class I, class M>
 inline void
 expairseq<I,M>::print(std::basic_ostream<char> &os) const {
   os << '(';
-  print_base(os);
+  static_cast<const I*>( this )->print_base(os);
   m_coef.print(os << ' ');
   if(m_poly) boost::for_each(*m_poly, detail::printer(os));
   os << ')';

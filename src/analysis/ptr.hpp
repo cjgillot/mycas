@@ -8,7 +8,8 @@
 #ifndef PTR_HPP_
 #define PTR_HPP_
 
-#include "stdlib.hpp"
+#include <boost/intrusive_ptr.hpp>
+#include "util/compare.hpp"
 
 namespace analysis {
 
@@ -76,7 +77,7 @@ public:
 
   //! \brief Comparison template function
   template<class Compare>
-  static int
+  static util::cmp_t
   compare(const ptr &a, const ptr &b, Compare cmp);
 };
 

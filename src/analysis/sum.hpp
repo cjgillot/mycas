@@ -8,16 +8,12 @@
 #ifndef ADD_HPP_
 #define ADD_HPP_
 
+#include "analysis/basic.hpp"
+
 #include "analysis/expairseq.hpp"
 #include "analysis/prod.hpp"
 
-#include "util/final.hpp"
-
 namespace analysis {
-
-class sum;
-
-DECLARE_FINAL_CLASS(sum)
 
 /*!
  * \brief Addition class
@@ -28,32 +24,19 @@ DECLARE_FINAL_CLASS(sum)
  *
  * Printing : (+ c m1 m2 m3 ...)
  */
-class sum: FINAL_CLASS(sum)
-, public expairseq<sum, prod> {
+class sum
+: public expairseq<sum, prod> {
 
-  DEFINE_CONST_VISITABLE()
-
-private:
-  //! \brief Base class type
+  friend class expairseq<sum, prod>;
   typedef expairseq<sum, prod> super;
+  REGISTER_FINAL( sum, super )
 
 public:
   struct ep;
 
 protected:
-  //! \brief Copy constructor (for clone)
-  sum(const sum &);
-
-public:
-  //! \brief Destructor
-  virtual ~sum();
-
-protected:
-  //! \brief Number constructor
   explicit sum(const number &);
-
-  //! \brief Multiplication constructor
-  sum(const number &, const epair &);
+  sum(const number &, const prod*);
 
   using super::add_t;
   using super::sub_t;

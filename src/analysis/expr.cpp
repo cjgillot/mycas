@@ -12,6 +12,9 @@
 #include "analysis/prod.hpp"
 #include "analysis/power.hpp"
 
+#include "analysis/expr.ipp"
+#include "analysis/basic.ipp"
+
 namespace analysis {
 
 const unsigned expr::default_eval_depth = 10;
@@ -52,9 +55,6 @@ bool expr::unit() const {
 void expr::eval(unsigned lv) const {
   m_impl->eval(lv).m_impl.swap(m_impl);
 }
-
-bool expr::has(const symbol &s) const
-{ return m_impl->has(s); }
 
 expr expr::diff(const symbol &s, unsigned n) const
 { eval(); return m_impl->diff(s,n); }
@@ -125,18 +125,20 @@ expr expr::inv() const {
   OPERATE_SELF(inv);
 }
 
-expr expr::pow(const expr &o) const {
+expr expr::pow(const expr &o) const
+{
   expr ret ( power::from_be(get(), o.get()) );
   ret.eval();
   return ret;
 }
 
-int
-expr::compare(const expr &a, const expr &b) {
+util::cmp_t
+expr::compare(const expr &a, const expr &b)
+{
   if(a.m_impl == b.m_impl)
     return 0;
 
-  int c = basic::compare(*a.m_impl, *b.m_impl);
+  util::cmp_t c = basic::compare(*a.m_impl, *b.m_impl);
   if(c) return c;
 
   // here, a == b

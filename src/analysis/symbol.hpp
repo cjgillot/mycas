@@ -19,58 +19,59 @@ class symbol;
 class symbol_
 : public basic {
 
-  // shall be defined in every derived class
-  DEFINE_CONST_VISITABLE()
+  REGISTER_CLASS( symbol_, basic )
 
-public:
+  friend class symbol;
+
+protected:
   //! \brief Default constructor
   symbol_();
   //! \brief Destructor
   ~symbol_();
 
-public:
+protected:
   symbol_* clone() const;
 
-public:
+protected:
   void print(std::basic_ostream<char> &) const;
   expr diff(const symbol&, unsigned) const;
   bool has(const symbol&) const;
 
 private:
-  std::size_t calc_hash() const;
-  int compare_same_type(const basic&) const;
-
-  friend class symbol;
+  std::size_t hash() const;
+  util::cmp_t compare_same_type(const basic&) const;
 };
 
 //! \brief Named symbol class
 class ident
 : public symbol_ {
 
-  // shall be defined in every derived class
-  DEFINE_CONST_VISITABLE()
+  REGISTER_CLASS( ident, symbol_ )
 
-public:
+  friend class symbol;
+
+protected:
   //! \brief Constructor from string
   ident(const std::string &);
   //! \brief Destructor
   ~ident();
 
-public:
+protected:
   void print(std::basic_ostream<char> &) const;
 
 private:
-  const char* m_name;
+  std::string m_name;
 };
 
 //! \brief Constant symbol class
 class constant
 : public ident {
 
-  // shall be defined in every derived class
-  DEFINE_CONST_VISITABLE()
+  REGISTER_CLASS( constant, ident )
 
-public:
+  friend class symbol;
+
+protected:
   //! \brief Constructor from string
   constant(const std::string &, const number &);
   //! \brief Destructor
@@ -96,9 +97,9 @@ struct symbol {
   { m_value.swap(o.m_value); }
 
   std::size_t hash() const
-  { return m_value->get_hash(); }
+  { return m_value->hash(); }
 
-  static int compare(const symbol &a, const symbol &b)
+  static util::cmp_t compare(const symbol &a, const symbol &b)
   { return a.m_value->symbol_::compare_same_type(*b.m_value); }
 
 private:

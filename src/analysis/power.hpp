@@ -12,13 +12,7 @@
 #include "expr.hpp"
 #include "numeric.hpp"
 
-#include "util/final.hpp"
-
 namespace analysis {
-
-class power;
-
-DECLARE_FINAL_CLASS(power)
 
 /*!
  * \brief This is the main power representation class
@@ -26,21 +20,16 @@ DECLARE_FINAL_CLASS(power)
  * This structure represents the power {b^e}
  * using the expair { coef=e; rest=b }.
  */
-class power: FINAL_CLASS(power)
-, public basic {
+class power
+: public basic {
 
-  DEFINE_CONST_VISITABLE()
+  REGISTER_FINAL( power, basic )
 
 public:
   struct handle;
 
-private: // ctors
-  power(const power &);
+private: // cdtor
   power(const expr&, const expr&);
-
-public:
-  void swap(power &);
-  virtual ~power();
 
 public: // coercion
   power* clone() const;
@@ -55,11 +44,11 @@ public: // tests
   bool has(const symbol&) const;
 
 public: // misc.
-  int compare_same_type(const basic &) const;
+  util::cmp_t compare_same_type(const basic &) const;
   void print(std::basic_ostream<char> &) const;
 
 private:
-  std::size_t calc_hash() const;
+  std::size_t hash() const;
 
   /*!
    * \brief Logarithmic differentiation
@@ -92,7 +81,7 @@ struct power::handle {
   ~handle() {}
 
   operator expr() const
-  { return expr(m_ptr.get()); }
+  { return expr( m_ptr.get() ); }
 
 
   handle operator+(const handle &) const;
@@ -103,15 +92,15 @@ struct power::handle {
   bool null() const
   { return m_ptr->m_expo.null(); }
 
-  static int compare(const handle &a, const handle &b);
-  static int deep_compare(const handle &a, const handle &b) {
-    int c = a.hash() - b.hash();
+  static util::cmp_t compare(const handle &a, const handle &b);
+  static util::cmp_t deep_compare(const handle &a, const handle &b) {
+    util::cmp_t c = util::compare( a.hash() , b.hash() );
     if(c) return c;
     return a.m_ptr->power::compare_same_type(*b.m_ptr);
   }
 
   std::size_t hash() const
-  { return m_ptr->power::get_hash(); }
+  { return m_ptr->power::hash(); }
 
   template<class S>
   void print(S &os) const

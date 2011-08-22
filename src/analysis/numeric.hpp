@@ -17,14 +17,12 @@
 
 namespace analysis {
 
-class numeric;
+class numeric
+: public basic {
 
-DECLARE_FINAL_CLASS(numeric)
+  REGISTER_FINAL( numeric, basic )
 
-class numeric: FINAL_CLASS(numeric)
-, public basic {
-
-  DEFINE_CONST_VISITABLE()
+  friend class number;
 
 public:
   numeric(const numeric &);
@@ -78,10 +76,9 @@ public:
 
 public:
   void print(std::basic_ostream<char> &os) const;
-  int compare_same_type(const basic&) const;
+  util::cmp_t compare_same_type(const basic&) const;
 
-private:
-  std::size_t calc_hash() const
+  std::size_t hash() const
   { return boost::hash<algebra::real>()(m_value); }
 
 private:

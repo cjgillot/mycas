@@ -8,21 +8,12 @@
 #ifndef BASIC_HPP_
 #define BASIC_HPP_
 
-#include "stdlib.hpp"
 #include "util/refcounted.hpp"
-#include "util/visitor.hpp"
 
 #include "analysis/forward.hpp"
+#include "analysis/register.hpp"
 
 namespace analysis {
-
-class expr;
-class symbol;
-
-//! \brief Flags used by basic
-enum {
-  Hashed = 1
-};
 
 /*!
  * \brief Base expression class
@@ -33,24 +24,17 @@ enum {
  * for use with \c boost::intrusive_ptr via \c expr or \c ptr.
  */
 class basic
-: public util::base_const_visitable<bool>
-, private boost::noncopyable {
+: private util::nonassignable {
 
-  MAKE_REFCOUNTED(basic);
+  REGISTER_BASE( basic )
 
-  // shall be defined in every derived class
-  DEFINE_CONST_VISITABLE()
+protected:
+  basic();
+  basic(const basic &);
 
 public:
-  //! \brief Default constructor
-  basic();
-  //! \brief Copy constructor
-  basic(const basic &);
   //! \brief Virtual destructor
   virtual ~basic();
-
-  //! \brief Non-throwing swap
-  void swap(basic &);
 
   //! \brief Virtual clone
   virtual basic* clone() const = 0;
@@ -81,10 +65,12 @@ public:
    *
    * All recursive calls must ba made with parameter \a lv - 1.
    *
+   * Default implementation : no-op
+   *
    * \param lv : the recursion level
    * \return the evaluated form
    */
-  virtual expr eval(unsigned lv) const;
+  virtual expr eval(unsigned) const;
 
   /*!
    * \brief Has function
@@ -92,7 +78,7 @@ public:
    * \param s : a symbol
    * \return \c true if \c s is contained in the expression
    */
-  virtual bool has(const symbol &s) const = 0;
+  virtual bool has(const symbol &) const;
 
   /*!
    * \brief Differentiation function
@@ -139,31 +125,15 @@ private:
    *
    * \return the comparison integer
    */
-  virtual int compare_same_type(const basic&) const = 0;
+  virtual util::cmp_t compare_same_type(const basic&) const = 0;
 
+public:
   /*!
    * \brief Virtual hashing function
    *
-   * Default implementation in basic :
-   * return a hash of the typeid.
-   *
-   * At overriding, the super class hash should
-   * be used as seed.
-   *
    * \return a hash value for *this
    */
-  virtual std::size_t
-  calc_hash() const = 0;
-
-public:
-  //! \brief Hash value access
-  std::size_t
-  get_hash() const {
-    if(m_flags & Hashed) return m_hash;
-    m_hash = calc_hash();
-    m_flags |= Hashed;
-    return m_hash;
-  }
+  virtual std::size_t hash() const = 0;
 
   /*!
    * \brief Comparison dispatch function
@@ -179,27 +149,8 @@ public:
    *
    * \see compare_same_type()
    */
-  static int
+  static util::cmp_t
   compare(const basic&, const basic&);
-
-protected:
-  /*!
-   * \brief Forget function for the hash value
-   *
-   * This function has to be called each time
-   * a basic is modified after its construction.
-   */
-  void unhash() {
-    m_flags &= ~Hashed;
-  }
-
-private: // member data
-
-  //! \brief Flags
-  mutable unsigned m_flags;
-
-  //! \brief Computed hash value
-  mutable std::size_t m_hash;
 };
 
 }

@@ -4,11 +4,12 @@
 #include "analysis/expr.hpp"
 #include "analysis/symbol.hpp"
 
-#include<boost/array.hpp>
 #include<boost/foreach.hpp>
 #define foreach BOOST_FOREACH
 
 #include "algebra/compare.hpp"
+
+#include "analysis/function/unsafe_array.hpp"
 
 namespace analysis {
 
@@ -19,7 +20,7 @@ class function
   BOOST_STATIC_ASSERT( N > 0 );
 
   symbol m_name;
-  std::vector<expr> m_args;
+  detail::unsafe_array<expr, N> m_args;
 
 protected:
   template<class InputIterator>
@@ -27,8 +28,8 @@ protected:
     const InputIterator &b, const InputIterator &e);
 
   function(const function &);
-  function &operator=(const function &);
-  void swap(function &);
+
+ ~function();
 
 protected:
   //! \brief Argument list sorting
@@ -43,7 +44,7 @@ protected:
    *
    * This function should only be used when the
    * permutation sign is signficant,
-   * since it has a far grater time constant.
+   * since it has a far greater time constant.
    *
    * \return \c false for 1, \c true for -1
    *
@@ -52,11 +53,16 @@ protected:
   bool sign_sort();
 
   //! \brief Argument access
-  const expr &arg(unsigned n) const
-  { assert( n < N ); return m_args[n]; }
+  const expr &arg(unsigned i) const
+  { return m_args.at(i); }
+
+  //! \brief Argument access
+  template<unsigned I>
+  const expr &arg() const
+  { BOOST_STATIC_ASSERT( I < N ); return m_args[I]; }
 
 private:
-  std::size_t calc_hash() const
+  std::size_t hash() const
   {
     std::size_t seed = m_name.hash();
     foreach(const expr &e, m_args)
@@ -64,11 +70,13 @@ private:
     return seed;
   }
 
-  int compare_same_type(const basic &o_) const
+  util::cmp_t
+  compare_same_type(const basic &o_) const
   {
     const function &o = static_cast<const function&>(o_);
 
-    int c = symbol::compare(m_name, o.m_name);
+    util::cmp_t c
+      = symbol::compare(m_name, o.m_name);
     if(c) return c;
 
     return algebra::range_compare(m_args, o.m_args, expr::compare);
@@ -101,12 +109,6 @@ public:
   function(const std::string &name, const expr &a)
   : m_name(name), m_arg(a) {}
 
-  void swap(function &o)
-  {
-    m_name.swap(o.m_name);
-    m_arg.swap(o.m_arg);
-  }
-
 protected:
   //! \brief Argument list sorting
   void sort() {}
@@ -130,22 +132,27 @@ protected:
   { return false; }
 
   //! \brief Argument access
-  const expr &arg(unsigned n = 0) const
-  { assert( n == 0 ); return m_arg; }
+  const expr &arg(unsigned n) const
+  { assert( n == 0 ); (void)n; return m_arg; }
+
+  //! \brief Argument access
+  template<unsigned I>
+  const expr &arg() const
+  { BOOST_STATIC_ASSERT( I == 0 ); return m_arg; }
 
 private:
-  std::size_t calc_hash() const
+  std::size_t hash() const
   {
     std::size_t seed = m_name.hash();
     boost::hash_combine(seed, m_arg.hash());
     return seed;
   }
 
-  int compare_same_type(const basic &o_) const
+  util::cmp_t compare_same_type(const basic &o_) const
   {
     const function &o = static_cast<const function&>(o_);
 
-    int c = symbol::compare(m_name, o.m_name);
+    util::cmp_t c = symbol::compare(m_name, o.m_name);
     if(c) return c;
 
     return expr::compare(m_arg, o.m_arg);

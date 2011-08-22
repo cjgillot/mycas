@@ -84,7 +84,7 @@ const prod*
 numeric::as_prod() const
 { return prod::from_numeric(this); }
 
-int numeric::compare_same_type(const basic &o) const {
+util::cmp_t numeric::compare_same_type(const basic &o) const {
   return algebra::compare(
     m_value
   , static_cast<const numeric&>(o).m_value
@@ -94,8 +94,6 @@ int numeric::compare_same_type(const basic &o) const {
 
 bool numeric::has(const symbol&) const
 { return false; }
-expr numeric::diff(const symbol&, unsigned n) const
-{ return n == 0 ? number(this) : number::zero(); }
 
 
 // ****** number ****** //
@@ -165,14 +163,14 @@ number number::pow(const number &o) const {
 namespace {
 
 struct comparator {
-  inline int
+  inline util::cmp_t
   operator()(const numeric &a, const numeric &b)
   { return a.numeric::compare_same_type(b); }
 };
 
 }
 
-int
+util::cmp_t
 number::compare(const number &a, const number &b)
 { return impl_t::compare(a.m_impl, b.m_impl, comparator()); }
 

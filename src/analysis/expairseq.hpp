@@ -55,11 +55,6 @@ protected:
   friend class epseq::handle<Impl, Mono>;
 
 protected:
-  //! \brief Copy constructor
-  expairseq(const expairseq &o);
-  //! \brief Non-throwing swap
-  void swap(expairseq &o);
-
   //! \brief Constant construction
   explicit
   expairseq(const number &n);
@@ -124,8 +119,6 @@ private:
 
   util::cmp_t partial_compare(const expairseq &) const;
   util::cmp_t compare_same_type(const basic &) const;
-
-  virtual void print_base(std::basic_ostream<char> &) const = 0;
 
 public:
   void print(std::basic_ostream<char> &os) const;

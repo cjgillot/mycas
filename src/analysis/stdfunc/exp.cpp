@@ -1,58 +1,52 @@
 #include "analysis/stdfunc.hpp"
 #include "analysis/function/function.ipp"
 
-using namespace analysis;
-
-class exponential
-: public function<1> {
-
-  typedef function<1> super;
-
-public:
-  exponential(const expr &a)
-  : super("exp", a) {}
-
-  ~exponential() {}
-
-  exponential(const exponential &o)
-  : super(o) {}
-
-  exponential* clone() const
-  { return new exponential(*this); }
-
-  expr diff(const symbol &s, unsigned n = 1) const
-  {
-    if( n == 0 )
-      return expr(this);
-
-    const expr &a = super::arg();
-
-    if( ! a.has(s) )
-      return number::zero();
-
-    expr ret = a.diff(s) * expr(this);
-
-    if( n > 1 )
-      return ret.diff(s, n-1);
-
-    return ret;
-  }
-
-  expr eval(unsigned lv) const
-  {
-    const expr &a = super::arg();
-    a.eval(lv);
-
-    return expr(this);
-  }
-
-};
+#include "analysis/stdfunc/exp.hpp"
 
 namespace analysis {
 
-expr exp(const expr &a)
+inline
+exp_::exp_(const expr &a)
+: super("exp", a) {}
+
+inline
+exp_::exp_(const exp_ &o)
+: super(o) {}
+
+exp_::~exp_() {}
+
+exp_* exp_::clone() const
+{ return new exp_(*this); }
+
+expr exp_::diff(const symbol &s, unsigned n) const
 {
-  return expr( new exponential(a) );
+  if( n == 0 )
+    return expr(this);
+
+  const expr &a = super::arg<0>();
+
+  if( ! a.has(s) )
+    return number::zero();
+
+  const expr &ret = a.diff(s) * expr(this);
+
+  if( n > 1 )
+    return ret.diff(s, --n);
+
+  return ret;
 }
 
+expr exp_::eval(unsigned lv) const
+{
+  const expr &a = super::arg<0>();
+  a.eval(--lv);
+
+  return expr(this);
 }
+
+expr exp(const expr &a)
+{
+  return expr( new exp_(a) );
+}
+
+} // namespace analysis

@@ -15,10 +15,11 @@ class basic;
 class sum;
 class prod;
 class power;
-
-class number;
+class numeric;
 
 class expr;
+class symbol;
+class number;
 
 }
 

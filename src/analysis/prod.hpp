@@ -8,6 +8,8 @@
 #ifndef MUL_HPP_
 #define MUL_HPP_
 
+#include "analysis/basic.hpp"
+
 #include "analysis/expairseq.hpp"
 #include "analysis/power.hpp"
 
@@ -18,27 +20,17 @@ namespace analysis {
 class prod
 : public expairseq<prod, power> {
 
-  DEFINE_CONST_VISITABLE()
-
-private:
+  friend class expairseq<prod, power>;
   typedef expairseq<prod, power> super;
+  REGISTER_CLASS( prod, super )
 
 public:
   using super::handle;
   struct ep;
 
-public:
-  prod();
-
-  prod(const prod &);
-  void swap(prod &);
-
-  virtual ~prod();
-
-private:
-  explicit
-  prod(const number &);
-  prod(const number &, const epair &);
+protected:
+  explicit prod(const number &);
+  prod(const number &, const power*);
 
   using super::add_t;
   using super::sub_t;

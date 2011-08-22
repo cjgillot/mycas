@@ -8,7 +8,9 @@
 #include "analysis/sum.hpp"
 #include "analysis/prod.hpp"
 
-#include "expairseq.ipp"
+#include "analysis/expr.ipp"
+#include "analysis/basic.ipp"
+#include "analysis/expairseq.ipp"
 
 namespace analysis {
 
@@ -24,22 +26,10 @@ struct prod::ep {
 };
 
 //************* prod class implementation ************//
-prod::prod()
-: super(number::one()) {}
-
-prod::prod(const prod &o)
-: super(o) {}
-
-void prod::swap(prod &o) {
-  super::swap(o);
-}
-
-prod::~prod() {}
-
 prod::prod(const number &n)
 : super(n) {}
 
-prod::prod(const number &n, const epair &p)
+prod::prod(const number &n, const power* p)
 : super(n, p) {}
 
 // operation constructors
@@ -111,54 +101,6 @@ expr prod::eval(unsigned lv) const {
   }
 
   return basic::eval(++lv);
-}
-
-
-expr prod::diff(const symbol &s, unsigned n) const
-{
-  if( n == 0 )
-    return expr(this);
-
-  //! now, n >= 1
-  const number &c = super::coef();
-
-  //! d^n(* c) -> 0
-  if(super::is_empty())
-    return number::zero();
-
-  //! d^n(* 0 ...) -> 0
-  if(c.null())
-    return number::zero();
-
-  //! d^n(* c x) -> (* c d^n(x))
-  if(super::is_mono()) {
-    expr b ( super::mono() );
-
-    return expr(c) * b.diff(s, n);
-  }
-
-  if( n > 1 )
-    return diff(s).diff(s, n-1);
-
-  //! now, n == 1
-
-  //! We use logarithmic differentiation :
-  //!   \f[ e = \Pi_i p_i \f]
-  //! \f[ ln(e) = \sum_i ln(p_i) --> dln(e) = de/e = \sum_i dln(p_i) \f]
-  //! so, \f[ de = e * \sum_i dln(p_i) \f]
-  //!
-  //! Since \c p_i is a \c power, and that power differentiation
-  //! needs logarithm, \c epair { aka. \c power::handle }
-  //! provides it gently.
-
-  expr ret;
-
-  foreach(const epair &e, *this)
-    if( e.has(s) )
-      ret += e.diff_log(s);
-
-  ret *= expr(this);
-  return ret;
 }
 
 
