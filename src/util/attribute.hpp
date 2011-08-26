@@ -1,3 +1,5 @@
+#include <boost/config.hpp>
+
 // allow room for some optimizations
 
 #ifndef ATTRIBUTE_PURE

@@ -1,10 +1,3 @@
-/*
- * functor.hpp
- *
- *  Created on: 14 juin 2011
- *      Author: k1000
- */
-
 #ifndef UTILS_FUNCTOR_HPP_
 #define UTILS_FUNCTOR_HPP_
 

@@ -5,6 +5,8 @@
 #include <boost/type_traits/is_integral.hpp>
 #include <boost/type_traits/make_signed.hpp>
 
+#include "util/assert.hpp"
+
 namespace util {
 
 typedef signed int cmp_t;
@@ -22,7 +24,7 @@ template<class T>
 inline cmp_t
 sign(T x)
 {
-  BOOST_STATIC_ASSERT( boost::is_signed<T>::value );
+  STATIC_ASSERT( boost::is_signed<T>::value );
   return (x > 0) - (x < 0);
 }
 
@@ -38,7 +40,7 @@ sign(T x)
 template<class T>
 inline cmp_t
 compare(T a, T b) {
-  BOOST_STATIC_ASSERT( boost::is_integral<T>::value );
+  STATIC_ASSERT( boost::is_integral<T>::value );
   typedef typename boost::make_signed<T>::type ST;
   return detail::sign( static_cast<ST>(a) - static_cast<ST>(b) );
 }
