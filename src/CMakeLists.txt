@@ -1,5 +1,6 @@
 add_subdirectory(algebra)
 add_subdirectory(analysis)
+add_subdirectory(container)
 add_subdirectory(imperative)
 add_subdirectory(numeric)
 add_subdirectory(polynomial)
