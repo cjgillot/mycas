@@ -1,9 +1,12 @@
 #ifndef RTTI_HOLDER_HPP
 #define RTTI_HOLDER_HPP
 
-#include <cassert>
+#include <boost/type_traits/is_const.hpp>
 
+#include "rtti/rttifwd.hpp"
 #include "rtti/getter.hpp"
+
+#include "util/assert.hpp"
 
 namespace rtti {
 namespace detail {
@@ -34,25 +37,18 @@ struct rtti_node {
 template<class Rt>
 class creator {
 
-  static rtti_type current;
+  STATIC_ASSERT( boost::is_const<Rt>::value );
 
 public:
-  static inline
-  rtti_type
-  create() {
-    // check for overflow
-    assert(
-      current != 0
-    && "Too many instanciated classes for current RTTI."
-    );
-    return current++;
-  }
+  static rtti_type create();
+
+private:
+  static rtti_type current;
 };
 
+//! Arguments must be const-qualified to avoid unnecessary instanciations
 template<class T, class Rt>
 struct holder {
-
-  typedef typename RTTI_GETTER::types<T>::super super;
 
   static rtti_node node;
 
@@ -68,21 +64,15 @@ struct holder {
   get_id()
   { return node.id; }
 
-  static inline
-  void assert_initialized()
-  {
-    initializer.touch();
-    if( get_id() == 0 )
-      initialize();
-  }
+  static void assert_initialized();
 
 private:
-  static inline
-  void initialize()
-  {
-    // scope lock a mutex if needed
-    node.id = creator<Rt>::create();
-  }
+  STATIC_ASSERT( boost::is_const<T>::value );
+  STATIC_ASSERT( boost::is_const<Rt>::value );
+
+  typedef typename RTTI_GETTER::traits<T>::super super;
+
+  static void initialize();
 
   struct initializer_t {
     initializer_t() { holder::assert_initialized(); }
@@ -107,38 +97,23 @@ struct holder<Rt,Rt> {
   get_id()
   { return 0; }
 
-  static inline
-  void
-  ATTRIBUTE_CONST
-  assert_initialized()
-  {}
+  static void assert_initialized();
+
 };
 
-// initialize with 1, base class has static 0 id
-template<class Rt>
-rtti_type creator<Rt>::current = 1;
-
-// an POD aggregate initialized with a constant expression
-// standard ensures initialization before any non-trivial constructor called
+//! \brief Grant access to the holder
 template<class T, class Rt>
-rtti_node holder<T,Rt>::node = {
-  0
-, &holder<super, Rt>::node
-};
-
-template<class Rt>
-const rtti_node holder<Rt,Rt>::node
-  = { 0, 0 };
-
-template<class T, class Rt>
-typename holder<T,Rt>::initializer_t holder<T,Rt>::initializer;
-
-template<class T>
 struct get_holder {
-  typedef typename RTTI_GETTER::types<T>::base Rt;
-  typedef holder<T, Rt> type;
+  typedef holder<const T, const Rt> type;
+};
+template<class T>
+struct get_holder<T, void> {
+  typedef typename RTTI_GETTER::traits<T>::base Rt;
+  typedef holder<const T, const Rt> type;
 };
 
 }} // namespace rtti::detail
 
 #endif
+
+#include "rtti/holder.ipp"

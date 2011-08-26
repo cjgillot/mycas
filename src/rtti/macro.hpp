@@ -45,9 +45,9 @@
 
 //! \brief Declare \c klass as hierarchy root
 #define RTTI_DECL_TYPES( klass )  \
-  typedef klass rtti_base_type;   \
-  typedef void  rtti_super_type;  \
-  typedef klass rtti_self_type;
+  typedef const klass rtti_base_type;   \
+  typedef const void  rtti_super_type;  \
+  typedef const klass rtti_self_type;
 
 /*!
  * \brief Import member types from parent
@@ -55,7 +55,7 @@
  * allow \c template in hierarchy.
  */
 #define RTTI_IMPORT_TYPES( klass, parent ) \
-  typedef klass rtti_self_type; \
+  typedef const klass rtti_self_type; \
   typedef typename              \
     parent::rtti_base_type      \
       rtti_base_type;           \
@@ -81,23 +81,33 @@
   inline RTTI_DECL_GET          \
   { return RTTI_TYPE_NODE( klass ); }
 
+//! \brief Enum flags for some optimizations
+#define RTTI_FLAGS( abstract, final ) \
+  enum {                              \
+    rtti_is_abstract = abstract       \
+  , rtti_is_final = final             \
+  } // ;
+
 //! \brief Common part of base case
 #define RTTI_BASE_DECL( klass ) \
   RTTI_FRIEND_DECL              \
 protected:                      \
   RTTI_DECL_TYPES( klass )
 
+// ***** externally used macros ***** //
 //! \brief Abstract base case
 #define ABSTRACT_RTTI( klass )  \
   RTTI_BASE_DECL( klass )       \
 private:                        \
-  RTTI_PURE_GET
+  RTTI_PURE_GET                 \
+  RTTI_FLAGS( true, false )
 
 //! \brief Base case
 #define DECLARE_RTTI( klass )   \
   RTTI_BASE_DECL( klass )       \
 private:                        \
-  RTTI_IMPL_GET( klass )
+  RTTI_IMPL_GET( klass )        \
+  RTTI_FLAGS( false, false )
 
 //! \brief Derived case
 #define IMPLEMENT_RTTI( klass, parent ) \
@@ -105,7 +115,16 @@ private:                        \
 protected:                              \
   RTTI_IMPORT_TYPES( klass, parent )    \
 private:                                \
-  RTTI_IMPL_GET( klass )
+  RTTI_IMPL_GET( klass )                \
+  RTTI_FLAGS( false, false )
+
+//! \brief Final case
+#define FINAL_RTTI( klass, parent )   \
+  RTTI_FRIEND_DECL                    \
+private:                              \
+  RTTI_IMPORT_TYPES( klass, parent )  \
+  RTTI_IMPL_GET( klass )              \
+  RTTI_FLAGS( false, true )
 //@}
 /*! \} */
 

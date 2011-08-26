@@ -12,8 +12,7 @@ inline const rtti_node*
 rtti_getter::static_node() throw()
 {
   typedef typename boost::remove_pointer<T>::type T2;
-  typedef typename RTTI_GETTER::types<T2>::base Root;
-  typedef holder<T2, Root> h;
+  typedef typename get_holder<T2>::type h;
   h::assert_initialized();
   return h::get_node();
 }
@@ -21,7 +20,12 @@ rtti_getter::static_node() throw()
 template<class T>
 inline rtti_type
 rtti_getter::static_id() throw()
-{ return static_node<T>()->id; }
+{
+  typedef typename boost::remove_pointer<T>::type T2;
+  typedef typename get_holder<T2>::type h;
+  h::assert_initialized();
+  return h::get_id();
+}
 
 
 template<class T>

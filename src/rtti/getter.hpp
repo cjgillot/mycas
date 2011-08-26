@@ -34,7 +34,7 @@ struct rtti_getter {
 
   //! \brief Access member types
   template<class T>
-  struct types {
+  struct traits {
     typedef typename
       T::rtti_base_type
         base;
@@ -44,6 +44,10 @@ struct rtti_getter {
     typedef typename
       T::rtti_self_type
         self;
+    enum {
+      abstract = T::rtti_is_abstract
+    , final = T::rtti_is_final
+    };
   };
 
   //! \brief Get static id
