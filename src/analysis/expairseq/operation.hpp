@@ -1,14 +1,18 @@
 #ifndef EXPAIRSEQ_OPERATION_HPP
 #define EXPAIRSEQ_OPERATION_HPP
 
+#include "container/unsafe_vector.hpp"
 #include "analysis/expairseq/poly.hpp"
 
-#include <memory> // auto_ptr
 #include <functional>
+#include <boost/range.hpp>
+
+#include "util/foreach.hpp"
+#include "util/assert.hpp"
+#include "util/move.hpp" // move_ptr
 
 namespace analysis {
 namespace epseq {
-namespace detail {
 
 template<class T>
 struct neg_hash
@@ -42,13 +46,13 @@ struct sca_hash
 };
 
 template<class epair>
-unsafe_vector<epair>*
+poly<epair>*
 do_neg(
-    const unsafe_vector<epair> &a
+    const poly<epair> &a
   , std::size_t &hash
 ) {
-  typedef unsafe_vector<epair> vector_type;
-  std::auto_ptr<vector_type>
+  typedef poly<epair> vector_type;
+  util::move_ptr<vector_type>
     ret ( new vector_type( a.size() ) );
 
   std::transform(
@@ -57,19 +61,21 @@ do_neg(
   , neg_hash<epair>( hash )
   );
 
+  ret->shrink();
+
   // negating never cancels
   return ret.release();
 }
 
 template<class epair, class Sca>
-unsafe_vector<epair>*
+poly<epair>*
 do_sca(
-    const unsafe_vector<epair> &a
+    const poly<epair> &a
   , const Sca &n
   , std::size_t &hash
 ) {
-  typedef unsafe_vector<epair> vector_type;
-  std::auto_ptr<vector_type>
+  typedef poly<epair> vector_type;
+  util::move_ptr<vector_type>
     ret ( new vector_type( a.size() ) );
 
   std::transform(
@@ -78,26 +84,23 @@ do_sca(
   , sca_hash<epair,Sca>( hash, n )
   );
 
+  ret->shrink();
+
   // non-null scalar never cancels
   return ret.release();
 }
 
-/*!
- * \brief Polynomial addition function
- *
- * This function takes two \c vector s and merge them
- */
 template<class epair>
-unsafe_vector<epair>*
+poly<epair>*
 do_add(
-    const unsafe_vector<epair> &a
-  , const unsafe_vector<epair> &b
+    const poly<epair> &a
+  , const poly<epair> &b
   , std::size_t &hash
 ) {
   //! \invariant \c hash already contains <tt>hash_value(a) ^ hash_value(b)</tt>
 
-  typedef unsafe_vector<epair> vector_type;
-  std::auto_ptr<vector_type>
+  typedef poly<epair> vector_type;
+  util::move_ptr<vector_type>
     retp ( new vector_type( a.size() + b.size() ) );
   vector_type &ret = *retp;
 
@@ -155,20 +158,22 @@ do_add(
   std::copy( i1, e1, std::back_inserter(ret) );
   std::copy( i2, e2, std::back_inserter(ret) );
 
-  return ret.empty() ? 0 : retp.release();
+  ret.shrink();
+
+  return ret.empty() ? nullptr : retp.release();
 }
 
 template<class epair>
-unsafe_vector<epair>*
+poly<epair>*
 do_sub(
-    const unsafe_vector<epair> &a
-  , const unsafe_vector<epair> &b
+    const poly<epair> &a
+  , const poly<epair> &b
   , std::size_t &hash
 ) {
   //! \invariant \c hash already contains <tt>hash_value(a)</tt>
 
-  typedef unsafe_vector<epair> vector_type;
-  std::auto_ptr<vector_type>
+  typedef poly<epair> vector_type;
+  util::move_ptr<vector_type>
     retp ( new vector_type( a.size() + b.size() ) );
   vector_type &ret = *retp;
 
@@ -226,9 +231,167 @@ do_sub(
   std::copy(i1, e1, std::back_inserter(ret));
   std::transform(i2, e2, std::back_inserter(ret), neg_hash<epair>(hash));
 
-  return ret.empty() ? 0 : retp.release();
+  ret.shrink();
+
+  return ret.empty() ? nullptr : retp.release();
 }
 
-}}} // namespace analysis::epseq::detail
+template<class epair>
+struct sort_pred
+: std::binary_function<bool, const epair&, const epair&>
+{
+  inline bool operator()( const epair &a, const epair &b ) const
+  { return epair::compare( a, b ) < 0; }
+};
+
+struct do_range_impl_inplace {
+  template<class epair, class Iter, class Cont>
+  static void
+  unique(
+    Iter beg
+  , const Iter &end
+  , Cont &ret
+  , std::size_t &hash
+  ) {
+    STATIC_ASSERT(( boost::is_same< epair, typename boost::iterator_value<Iter>::type >::value ));
+
+    // unique_copy and hash
+
+    // use the range itself as buffer
+    epair &buf = *beg;
+
+    //! \invariant
+    //!   buf aliases *begin()
+    //!   only the subrange [begin(), it) has been modified
+    //!   so the range [it, end) has not
+    while( ++beg != end )
+    {
+      util::cmp_t c = epair::compare( buf, *beg );
+
+      // collision : accumulate in buf
+      if( c == 0 )
+      {
+        buf = buf + *beg;
+        continue;
+      }
+
+      // no collision, commit and update
+      if( ! buf.null() )
+      {
+        hash ^= buf.hash();
+        ret.push_back( buf );
+      }
+
+      // load new value in buf
+      buf.swap( *beg );
+    }
+  }
+};
+
+struct do_range_impl_copy {
+  template<class epair, class Iter, class Cont>
+  static void
+  unique(
+    Iter beg
+  , const Iter &end
+  , Cont &ret
+  , std::size_t &hash
+  ) {
+    // unique_copy and hash
+
+    epair buf = *beg;
+
+    //! \invariant
+    //!   buf aliases *begin()
+    //!   only the subrange [begin(), it) has been modified
+    //!   so the range [it, end) has not
+    while( ++beg != end )
+    {
+      util::cmp_t c = epair::compare( buf, *beg );
+
+      // collision : accumulate in buf
+      if( c == 0 )
+      {
+        buf = buf + *beg;
+        continue;
+      }
+
+      // no collision, commit and update
+      if( ! buf.null() )
+      {
+        hash ^= buf.hash();
+        ret.push_back( buf );
+      }
+
+      // load new value in buf
+      buf = *beg;
+    }
+  }
+};
+
+//! \brief Construct a vector from an unsorted range of \c epair
+template<class epair, class Iter>
+poly<epair>*
+do_range_mutable(
+    const Iter &beg
+  , const Iter &end
+  , std::size_t &hash
+) {
+  CONCEPT_ASSERT(( boost::Mutable_RandomAccessIteratorConcept<Iter> ));
+
+  typedef poly<epair> vec_t;
+
+  { // get canonical ordering
+    sort_pred< epair > p;
+    std::sort( beg, end, p );
+  }
+
+  typename std::iterator_traits< Iter >::difference_type
+    dist = std::distance( beg, end );
+
+  ASSERT( dist >= 0 );
+
+  util::move_ptr<vec_t> retp( new vec_t( std::size_t( dist ) ) );
+  vec_t &ret = *retp;
+
+  { // unique_copy and hash
+    typedef typename boost::iterator_value<Iter>::type value_type;
+
+    typedef typename boost::mpl::if_<
+      boost::is_same<epair, value_type>
+    , do_range_impl_inplace
+    , do_range_impl_copy
+    >::type impl;
+
+    impl::template unique<epair, Iter>( beg, end, ret, hash );
+  }
+
+  ret.shrink();
+
+  return ret.empty() ? nullptr : retp.release();
+}
+
+//! \brief Construct a vector from an unsorted range of \c epair
+template<class epair, class Iter>
+poly<epair>*
+do_range_const(
+    const Iter &beg
+  , const Iter &end
+  , std::size_t &hash
+) {
+  CONCEPT_ASSERT(( boost::RandomAccessIteratorConcept<Iter> ));
+
+  typename std::iterator_traits< Iter >::difference_type
+    dist = std::distance( beg, end );
+
+  ASSERT( dist >= 0 );
+
+  typedef container::unsafe_vector<epair> vec_t;
+  vec_t tmp ( std::size_t( dist ), beg, end );
+
+  return do_range_mutable<epair>( tmp.begin(), tmp.end(), hash );
+}
+
+}} // namespace analysis::epseq
 
 #endif

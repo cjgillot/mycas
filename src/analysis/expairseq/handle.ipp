@@ -2,6 +2,9 @@
 #define EXPAIRSEQ_HANDLE_IPP
 
 #include "analysis/expairseq/handle.hpp"
+#include "analysis/basic.hpp"
+
+#include "util/assert.hpp"
 
 namespace analysis {
 namespace epseq {
@@ -10,7 +13,7 @@ namespace epseq {
 template<class I, class M>
 inline
 handle<I,M>::handle(const eps_t* p)
-: m_ptr(p) { assert(p); }
+: m_ptr(p) { ASSERT(p); }
 
 template<class I, class M>
 inline
@@ -28,7 +31,16 @@ template<class I, class M>
 inline
 handle<I,M>::~handle() throw() {}
 
+template<class I, class M>
+inline void
+handle<I,M>::swap(handle &o) throw()
+{ m_ptr.swap( o.m_ptr ); }
+
 // coercion
+template<class I, class M>
+handle<I,M>::handle( const expr &e )
+: m_ptr( from_expr( e ) ) {}
+
 template<class I, class M>
 inline
 handle<I,M>::operator expr() const
@@ -38,14 +50,14 @@ handle<I,M>::operator expr() const
 template<class I, class M>
 inline handle<I,M>
 handle<I,M>::operator+(const handle &o) const {
-  assert(compare(*this, o) == 0);
+  ASSERT(compare(*this, o) == 0);
   return chg_coef(m_ptr->m_coef + o.m_ptr->m_coef);
 }
 
 template<class I, class M>
 inline handle<I,M>
 handle<I,M>::operator-(const handle &o) const {
-  assert(compare(*this, o) == 0);
+  ASSERT(compare(*this, o) == 0);
   return chg_coef(m_ptr->m_coef - o.m_ptr->m_coef);
 }
 template<class I, class M>
@@ -88,14 +100,15 @@ handle<I,M>::print(S &os) const
 { m_ptr->print(os); }
 
 template<class I, class M>
-inline const typename handle<I,M>::eps_t*
+inline typename handle<I,M>::const_pointer
 handle<I,M>::ptr() const throw()
-{ return m_ptr.get(); }
+{ return static_cast<const_pointer>( m_ptr.get() ); }
 
 // operations implementation
 template<class I, class M>
 inline typename handle<I,M>::eps_t*
-handle<I,M>::chg_coef(const number &n) const throw() {
+handle<I,M>::chg_coef(const number &n) const throw()
+{
   eps_t* ret = m_ptr->clone();
   ret->m_coef = n;
   return ret;
