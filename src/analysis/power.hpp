@@ -1,16 +1,13 @@
-/*
- * power.hpp
- *
- *  Created on: 21 juin 2011
- *      Author: k1000
- */
-
 #ifndef POWER_HPP_
 #define POWER_HPP_
 
-#include "basic.hpp"
-#include "expr.hpp"
-#include "numeric.hpp"
+#include "analysis/expr.hpp"
+#include "analysis/basic.hpp"
+#include "analysis/numeric.hpp"
+
+#include "analysis/expairseq.hpp"
+
+#include "util/concept.hpp"
 
 namespace analysis {
 
@@ -25,6 +22,8 @@ class power
 
   REGISTER_FINAL( power, basic )
 
+  friend class prod;
+
 public:
   struct handle;
 
@@ -35,13 +34,20 @@ public: // coercion
   power* clone() const;
   const power* as_power() const;
 
+public: // access
+  const expr &base() const
+  { return m_base; }
+  const expr &expo() const
+  { return m_expo; }
+
 public: // tests
   bool null() const;
   bool unit() const;
 
   expr eval(unsigned) const;
-  expr diff(const symbol&, unsigned=1) const;
   bool has(const symbol&) const;
+  expr diff(const symbol&, unsigned) const;
+  expr expand() const;
 
 public: // misc.
   util::cmp_t compare_same_type(const basic &) const;
@@ -61,34 +67,40 @@ private:
   expr diff_log(const symbol &s) const;
 
 public: // static
-  static const power*
-  from_be(const basic* b, const basic* e);
+  static const power* from_be(const expr &b, const expr &e);
+  static const power* from_basic(const basic*);
+  static const power* from_numeric(const numeric*);
 
-  static const power*
-  from_1basic(const basic*);
-
-  static const power*
-  from_numeric(const numeric*);
-
-private:
+private: // data
   expr m_base, m_expo;
 };
 
-struct power::handle {
+struct power::handle
+: private util::implement_concept< ExpairseqHandle< power::handle, power > >
+{
+public:
+  typedef const power* const_pointer;
 
-  handle(const power* p)
-  : m_ptr(p) { assert(p); }
-  ~handle() {}
+public: // cdtor
+  handle(const_pointer p)
+  : m_ptr(p) { ASSERT(p); }
+  ~handle() throw() {}
 
+  void swap(handle &o) throw()
+  { m_ptr.swap( o.m_ptr ); }
+
+public: // coercion with expr
+  handle( const expr &ex )
+  : m_ptr( ex.get()->as_power() ) {}
   operator expr() const
   { return expr( m_ptr.get() ); }
 
-
+public: // operations
   handle operator+(const handle &) const;
   handle operator-(const handle &) const;
   handle operator-() const;
 
-
+public: // tests
   bool null() const
   { return m_ptr->m_expo.null(); }
 
@@ -99,6 +111,7 @@ struct power::handle {
     return a.m_ptr->power::compare_same_type(*b.m_ptr);
   }
 
+public: // misc
   std::size_t hash() const
   { return m_ptr->power::hash(); }
 
@@ -106,19 +119,24 @@ struct power::handle {
   void print(S &os) const
   { m_ptr->power::print(os); }
 
-  const power* ptr() const
+  const_pointer ptr() const
   { return m_ptr.get(); }
 
-  bool has(const symbol &s) const
-  { return m_ptr->power::has(s); }
-
-  expr diff_log(const symbol &s) const
-  { return m_ptr->power::diff_log(s); }
-
-private:
+private: // data
   boost::intrusive_ptr<const power> m_ptr;
 };
 
 }
+
+namespace std {
+
+inline void swap(
+  analysis::power::handle &a
+, analysis::power::handle &b
+) {
+  a.swap( b );
+}
+
+} // namespace std
 
 #endif /* POWER_HPP_ */

@@ -1,107 +1,93 @@
-/*
- * prod.cpp
- *
- *  Created on: 21 juin 2011
- *      Author: k1000
- */
-
 #include "analysis/sum.hpp"
 #include "analysis/prod.hpp"
 
 #include "analysis/expr.ipp"
 #include "analysis/basic.ipp"
-#include "analysis/expairseq.ipp"
 
-namespace analysis {
+using namespace analysis;
 
-struct prod::ep {
-  static number add(const number &c1, const number &c2)
-  { return c1 * c2; }
-
-  static number sub(const number &c1, const number &c2)
-  { return c1 / c2; }
-
-  static number neg(const number &c1)
-  { return c1.inv(); }
-};
-
-//************* prod class implementation ************//
 prod::prod(const number &n)
 : super(n) {}
 
-prod::prod(const number &n, const power* p)
-: super(n, p) {}
-
-// operation constructors
-template<class Tag>
-prod::prod(const prod &a, const prod &b, Tag)
-: super(a,b, Tag()) {}
-prod::prod(const prod &a, neg_t)
-: super(a, neg_t()) {}
-
-
 // operations
-prod* prod::mul(const prod &o) const
-{ return new prod(*this, o, add_t()); }
-prod* prod::div(const prod &o) const
-{ return new prod(*this, o, sub_t()); }
-prod* prod::inv() const
-{ return new prod(*this, neg_t()); }
+prod* prod::mul(const prod &a, const prod &b)
+{
+  const number &c = a.coef() * b.coef();
+  util::move_ptr< prod > tmp ( new prod( c ) );
+  tmp->construct_add( a, b );
+  return tmp.release();
+}
+prod* prod::div(const prod &a, const prod &b)
+{
+  ASSERT( ! b.coef().null() );
+  const number &c = a.coef() / b.coef();
+  util::move_ptr< prod > tmp ( new prod( c ) );
+  tmp->construct_sub( a, b );
+  return tmp.release();
+}
+prod* prod::inv(const prod &b)
+{
+  ASSERT( ! b.coef().null() );
+  const number &c = b.coef().inv();
+  util::move_ptr< prod > tmp ( new prod( c ) );
+  tmp->construct_neg( b );
+  return tmp.release();
+}
 
 // test
 bool prod::null() const {
-  return super::coef().null();
+  return coef().null();
 }
 
 bool prod::unit() const {
-  return super::coef().unit()
-      && super::is_empty();
+  return coef().unit()
+      && empty();
 }
 
 // static members
-prod* prod::from_1basic(const basic* a) {
+prod* prod::from_basic(const basic* a)
+{
   boost::intrusive_ptr<const power> pa = a->as_power();
-  return new prod(number::one(), pa.get()); // TODO
+  util::move_ptr<prod> tmp ( new prod( number::one() ) );
+  tmp->construct_monomial( pa.get() );
+  return tmp.release();
 }
-prod* prod::from_numeric(const numeric* n) {
+prod* prod::from_numeric(const numeric* n)
+{
   return new prod(n);
 }
 
 // eval
 expr prod::eval(unsigned lv) const {
-  const number &c = super::coef();
+  const number &c = coef();
 
   // (* c) -> c
-  if(super::is_empty())
+  if( empty() )
     return c.eval(lv);
 
   // (* 0 ...) -> 0
-  if(c.null())
+  if( c.null() )
     return number::zero();
 
-  if(lv == 0)
+  if( lv == 0 )
     return expr(this);
   --lv;
 
   // (* c x) ?
-  if(super::is_mono()) {
+  if( super::is_mono() )
+  {
     expr b ( super::mono() );
     b.eval(lv);
 
     // (* 1 x) -> x
-    if(c.unit())
+    if( c.unit() )
       return b;
 
-    // expand the addition TODO
+    // expand the addition
     // (* c (+ c' a...)) -> (+ cc' ca...)
-    if(b.is_a<sum>()) {
-      const sum* a = b.as_a<sum>();
-      return expr( a->mul( c ) );
-    }
+    if( b.is_a< sum >() )
+      return expr( sum::sca( c, *b.as_a< sum >() ) );
   }
 
   return basic::eval(++lv);
-}
-
-
 }

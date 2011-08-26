@@ -1,10 +1,3 @@
-/*
- * sum.hpp
- *
- *  Created on: 20 juin 2011
- *      Author: k1000
- */
-
 #ifndef ADD_HPP_
 #define ADD_HPP_
 
@@ -12,6 +5,8 @@
 
 #include "analysis/expairseq.hpp"
 #include "analysis/prod.hpp"
+
+#include "util/functor.hpp"
 
 namespace analysis {
 
@@ -31,22 +26,25 @@ class sum
   typedef expairseq<sum, prod> super;
   REGISTER_FINAL( sum, super )
 
-public:
+private:
   struct ep;
 
-protected:
-  explicit sum(const number &);
-  sum(const number &, const prod*);
+private:
+  explicit sum( const number & = number::zero() );
 
-  using super::add_t;
-  using super::sub_t;
-  using super::neg_t;
-  using super::sca_t;
+public: // access
+  using super::coef;
 
-  template<class Tag>
-  sum(const sum &a, const sum &b, Tag);
-  sum(const sum &a, neg_t);
-  sum(const sum &a, const number &n, sca_t);
+  using super::const_iterator;
+  using super::const_reverse_iterator;
+
+  using super::begin;
+  using super::end;
+  using super::rbegin;
+  using super::rend;
+
+  using super::size;
+  using super::empty;
 
 public:
   sum* clone() const
@@ -60,25 +58,62 @@ public:
   bool null() const;
   expr eval(unsigned) const;
   expr diff(const symbol&, unsigned=1) const;
-
-public:
-  sum* add(const sum &o) const;
-  sum* sub(const sum &o) const;
-  sum* neg() const;
-
-  sum* mul(const number &n) const;
+  expr expand() const;
 
 private:
   void print_base(std::basic_ostream<char> &os) const
   { os << '+'; }
 
 public:
-  static sum*
-  from_1basic(const basic*);
+  static sum* add(const sum &, const sum &);
+  static sum* sub(const sum &, const sum &);
+  static sum* neg(const sum &);
 
-  static sum*
-  from_numeric(const numeric*);
+  static sum* sca(const number &, const sum &);
+
+  static sum* from_basic  (const basic*);
+  static sum* from_numeric(const numeric*);
+
+  template< class Iter >
+  static sum* from_expr_range(const Iter &b, const Iter &e);
+  template< class Iter >
+  static sum* from_prod_range(const number &n, const Iter &b, const Iter &e);
+  template< class Iter >
+  static sum* from_mutable_prod_range(const number &n, const Iter &b, const Iter &e);
 };
+
+namespace detail {
+
+struct expr2prod
+: std::unary_function<const prod*, const expr&>
+{
+  inline const prod* operator()( const expr &ex )
+  { return ex.get()->as_prod(); }
+};
+
+}
+
+template< class Iter >
+inline sum* sum::from_expr_range(const Iter &b, const Iter &e)
+{
+  util::move_ptr< sum > tmp ( new sum );
+  tmp->construct_expr_range( b, e, detail::expr2prod(), functor::plus_eq<number>() );
+  return tmp.release();
+}
+template< class Iter >
+inline sum* sum::from_prod_range(const number &n, const Iter &b, const Iter &e)
+{
+  util::move_ptr< sum > tmp ( new sum( n ) );
+  tmp->construct_mono_range( b, e );
+  return tmp.release();
+}
+template< class Iter >
+inline sum* sum::from_mutable_prod_range(const number &n, const Iter &b, const Iter &e)
+{
+  util::move_ptr< sum > tmp ( new sum( n ) );
+  tmp->construct_mutable_mono_range( b, e );
+  return tmp.release();
+}
 
 }
 

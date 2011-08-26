@@ -1,10 +1,3 @@
-/*
- * prod.hpp
- *
- *  Created on: 20 juin 2011
- *      Author: k1000
- */
-
 #ifndef MUL_HPP_
 #define MUL_HPP_
 
@@ -13,39 +6,43 @@
 #include "analysis/expairseq.hpp"
 #include "analysis/power.hpp"
 
-#include "util/final.hpp"
+#include "util/functor.hpp"
 
 namespace analysis {
 
 class prod
 : public expairseq<prod, power> {
 
+  // grant access to super
   friend class expairseq<prod, power>;
   typedef expairseq<prod, power> super;
-  REGISTER_CLASS( prod, super )
+  REGISTER_FINAL( prod, super )
 
 public:
   using super::handle;
-  struct ep;
 
-protected:
-  explicit prod(const number &);
-  prod(const number &, const power*);
+private:
+  explicit prod( const number & = number::one() );
 
-  using super::add_t;
-  using super::sub_t;
-  using super::neg_t;
+public: // access
+  using super::coef;
 
-  template<class Tag>
-  prod(const prod &a, const prod &b, Tag);
-  prod(const prod &a, neg_t);
+  using super::const_iterator;
+  using super::const_reverse_iterator;
+
+  using super::begin;
+  using super::end;
+  using super::rbegin;
+  using super::rend;
+
+  using super::size;
+  using super::empty;
 
 public:
   prod* clone() const
-  { return new prod(*this); }
+  { return new prod( *this ); }
 
-public:
-  virtual const prod* as_prod() const
+  const prod* as_prod() const
   { return this; }
 
 public:
@@ -53,23 +50,75 @@ public:
   bool unit() const;
   expr eval(unsigned) const;
   expr diff(const symbol&, unsigned=1) const;
-
-public:
-  prod* mul(const prod &o) const;
-  prod* div(const prod &o) const;
-  prod* inv() const;
+  expr expand() const;
 
 private:
   void print_base(std::basic_ostream<char> &os) const
   { os << '*'; }
 
 public:
-  static prod*
-  from_1basic(const basic*);
+  static prod* mul(const prod &, const prod &);
+  static prod* div(const prod &, const prod &);
+  static prod* inv(const prod &);
 
-  static prod*
-  from_numeric(const numeric*);
+  static prod* from_basic (const basic*);
+  static prod* from_numeric(const numeric*);
+
+  template< class Iter >
+  static prod* from_expr_range(const Iter &b, const Iter &e);
+
+  template< class Iter >
+  static prod* from_power_range(const number &n, const Iter &b, const Iter &e);
+
+  template< class Iter >
+  static prod* from_mutable_power_range(const number &n, const Iter &b, const Iter &e);
 };
+
+namespace detail {
+
+struct expr2power
+: std::unary_function<const power*, const expr&>
+{
+  inline const power* operator()( const expr &ex )
+  { return ex.get()->as_power(); }
+};
+
+}
+
+template< class Iter >
+inline prod* prod::from_expr_range(const Iter &b, const Iter &e)
+{
+  util::move_ptr< prod > tmp ( new prod );
+  tmp->construct_expr_range( b, e, detail::expr2power(), functor::multiplies_eq<number>() );
+  return tmp.release();
+}
+template< class Iter >
+inline prod* prod::from_power_range(const number &n, const Iter &b, const Iter &e)
+{
+  ASSERT( ! n.null() );
+  util::move_ptr< prod > tmp ( new prod( n ) );
+  tmp->construct_mono_range( b, e );
+  return tmp.release();
+}
+
+template< class Iter >
+inline prod* prod::from_mutable_power_range(const number &n, const Iter &b, const Iter &e)
+{
+  ASSERT( ! n.null() );
+  util::move_ptr< prod > tmp ( new prod( n ) );
+  tmp->construct_mutable_mono_range( b, e );
+  return tmp.release();
+}
+
+// specialize handle::from_expr
+namespace epseq {
+
+template<>
+inline prod::handle::const_pointer
+prod::handle::from_expr( const expr &e )
+{ return e.get()->as_prod(); }
+
+}
 
 }
 
