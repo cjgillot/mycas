@@ -1,10 +1,3 @@
-/*
- * expr.hpp
- *
- *  Created on: 19 juin 2011
- *      Author: k1000
- */
-
 #ifndef EXPR_HPP_
 #define EXPR_HPP_
 
@@ -31,9 +24,6 @@ class expr
 > > {
 
 public:
-  //! \brief Zero constructor
-  expr();
-
   // compiler-generated copy and assignment
 
   //! \brief Non-throwing swap
@@ -43,7 +33,7 @@ public:
 
   //! \brief Explicit creation from \c basic instance
   //! \param b a non-null pointer to a \c basic instance
-  explicit expr(const basic*);
+  expr(const basic*);
 
 public:
   //! \brief Nullity test
@@ -59,6 +49,7 @@ public:
 
   bool has(const symbol&) const;
   expr diff(const symbol&, unsigned=1) const;
+  expr expand() const;
 
 public: // RTTI
   //! \brief \c basic pointer access
@@ -89,18 +80,21 @@ public:
 
 public:
   expr &ineg() {
-    neg().swap(*this);
+    neg().swap( *this );
     return *this;
   }
   expr &iinv() {
-    inv().swap(*this);
+    inv().swap( *this );
     return *this;
   }
 
-#define OP_EQ(op) \
-  expr &operator op##=(const expr &o) { \
-    ( operator op(o) ).swap(*this); \
-    return *this; \
+#define OP_EQ(op)               \
+  expr &                        \
+  operator op##=(const expr &o) \
+  {                             \
+    ( *this op o )              \
+      .swap( *this );           \
+    return *this;               \
   }
 
   OP_EQ(+)

@@ -32,10 +32,10 @@ protected:
   basic();
   basic(const basic &);
 
-public:
   //! \brief Virtual destructor
   virtual ~basic();
 
+public:
   //! \brief Virtual clone
   virtual basic* clone() const = 0;
 
@@ -61,9 +61,9 @@ public:
    * (without changing the value), and returns the most
    * simple form (often \c this, or a number).
    *
-   * This function must not recurse if \a lv == 0.
+   * This function must not have any recursive call if \a lv == 0.
    *
-   * All recursive calls must ba made with parameter \a lv - 1.
+   * All recursive calls must be made with parameter \a lv - 1.
    *
    * Default implementation : no-op
    *
@@ -89,6 +89,25 @@ public:
    */
   virtual expr diff(const symbol &s, unsigned nth = 1) const = 0;
 
+  /*!
+   * \brief Expansion function
+   *
+   * \return the evaluated expanded version of \c *this
+   */
+  virtual expr expand() const;
+
+  /*!
+   * \brief Powering function
+   *
+   * Rationale : power of expressions often have very special
+   * meaning and evaluation rules (for example <tt>abs(real)^2 -> real^2</tt>),
+   * whose handling must be given to the basis class.
+   *
+   * \param expo the exponent
+   * \return the evaluated version of \c *this ^ \c expo
+   */
+  virtual expr pow(const expr &expo) const;
+
 public:
   //! \brief RTTI
   virtual bool is_numeric() const;
@@ -103,18 +122,14 @@ public:
    *
    * \{
    */
-  //! \brief Addition coercion
-  virtual const sum* as_sum() const;
-  //! \brief Multiplication coercion
-  virtual const prod* as_prod() const;
-  //! \brief Power coercion
+  virtual const sum*   as_sum  () const;
+  virtual const prod*  as_prod () const;
   virtual const power* as_power() const;
   /*! \} */
 
 public:
   //! \brief Virtual printing function
-  virtual void
-  print(std::basic_ostream<char>&) const = 0;
+  virtual void print(std::basic_ostream<char>&) const = 0;
 
 private:
   /*!
