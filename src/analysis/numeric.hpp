@@ -11,7 +11,6 @@
 #include "analysis/basic.hpp"
 
 #include "algebra/real.hpp"
-#include "util/final.hpp"
 
 #include<boost/intrusive_ptr.hpp>
 

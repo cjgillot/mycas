@@ -34,8 +34,8 @@ protected:
 
 protected:
   void print(std::basic_ostream<char> &) const;
-  expr diff(const symbol&, unsigned) const;
   bool has(const symbol&) const;
+  expr diff(const symbol&, unsigned) const;
 
 private:
   std::size_t hash() const;

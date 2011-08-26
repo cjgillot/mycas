@@ -3,6 +3,8 @@
 
 #include<boost/noncopyable.hpp>
 
+#include "util/refcounted.hpp"
+
 #include "rtti.hpp"
 #include "rtti/visitor.hpp"
 

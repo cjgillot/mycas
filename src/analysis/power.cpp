@@ -15,7 +15,7 @@ power::handle::compare(const handle &a, const handle &b)
 // all operations :
 power::handle
 power::handle::operator+(const handle &o) const {
-  assert(compare(*this, o) == 0);
+  ASSERT(compare(*this, o) == 0);
 
   return new power(
     m_ptr->m_base
@@ -24,7 +24,7 @@ power::handle::operator+(const handle &o) const {
 }
 power::handle
 power::handle::operator-(const handle &o) const {
-  assert(compare(*this, o) == 0);
+  ASSERT(compare(*this, o) == 0);
 
   return new power(
     m_ptr->m_base
@@ -133,15 +133,15 @@ std::size_t power::hash() const {
 
 // static
 const power*
-power::from_be(const basic* b, const basic* e)
-{ return new power(expr(b), expr(e)); }
+power::from_be(const expr &b, const expr &e)
+{ return new power( b, e ); }
 
 const power*
-power::from_1basic(const basic* b)
-{ return from_be(b, number::one().get()); }
+power::from_basic(const basic* b)
+{ return from_be( b, number::one() ); }
 
 const power*
 power::from_numeric(const numeric* n)
-{ return from_1basic(n); }
+{ return from_basic( n ); }
 
 }
