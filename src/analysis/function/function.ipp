@@ -44,40 +44,45 @@ namespace detail {
 // utility iterator class for sign_sort
 template<class Iter>
 class indexer_t
-: boost::iterator_facade<
-    indexer_t<Iter>
+: boost::iterator_adaptor<
+    indexer_t<Iter> // Derived
+  , Iter // Base
   , std::pair<
       typename boost::iterator_value<Iter>::type
     , unsigned
-    > const
-  , boost::forward_traversal_tag
+    > const // Value
+  , std::input_iterator_tag // Tag
+  , std::pair<
+      typename boost::iterator_value<Iter>::type
+    , unsigned
+    > const // Reference
   > {
 
-  typedef typename boost::iterator_value<Iter>::type base_t;
-  typedef std::pair<base_t, unsigned> value_type;
+  typedef typename indexer_t::iterator_adaptor_ super_type;
 
 public:
+  typedef typename super_type::value_type value_type;
+  typedef typename super_type::reference reference;
+
   explicit
   indexer_t(const Iter &i)
-  : m_value(i, 0) {}
+  : super_type(i), m_index(0) {}
 
 private:
   friend class boost::iterator_core_access;
 
   void increment()
   {
-    ++m_value.first;
-    ++m_value.second;
+    super_type::increment();
+    ++m_index;
   }
 
-  const value_type &
+  reference
   dereference() const
-  { return m_value; }
+  { return value_type( *this->base_reference(), m_index ); }
 
-  bool equal( const indexer_t &o ) const
-  { return o.m_value.first == o.m_value.second; }
-
-  value_type m_value;
+private: // data
+  unsigned m_index;
 };
 
 template<class It>
@@ -99,13 +104,16 @@ struct less_pair {
 template<unsigned N>
 inline bool
 function<N>::sign_sort() {
-  typedef boost::array<unsigned, N> perm_t;
+  typedef unsigned index_t;
+
+  typedef boost::array<index_t, N> perm_t;
   perm_t perm;
 
   //! sort an indexed vector
   {
     //! temporary indexed array to be sorted
-    typedef detail::unsafe_array<std::pair<expr, unsigned>, N> tmp_t;
+    typedef std::pair< expr, index_t > pair_t;
+    typedef container::unsafe_array< pair_t, N > tmp_t;
 
     tmp_t tmp (
       detail::indexer( m_args.begin() )

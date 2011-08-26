@@ -4,12 +4,12 @@
 #include "analysis/expr.hpp"
 #include "analysis/symbol.hpp"
 
-#include<boost/foreach.hpp>
-#define foreach BOOST_FOREACH
+#include "util/foreach.hpp"
+#include "util/assert.hpp"
 
 #include "algebra/compare.hpp"
 
-#include "analysis/function/unsafe_array.hpp"
+#include "container/unsafe_array.hpp"
 
 namespace analysis {
 
@@ -17,10 +17,10 @@ template<unsigned N>
 class function
 : public basic
 {
-  BOOST_STATIC_ASSERT( N > 0 );
+  STATIC_ASSERT( N > 0 );
 
   symbol m_name;
-  detail::unsafe_array<expr, N> m_args;
+  container::unsafe_array<expr, N> m_args;
 
 protected:
   template<class InputIterator>
@@ -59,7 +59,7 @@ protected:
   //! \brief Argument access
   template<unsigned I>
   const expr &arg() const
-  { BOOST_STATIC_ASSERT( I < N ); return m_args[I]; }
+  { STATIC_ASSERT( I < N ); return m_args[I]; }
 
 private:
   std::size_t hash() const
@@ -133,12 +133,12 @@ protected:
 
   //! \brief Argument access
   const expr &arg(unsigned n) const
-  { assert( n == 0 ); (void)n; return m_arg; }
+  { ASSERT( n == 0 ); return m_arg; }
 
   //! \brief Argument access
   template<unsigned I>
   const expr &arg() const
-  { BOOST_STATIC_ASSERT( I == 0 ); return m_arg; }
+  { STATIC_ASSERT( I == 0 ); return m_arg; }
 
 private:
   std::size_t hash() const
