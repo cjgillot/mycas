@@ -32,7 +32,7 @@ basic::compare(const basic &a, const basic &b) {
 
   { // we have same type
     // compare hash
-    c = util::compare( a.hash(), b.hash() );
+    util::cmp_t c = util::compare( a.hash(), b.hash() );
     if( c ) return c;
   }
 

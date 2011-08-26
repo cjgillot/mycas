@@ -1,16 +1,13 @@
-#ifndef UTIL_NULL_HPP
-#define UTIL_NULL_HPP
-
 #include<boost/config.hpp>
 
-#ifndef BOOST_HAS_NULLPTR
+#if !defined( BOOST_HAS_NULLPTR ) && !defined( nullptr )
+
+// avoid GCC warning: identifier 'nullptr' will become a keyword in C++0x [-Wc++0x-compat]
+#define nullptr nullptr_
 
 namespace util {
 
 struct nullptr_t {
-  nullptr_t() throw() {}
- ~nullptr_t() throw() {}
-
   template<typename T>
   operator T*() const throw()
   { return 0; }
@@ -24,16 +21,22 @@ struct nullptr_t {
   template<class C, typename T>
   operator const T C::* () const throw()
   { return 0; }
+
+private: // non-template version for safe-bool
+  struct safe_bool_class {};
+  typedef void(safe_bool_class::* bool_type)();
+
+public:
+  operator bool_type() const
+  { return 0; }
+  bool operator!() const
+  { return true; }
 };
 
-// avoid GCC warning: identifier 'nullptr' will become a keyword in C++0x [-Wc++0x-compat]
-#define nullptr nullptr_
-static const nullptr_t nullptr;
+static const nullptr_t nullptr = {};
 
 }
 
 using util::nullptr;
-
-#endif
 
 #endif
