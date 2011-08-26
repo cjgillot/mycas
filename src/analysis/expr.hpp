@@ -1,19 +1,14 @@
-/*
- * expr.hpp
- *
- *  Created on: 19 juin 2011
- *      Author: k1000
- */
-
 #ifndef EXPR_HPP_
 #define EXPR_HPP_
 
-#include "stdlib.hpp"
 #include "operators.hpp"
 
-#include "analysis/basic.hpp"
+#include "util/compare.hpp"
+#include "util/attribute.hpp"
 
-#include "analysis/ptr.hpp"
+#include "analysis/forward.hpp"
+
+#include <boost/intrusive_ptr.hpp>
 
 namespace analysis {
 
@@ -28,35 +23,17 @@ class expr
 , operators::ordered<expr
 > > {
 
-  /*!
-   * \brief Shared pointer representation
-   * \invariant m_impl != 0
-   */
-  mutable boost::intrusive_ptr<const basic> m_impl;
-
 public:
-  //! \brief Copy constructor
-  expr(const expr &o)
-  : m_impl(o.m_impl) {}
-  //! \brief Assignment operator
-  expr& operator=(const expr &o) {
-    m_impl = o.m_impl;
-    return *this;
-  }
+  // compiler-generated copy and assignment
 
   //! \brief Non-throwing swap
-  void swap(expr &o) {
-    m_impl.swap(o.m_impl);
-  }
-
+  void swap(expr &o);
   //! \brief Non-virtual destructor
-  ~expr()
-  {}
+  ~expr();
 
-  //! \brief Explicit creation from basic
-  explicit
-  expr(const basic* b)
-  : m_impl(b) {}
+  //! \brief Explicit creation from \c basic instance
+  //! \param b a non-null pointer to a \c basic instance
+  expr(const basic*);
 
 public:
   //! \brief Nullity test
@@ -65,34 +42,23 @@ public:
   bool unit() const;
 
   //! \brief Printing
-  inline void
-  print(std::basic_ostream<char> &os) const
-  { m_impl->print(os); }
-
-  inline std::size_t
-  get_hash() const
-  { return m_impl->get_hash(); }
+  void print(std::basic_ostream<char> &os) const;
 
   static const unsigned default_eval_depth;
   void eval(unsigned = default_eval_depth) const;
 
+  bool has(const symbol&) const;
+  expr diff(const symbol&, unsigned=1) const;
+  expr expand() const;
+
 public: // RTTI
   //! \brief \c basic pointer access
-  inline const basic*
-  get() const
-  { return m_impl.get(); }
+  const basic* get() const;
 
-  template<class T>
-  bool is_a() const
-  { return dynamic_cast<const T*>( get() ); }
-
-  template<class T>
-  bool is_exactly_a() const
-  { return typeid(get()) == typeid(const T*); }
-
-  template<class T>
-  const T* as_a() const
-  { return static_cast<const T*>(get()); }
+  bool is_numeric() const;
+  template<class T> bool     is_a() const;
+  template<class T> const T* as_a() const;
+  template<class T> bool     is_exactly_a() const;
 
 public:
   friend expr operator+(const expr &a)
@@ -114,18 +80,21 @@ public:
 
 public:
   expr &ineg() {
-    neg().swap(*this);
+    neg().swap( *this );
     return *this;
   }
   expr &iinv() {
-    inv().swap(*this);
+    inv().swap( *this );
     return *this;
   }
 
-#define OP_EQ(op) \
-  expr &operator op##=(const expr &o) { \
-    ( operator op(o) ).swap(*this); \
-    return *this; \
+#define OP_EQ(op)               \
+  expr &                        \
+  operator op##=(const expr &o) \
+  {                             \
+    ( *this op o )              \
+      .swap( *this );           \
+    return *this;               \
   }
 
   OP_EQ(+)
@@ -136,13 +105,22 @@ public:
 #undef OP_EQ
 
 public:
-  static int
+  static util::cmp_t
   compare(const expr &a, const expr &b);
+
+  std::size_t hash() const;
+
+private:
+  /*!
+   * \brief Shared pointer representation
+   * \invariant m_impl != 0
+   */
+  mutable boost::intrusive_ptr<const basic> m_impl;
 };
 
-inline std::basic_ostream<char> &
-operator<<(std::basic_ostream<char> &os, const expr &e)
-{ e.print(os); return os; }
+std::basic_ostream<char> &operator<<(std::basic_ostream<char> &, const expr &);
+
+expr pow(const expr &, const expr &);
 
 } // namespace analysis
 

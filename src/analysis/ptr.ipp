@@ -1,9 +1,11 @@
 #ifndef PTR_IPP_
 #define PTR_IPP_
 
-#include "stdlib.hpp"
-
 #include "analysis/ptr.hpp"
+
+#include "util/refcounted.hpp"
+
+#include "analysis/expr.hpp"
 
 namespace analysis {
 
@@ -73,7 +75,7 @@ ptr<T>::print(std::basic_ostream<char> &os) const
 
 template<class T>
 template<class Compare>
-inline int
+inline util::cmp_t
 ptr<T>::compare(const ptr &a, const ptr &b, Compare cmp) {
   if(a.m_ptr == b.m_ptr)
     return 0;
@@ -84,8 +86,7 @@ ptr<T>::compare(const ptr &a, const ptr &b, Compare cmp) {
   if(! a.m_ptr)
     return -1;
 */
-  int c = cmp(*a.m_ptr, *b.m_ptr);
-
+  util::cmp_t c = cmp(*a.m_ptr, *b.m_ptr);
   if(c) return c;
 
   // here, a == b

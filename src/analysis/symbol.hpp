@@ -8,74 +8,104 @@
 #ifndef SYMBOL_HPP_
 #define SYMBOL_HPP_
 
-#include "stdlib.hpp"
 #include "analysis/basic.hpp"
-#include "analysis/numeric.hpp"
+#include "analysis/number.hpp"
 
 namespace analysis {
 
-/*!
- * \class symbol
- *
- * \brief Anonymous symbol class
- */
-class symbol
+class symbol;
+
+//! \brief Anonymous symbol class
+class symbol_
 : public basic {
 
-public:
-  symbol();
-  ~symbol();
+  REGISTER_CLASS( symbol_, basic )
 
-public:
-  symbol* clone() const;
+  friend class symbol;
 
-public:
+protected:
+  //! \brief Default constructor
+  symbol_();
+  //! \brief Destructor
+  ~symbol_();
+
+protected:
+  symbol_* clone() const;
+
+protected:
   void print(std::basic_ostream<char> &) const;
+  bool has(const symbol&) const;
+  expr diff(const symbol&, unsigned) const;
 
 private:
-  std::size_t calc_hash() const;
-  int compare_same_type(const basic&) const;
+  std::size_t hash() const;
+  util::cmp_t compare_same_type(const basic&) const;
 };
 
-/*!
- * \class ident
- *
- * \brief Named symbol class
- */
+//! \brief Named symbol class
 class ident
-: public symbol {
+: public symbol_ {
 
-  const char* m_name;
+  REGISTER_CLASS( ident, symbol_ )
 
-private:
-  ident();
+  friend class symbol;
 
-public:
+protected:
   //! \brief Constructor from string
   ident(const std::string &);
+  //! \brief Destructor
   ~ident();
 
-public:
+protected:
   void print(std::basic_ostream<char> &) const;
+
+private:
+  std::string m_name;
 };
 
-/*!
- * \class constant
- *
- * \brief Constant symbol class
- */
+//! \brief Constant symbol class
 class constant
 : public ident {
 
-  number m_value;
+  REGISTER_CLASS( constant, ident )
 
-private:
-  constant();
+  friend class symbol;
 
-public:
+protected:
   //! \brief Constructor from string
   constant(const std::string &, const number &);
+  //! \brief Destructor
   ~constant();
+
+private:
+  number m_value;
+};
+
+//! \brief Symbol handler
+struct symbol {
+
+  symbol()
+  : m_value(new symbol_) {}
+
+  symbol(const std::string &s)
+  : m_value(new ident(s)) {}
+
+  operator expr() const
+  { return expr( m_value.get() ); }
+
+  void swap(symbol &o)
+  { m_value.swap(o.m_value); }
+
+  std::size_t hash() const
+  { return m_value->hash(); }
+
+  static util::cmp_t compare(const symbol &a, const symbol &b)
+  { return a.m_value->symbol_::compare_same_type(*b.m_value); }
+
+private:
+  friend class symbol_;
+
+  boost::intrusive_ptr<const symbol_> m_value;
 };
 
 }

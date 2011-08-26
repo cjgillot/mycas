@@ -1,9 +1,12 @@
 #ifndef UTILS_VISITOR_HPP
-#define UTILs_VISITOR_HPP
+#define UTILS_VISITOR_HPP
+
+#warning deprecated header "util/visitor.hpp"
+#warning please use "rtti/visitor.hpp" instead.
 
 namespace util {
 
-class base_visitor {
+struct base_visitor {
   virtual ~base_visitor() {}
 };
 

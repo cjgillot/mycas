@@ -1,55 +1,14 @@
-/*
- * sum.hpp
- *
- *  Created on: 20 juin 2011
- *      Author: k1000
- */
-
 #ifndef ADD_HPP_
 #define ADD_HPP_
+
+#include "analysis/basic.hpp"
 
 #include "analysis/expairseq.hpp"
 #include "analysis/prod.hpp"
 
-#include "util/final.hpp"
+#include "util/functor.hpp"
 
 namespace analysis {
-
-class sum;
-
-#if 0
-//! \brief Traits structure for addition \c expairseq
-struct add_traits {
-  //! \brief Actual implemented type
-  typedef sum type;
-
-  //! \brief Addition overall coefficient type
-  typedef number coef_type;
-
-  /*!
-   * \brief Operations with addition
-   *
-   * In the traits class, the \c expair is considered
-   * as a multiplication.
-   */
-  struct ep {
-
-    //! \brief Add the coefs
-    static void mul_coef(coef_type &, const coef_type &);
-    //! \brief Subtract the coefs
-    static void div_coef(coef_type &, const coef_type &);
-
-    //! \brief Negate the coef
-    static void inv_coef(coef_type &);
-
-    //! \brief Print the tree root '+'
-    static void print_base(std::basic_ostream<char> &);
-
-  };
-};
-#endif
-
-DECLARE_FINAL_CLASS(sum)
 
 /*!
  * \brief Addition class
@@ -60,42 +19,32 @@ DECLARE_FINAL_CLASS(sum)
  *
  * Printing : (+ c m1 m2 m3 ...)
  */
-class sum: FINAL_CLASS(sum)
-, public expairseq<sum, prod> {
+class sum
+: public expairseq<sum, prod> {
 
-  DEFINE_CONST_VISITABLE()
+  friend class expairseq<sum, prod>;
+  typedef expairseq<sum, prod> super;
+  REGISTER_FINAL( sum, super )
 
 private:
-  //! \brief Base class type
-  typedef expairseq<sum, prod> super;
-
-public:
   struct ep;
 
-protected:
-  //! \brief Copy constructor (for clone)
-  sum(const sum &);
+private:
+  explicit sum( const number & = number::zero() );
 
-public:
-  //! \brief Destructor
-  virtual ~sum();
+public: // access
+  using super::coef;
 
-protected:
-  //! \brief Number constructor
-  explicit sum(const number &);
+  using super::const_iterator;
+  using super::const_reverse_iterator;
 
-  //! \brief Multiplication constructor
-  sum(const number &, const epair &);
+  using super::begin;
+  using super::end;
+  using super::rbegin;
+  using super::rend;
 
-  using super::add_t;
-  using super::sub_t;
-  using super::neg_t;
-  using super::sca_t;
-
-  template<class Tag>
-  sum(const sum &a, const sum &b, Tag);
-  sum(const sum &a, neg_t);
-  sum(const sum &a, const number &n, sca_t);
+  using super::size;
+  using super::empty;
 
 public:
   sum* clone() const
@@ -106,27 +55,65 @@ public:
   { return this; }
 
 public:
-  virtual bool null() const;
-  virtual expr eval(unsigned) const;
-
-public:
-  sum* add(const sum &o) const;
-  sum* sub(const sum &o) const;
-  sum* neg() const;
-
-  sum* mul(const number &n);
+  bool null() const;
+  expr eval(unsigned) const;
+  expr diff(const symbol&, unsigned=1) const;
+  expr expand() const;
 
 private:
   void print_base(std::basic_ostream<char> &os) const
   { os << '+'; }
 
 public:
-  static sum*
-  from_1basic(const basic*);
+  static sum* add(const sum &, const sum &);
+  static sum* sub(const sum &, const sum &);
+  static sum* neg(const sum &);
 
-  static sum*
-  from_numeric(const numeric*);
+  static sum* sca(const number &, const sum &);
+
+  static sum* from_basic  (const basic*);
+  static sum* from_numeric(const numeric*);
+
+  template< class Iter >
+  static sum* from_expr_range(const Iter &b, const Iter &e);
+  template< class Iter >
+  static sum* from_prod_range(const number &n, const Iter &b, const Iter &e);
+  template< class Iter >
+  static sum* from_mutable_prod_range(const number &n, const Iter &b, const Iter &e);
 };
+
+namespace detail {
+
+struct expr2prod
+: std::unary_function<const prod*, const expr&>
+{
+  inline const prod* operator()( const expr &ex )
+  { return ex.get()->as_prod(); }
+};
+
+}
+
+template< class Iter >
+inline sum* sum::from_expr_range(const Iter &b, const Iter &e)
+{
+  util::move_ptr< sum > tmp ( new sum );
+  tmp->construct_expr_range( b, e, detail::expr2prod(), functor::plus_eq<number>() );
+  return tmp.release();
+}
+template< class Iter >
+inline sum* sum::from_prod_range(const number &n, const Iter &b, const Iter &e)
+{
+  util::move_ptr< sum > tmp ( new sum( n ) );
+  tmp->construct_mono_range( b, e );
+  return tmp.release();
+}
+template< class Iter >
+inline sum* sum::from_mutable_prod_range(const number &n, const Iter &b, const Iter &e)
+{
+  util::move_ptr< sum > tmp ( new sum( n ) );
+  tmp->construct_mutable_mono_range( b, e );
+  return tmp.release();
+}
 
 }
 

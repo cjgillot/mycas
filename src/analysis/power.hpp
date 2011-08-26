@@ -1,24 +1,15 @@
-/*
- * power.hpp
- *
- *  Created on: 21 juin 2011
- *      Author: k1000
- */
-
 #ifndef POWER_HPP_
 #define POWER_HPP_
 
-#include "basic.hpp"
-#include "expr.hpp"
-#include "numeric.hpp"
+#include "analysis/expr.hpp"
+#include "analysis/basic.hpp"
+#include "analysis/numeric.hpp"
 
-#include "util/final.hpp"
+#include "analysis/expairseq.hpp"
+
+#include "util/concept.hpp"
 
 namespace analysis {
-
-class power;
-
-DECLARE_FINAL_CLASS(power)
 
 /*!
  * \brief This is the main power representation class
@@ -26,87 +17,126 @@ DECLARE_FINAL_CLASS(power)
  * This structure represents the power {b^e}
  * using the expair { coef=e; rest=b }.
  */
-class power: FINAL_CLASS(power)
-, public basic {
+class power
+: public basic {
+
+  REGISTER_FINAL( power, basic )
+
+  friend class prod;
 
 public:
   struct handle;
 
-private: // ctors
-  power(const power &);
+private: // cdtor
   power(const expr&, const expr&);
-
-public:
-  void swap(power &);
-  virtual ~power();
 
 public: // coercion
   power* clone() const;
   const power* as_power() const;
+
+public: // access
+  const expr &base() const
+  { return m_base; }
+  const expr &expo() const
+  { return m_expo; }
 
 public: // tests
   bool null() const;
   bool unit() const;
 
   expr eval(unsigned) const;
+  bool has(const symbol&) const;
+  expr diff(const symbol&, unsigned) const;
+  expr expand() const;
 
 public: // misc.
-  int compare_same_type(const basic &) const;
+  util::cmp_t compare_same_type(const basic &) const;
   void print(std::basic_ostream<char> &) const;
 
 private:
-  std::size_t calc_hash() const;
+  std::size_t hash() const;
+
+  /*!
+   * \brief Logarithmic differentiation
+   *
+   * This method is used internally by \c prod::diff()
+   * and \c power::diff().
+   *
+   * It returns the logarithmic derivative with respect to \c s.
+   */
+  expr diff_log(const symbol &s) const;
 
 public: // static
-  static const power*
-  from_be(const basic* b, const basic* e);
+  static const power* from_be(const expr &b, const expr &e);
+  static const power* from_basic(const basic*);
+  static const power* from_numeric(const numeric*);
 
-  static const power*
-  from_1basic(const basic*);
-
-  static const power*
-  from_numeric(const numeric*);
-
-private:
+private: // data
   expr m_base, m_expo;
 };
 
-struct power::handle {
+struct power::handle
+: private util::implement_concept< ExpairseqHandle< power::handle, power > >
+{
+public:
+  typedef const power* const_pointer;
 
-  handle(const power* p)
-  : m_ptr(p) { assert(p); }
-  ~handle() {}
+public: // cdtor
+  handle(const_pointer p)
+  : m_ptr(p) { ASSERT(p); }
+  ~handle() throw() {}
 
+  void swap(handle &o) throw()
+  { m_ptr.swap( o.m_ptr ); }
+
+public: // coercion with expr
+  handle( const expr &ex )
+  : m_ptr( ex.get()->as_power() ) {}
   operator expr() const
-  { return expr(m_ptr.get()); }
+  { return expr( m_ptr.get() ); }
 
-
+public: // operations
   handle operator+(const handle &) const;
   handle operator-(const handle &) const;
   handle operator-() const;
 
-
+public: // tests
   bool null() const
-  { return m_ptr->unit(); }
+  { return m_ptr->m_expo.null(); }
 
-  static int compare(const handle &a, const handle &b);
-  static int deep_compare(const handle &a, const handle &b) {
-    int c = a.hash() - b.hash();
+  static util::cmp_t compare(const handle &a, const handle &b);
+  static util::cmp_t deep_compare(const handle &a, const handle &b) {
+    util::cmp_t c = util::compare( a.hash() , b.hash() );
     if(c) return c;
     return a.m_ptr->power::compare_same_type(*b.m_ptr);
   }
 
+public: // misc
   std::size_t hash() const
-  { return m_ptr->get_hash(); }
+  { return m_ptr->power::hash(); }
 
   template<class S>
   void print(S &os) const
-  { m_ptr->print(os); }
+  { m_ptr->power::print(os); }
 
-private:
+  const_pointer ptr() const
+  { return m_ptr.get(); }
+
+private: // data
   boost::intrusive_ptr<const power> m_ptr;
 };
 
 }
+
+namespace std {
+
+inline void swap(
+  analysis::power::handle &a
+, analysis::power::handle &b
+) {
+  a.swap( b );
+}
+
+} // namespace std
 
 #endif /* POWER_HPP_ */

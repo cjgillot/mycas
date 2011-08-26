@@ -8,18 +8,12 @@
 #ifndef BASIC_HPP_
 #define BASIC_HPP_
 
-#include "stdlib.hpp"
 #include "util/refcounted.hpp"
-#include "util/visitor.hpp"
 
 #include "analysis/forward.hpp"
+#include "analysis/register.hpp"
 
 namespace analysis {
-
-//! \brief Flags used by basic
-enum {
-  Hashed = 1
-};
 
 /*!
  * \brief Base expression class
@@ -30,29 +24,34 @@ enum {
  * for use with \c boost::intrusive_ptr via \c expr or \c ptr.
  */
 class basic
-: public util::base_const_visitable<bool>
-, private boost::noncopyable {
+: private util::nonassignable {
 
-  MAKE_REFCOUNTED(basic);
+  REGISTER_BASE( basic )
 
-  // shall be defined in every derived class
-  DEFINE_CONST_VISITABLE()
-
-public:
-  //! \brief Default constructor
+protected:
   basic();
-  //! \brief Copy constructor
   basic(const basic &);
+
   //! \brief Virtual destructor
   virtual ~basic();
 
-  //! \brief Non-throwing swap
-  void swap(basic &);
-
+public:
   //! \brief Virtual clone
   virtual basic* clone() const = 0;
 
 public:
+  /*!
+   * \brief Nullity test
+   * \return \c true if the expression is exactly 0,
+   *    \c false otherwise (if unknown)
+   */
+  virtual bool null() const;
+  /*!
+   * \brief Unity test
+   * \see basic::null()
+   */
+  virtual bool unit() const;
+
   /*!
    * \brief Evaluation function
    *
@@ -62,42 +61,52 @@ public:
    * (without changing the value), and returns the most
    * simple form (often \c this, or a number).
    *
-   * This function must not recurse if \a lv == 0.
+   * This function must not have any recursive call if \a lv == 0.
    *
-   * All recursive calls must ba made with parameter \a lv - 1.
+   * All recursive calls must be made with parameter \a lv - 1.
    *
-   * @param lv : the recursion level
-   * @return the evaluated form
+   * Default implementation : no-op
+   *
+   * \param lv : the recursion level
+   * \return the evaluated form
    */
-  virtual expr eval(unsigned lv) const;
+  virtual expr eval(unsigned) const;
 
   /*!
-   * \brief Nullity test
-   * \return true if the expression is exactly 0,
-   *    false otherwise (if unknown)
+   * \brief Has function
+   *
+   * \param s : a symbol
+   * \return \c true if \c s is contained in the expression
    */
-  virtual bool null() const;
-  /*!
-   * \brief Unity test
-   * \see basic::null()
-   */
-  virtual bool unit() const;
+  virtual bool has(const symbol &) const;
 
-public:
   /*!
-   * \brief Copy on write function
+   * \brief Differentiation function
    *
-   * Calling this function allows to get
-   * a modifiable version of the current object.
-   *
-   * \return \c this if modifiable, a \c clone() otherwise.
+   * \param s : the symbol with respect to which we differentiate
+   * \param nth : the number of differentiations
+   * \return the evaluated nth derivative of \c *this
    */
-//  template<class T>
-//  T* cow() const {
-//    if(!util::unique(this))
-//      return static_cast<T*>(clone());
-//    return static_cast<T*>(const_cast<basic*>(this));
-//  }
+  virtual expr diff(const symbol &s, unsigned nth = 1) const = 0;
+
+  /*!
+   * \brief Expansion function
+   *
+   * \return the evaluated expanded version of \c *this
+   */
+  virtual expr expand() const;
+
+  /*!
+   * \brief Powering function
+   *
+   * Rationale : power of expressions often have very special
+   * meaning and evaluation rules (for example <tt>abs(real)^2 -> real^2</tt>),
+   * whose handling must be given to the basis class.
+   *
+   * \param expo the exponent
+   * \return the evaluated version of \c *this ^ \c expo
+   */
+  virtual expr pow(const expr &expo) const;
 
 public:
   //! \brief RTTI
@@ -113,20 +122,16 @@ public:
    *
    * \{
    */
-  //! \brief Addition coercion
-  virtual const sum* as_sum() const;
-  //! \brief Multiplication coercion
-  virtual const prod* as_prod() const;
-  //! \brief Power coercion
+  virtual const sum*   as_sum  () const;
+  virtual const prod*  as_prod () const;
   virtual const power* as_power() const;
   /*! \} */
 
 public:
   //! \brief Virtual printing function
-  virtual void
-  print(std::basic_ostream<char>&) const = 0;
+  virtual void print(std::basic_ostream<char>&) const = 0;
 
-protected:
+private:
   /*!
    * \brief Virtual homogeneous comparison
    *
@@ -135,69 +140,33 @@ protected:
    *
    * \return the comparison integer
    */
-  virtual int compare_same_type(const basic&) const = 0;
-
-  /*!
-   * \brief Virtual hashing function
-   *
-   * Default implementation in basic :
-   * return a hash of the typeid.
-   *
-   * At overriding, the super class hash should
-   * be used as seed.
-   *
-   * \return a hash value for *this
-   */
-  virtual std::size_t
-  calc_hash() const = 0;
+  virtual util::cmp_t compare_same_type(const basic&) const = 0;
 
 public:
   /*!
-   * \brief Hash value access
+   * \brief Virtual hashing function
+   *
+   * \return a hash value for *this
    */
-  std::size_t
-  get_hash() const {
-    if(m_flags & Hashed) return m_hash;
-    m_hash = calc_hash();
-    m_flags |= Hashed;
-    return m_hash;
-  }
+  virtual std::size_t hash() const = 0;
 
   /*!
    * \brief Comparison dispatch function
    *
+   * The comparison template is the following :
+   * - first compare hash values : if different, return according to these
+   * - then compare
+   *
    * This function compares the \c typeid of the
    * two \c basic objects, and orders according to
    * these types.
-   * If equal, compare_same_type is called.
-   */
-  static int
-  compare(const basic&, const basic&);
-
-protected:
-  /*!
-   * \brief Forget function for the hash value
+   * If equal, \c compare_same_type() is called.
    *
-   * This function has to be called each time
-   * a basic is modified after its construction.
+   * \see compare_same_type()
    */
-  void unhash() {
-    m_flags &= ~Hashed;
-  }
-
-private: // member data
-
-  //! \brief Flags
-  mutable unsigned m_flags;
-
-  //! \brief Computed hash value
-  mutable std::size_t m_hash;
+  static util::cmp_t
+  compare(const basic&, const basic&);
 };
-
-inline std::size_t
-basic::calc_hash() const
-{ return boost::hash_value(typeid(*this).name()); }
-
 
 }
 

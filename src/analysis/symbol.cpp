@@ -7,7 +7,10 @@
 
 #include "symbol.hpp"
 
-namespace analysis {
+#include "analysis/expr.ipp"
+#include "analysis/basic.ipp"
+
+using namespace analysis;
 
 namespace {
 
@@ -20,35 +23,34 @@ get_name(const std::string &orig) {
 
 }
 
-symbol::symbol() {}
-symbol::~symbol() {}
+symbol_::symbol_() {}
+symbol_::~symbol_() {}
 
-symbol* symbol::clone() const {
-  return const_cast<symbol*>(this);
+symbol_* symbol_::clone() const {
+  return const_cast<symbol_*>(this);
 }
 
 void
-symbol::print(std::basic_ostream<char> &os) const {
+symbol_::print(std::basic_ostream<char> &os) const {
   os << '_' << static_cast<const void*>(this);
 }
 
 // all symbols are unique
 // so address comparison is sufficient
-int
-symbol::compare_same_type(const basic &o) const {
-  return this - static_cast<const symbol*>(&o);
-}
-std::size_t symbol::calc_hash() const {
-  std::size_t seed = basic::calc_hash();
-  boost::hash_combine(seed, this);
-  return seed;
-}
+util::cmp_t symbol_::compare_same_type(const basic &o) const
+{ return util::compare(this, static_cast<const symbol_*>(&o)); }
 
+std::size_t symbol_::hash() const
+{ return boost::hash_value(this); }
+
+bool symbol_::has(const symbol &s) const
+{ return s.m_value.get() == this; }
+
+
+// ident class
 ident::ident(const std::string &n)
-: m_name(get_name(n)) {}
-ident::~ident() {
-  delete[] m_name;
-}
+: m_name(n) {}
+ident::~ident() {}
 
 void
 ident::print(std::basic_ostream<char> &os) const {
@@ -58,5 +60,3 @@ ident::print(std::basic_ostream<char> &os) const {
 constant::constant(const std::string &n, const number &v)
 : ident(n), m_value(v) {}
 constant::~constant() {}
-
-}

@@ -1,31 +1,31 @@
-/*
- * basic.ipp
- *
- *  Created on: 20 juin 2011
- *      Author: k1000
- */
+#ifndef BASIC_IPP
+#define BASIC_IPP
 
-#ifndef BASIC_IPP_
-#define BASIC_IPP_
+#include "analysis/forward.hpp"
 
-#include "basic.hpp"
-#include "sum.hpp"
-#include "prod.hpp"
-#include "power.hpp"
+#include "analysis/expr.hpp"
+#include "analysis/basic.hpp"
 
 namespace analysis {
-/*
-inline sum*
-basic::as_sum() const {
-  return new sum(this);
+
+// cdtor
+inline basic::basic() {}
+inline basic::basic(const basic&) {}
+inline basic::~basic() {}
+
+// tests
+inline bool basic::null() const { return false; }
+inline bool basic::unit() const { return false; }
+
+// eval
+inline expr basic::eval(unsigned) const { return expr( this ); }
+
+// has
+inline bool basic::has(const symbol &) const { return false; }
+
+// RTTI
+inline bool basic::is_numeric() const { return false; }
+
 }
 
-inline prod*
-basic::as_prod() const {
-  return new prod(this);
-}
-*/
-
-}
-
-#endif /* BASIC_IPP_ */
+#endif
