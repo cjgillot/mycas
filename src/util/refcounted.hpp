@@ -1,24 +1,45 @@
-/*
- * utils/refcounted.hpp
- *
- *  Created on: 14 juin 2011
- *      Author: k1000
- */
-
 #ifndef UTILS_REFCOUNTED_HPP_
 #define UTILS_REFCOUNTED_HPP_
+
+#include<new>
 
 #include<boost/shared_ptr.hpp>
 #include<boost/noncopyable.hpp>
 #include<boost/intrusive_ptr.hpp>
 
+#include "util/assert.hpp"
+#include "util/attribute.hpp"
+
 namespace util {
 
 class refcount_access;
 
+//! \brief Non-heap allocable
+struct nonheapable {
+private:
+  void* operator new( std::size_t ) throw( std::bad_alloc );
+  void* operator new( std::size_t, std::nothrow_t ) throw();
+
+  void  operator delete( void* ) throw();
+  void  operator delete( void*, std::nothrow_t ) throw();
+
+  // leave placement operators -> containers give stack scoping
+};
+
+//! \brief Non-assignable class
+struct nonassignable {
+private:
+  nonassignable& operator=(const nonassignable&) ATTRIBUTE_DELETED;
+};
+
+//! \brief Non-copyable class
+struct noncopyable {
+private:
+  noncopyable(const noncopyable&) ATTRIBUTE_DELETED;
+  noncopyable& operator=(const noncopyable&) ATTRIBUTE_DELETED;
+};
+
 /*!
- * \struct refcounter
- *
  * \brief A simple reference counter class
  *
  * This class handles the internal
@@ -27,50 +48,66 @@ class refcount_access;
  * \invariant \c m_refc == 0 at construction and destruction
  *
  * \todo Implement atomic operations
- *
  */
 struct refcounter
-: private boost::noncopyable {
-  //! \brief Reference count
-  unsigned long m_refc;
+: private nonassignable {
 
+public:
   //! \brief Default constructor
-  inline
-  refcounter()
+  inline  refcounter() throw()
+  : m_refc(0) {}
+
+  //! \brief Copy constructor
+  inline  refcounter(const refcounter&) throw()
   : m_refc(0) {}
 
   //! \brief Destructor
-  inline
-  ~refcounter()
-  { assert(m_refc == 0); }
+  inline ~refcounter() throw()
+  { ASSERT(m_refc == 0); }
 
+public:
   //! \brief Incrementation
-  inline void grab()
-  { ++m_refc; }
+  inline void grab() throw()
+  {
+    ++m_refc;
+    ASSERT_MSG( m_refc != 0, "Reference counter overflow" );
+  }
 
   //! \brief Decrementation
-  inline bool drop()
-  { return --m_refc; }
+  template<class T>
+  inline void
+  ATTRIBUTE_NONNULL(1)
+  drop(const T* p) throw()
+  {
+    // T is known to be complete
+    // since drop() is called by intrusive_ptr_release()
+    if( --m_refc == 0 )
+      delete p;
+  }
 
   /*!
    * \brief Uniqueness test
    *
-   * A pointer is unique if :
-   * -> there is only one intrusive_ptr (m_refc == 1)
-   * -> there is no intrusive_ptr (m_refc == 0)
-   *
+   * A pointer is unique in these cases :
+   * - there is only one intrusive_ptr (\ref m_refc == 1)
+   * - there is no intrusive_ptr (\ref m_refc == 0)
    */
-  inline bool unique() const
+  inline bool
+  ATTRIBUTE_PURE
+  unique() const throw()
   { return m_refc <= 1; }
+
+public:
+  //! \brief Reference count
+  unsigned long m_refc;
 };
 
 /*!
- * \def GET_REFCOUNTED
+ * \def REFCOUNT_NAME
  *
- * Macro giving the name of the refcount integer
- *
+ * Macro giving the name of the \ref refcounter member
  */
-#define GET_REFCOUNTED \
+#define REFCOUNT_NAME \
   _m_refcount_
 
 /*!
@@ -80,27 +117,20 @@ struct refcounter
  * defines the two \c intrusive_ptr_* functions used
  * by \c boost::intrusive_ptr.
  *
- * The \c refcounter structure cares for itself.
+ * The \ref refcounter structure cares for itself.
  */
-#define MAKE_REFCOUNTED(klass)   \
-  private: \
-    mutable ::util::refcounter GET_REFCOUNTED; \
-    \
-  public: \
-    /*! \brief Ref counter incrementation for boost::intrusive_ptr */ \
-    friend inline void \
-    intrusive_ptr_add_ref(const klass* it) { \
-      it->GET_REFCOUNTED.grab(); \
-    } \
-    \
-    /*! \brief Ref counter decrementation for boost::intrusive_ptr */ \
-    friend void  \
-    intrusive_ptr_release(const klass* it) {    \
-      if(! it->GET_REFCOUNTED.drop())       \
-        delete it;      \
-    }   \
-    \
-    /*! \brief Test whether pointer is unique (ie. {refcount == 1}) */ \
+#define MAKE_REFCOUNTED(klass)              \
+  private:                                  \
+    mutable ::util::refcounter              \
+      REFCOUNT_NAME;                        \
+  public:                                   \
+    friend inline void                      \
+    intrusive_ptr_add_ref(const klass* it)  \
+    { it->REFCOUNT_NAME.grab(); }           \
+    friend inline void                      \
+    intrusive_ptr_release(const klass* it)  \
+    { it->REFCOUNT_NAME.drop( it ); }       \
+    friend class ::util::refcounter;        \
     friend class ::util::refcount_access // missing ";"
 
 /*!
@@ -114,8 +144,9 @@ struct refcounter
 struct refcount_access {
   //! \brief Pointer uniqueness test \see util::unique
   template<class T>
-  static bool unique(const T* it) {
-    return it->GET_REFCOUNTED.unique();
+  static bool ATTRIBUTE_PURE
+  unique(const T* it) {
+    return it->REFCOUNT_NAME.unique();
   }
   //! \brief Pointer unification \see util::unify
   template<class T>
@@ -124,7 +155,7 @@ struct refcount_access {
   , boost::intrusive_ptr<T> &b
   ) {
     // get rid of the less referenced
-    if(b->GET_REFCOUNTED.m_refc < a->GET_REFCOUNTED.m_refc) {
+    if(b->REFCOUNT_NAME.m_refc < a->REFCOUNT_NAME.m_refc) {
       b = a;
       return;
     }
@@ -135,12 +166,12 @@ struct refcount_access {
 /*!
  * \brief Unique pointer test
  *
- * \param it : a ref-counted pointer
- * \return true if the ref-counter equals 1,
+ * \param it : a reference counted pointer
+ * \return true if the reference counter equals 0 or 1,
  *      false otherwise
  */
 template<class T>
-inline bool
+inline bool ATTRIBUTE_PURE
 unique(const T* it) {
   return refcount_access::unique(it);
 }
@@ -151,8 +182,6 @@ unique(const T* it) {
  * If two pointers have the same dereferenced
  * value, they can be unified by this function.
  * It cares for getting rid of the less referenced.
- *
- * \param a,b : \c boost::intrusive_ptr to be unified
  */
 template<class T>
 inline void
@@ -168,10 +197,10 @@ unify_ptr(
   boost::shared_ptr<T> &a
 , boost::shared_ptr<T> &b
 ) {
-  const int ac = a.use_count(), bc = b.use_count();
-  if(ac <= bc)
-    a.reset(b);
-  b.reset(a);
+  if(a.use_count() <= b.use_count())
+    a = b;
+  else
+    b = a;
 }
 
 }
