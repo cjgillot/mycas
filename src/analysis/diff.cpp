@@ -4,6 +4,8 @@
 #include "analysis/expr.ipp"
 #include "analysis/basic.ipp"
 
+#include "util/assert.hpp"
+
 using namespace analysis;
 
 // numeric
@@ -11,7 +13,7 @@ using namespace analysis;
 #include "analysis/numeric.hpp"
 
 expr numeric::diff(const symbol &, unsigned n) const
-{ return n ? number::zero() : expr(this); }
+{ return n ? number::zero() : this; }
 
 // symbol
 #include "analysis/symbol.hpp"
@@ -19,7 +21,7 @@ expr numeric::diff(const symbol &, unsigned n) const
 expr symbol_::diff(const symbol &s, unsigned n) const
 {
   if( n == 0 )
-    return expr(this);
+    return this;
 
   if( n == 1 && symbol_::has(s) )
     return number::one();
@@ -47,24 +49,35 @@ expr power::diff_log(const symbol &s) const
 expr power::diff(const symbol &s, unsigned n) const
 {
   if( n == 0 )
-    return expr(this);
+    return this;
 
   bool bh = m_base.has(s)
   ,    eh = m_expo.has(s);
 
+  // trivial case
   if( !bh & !eh )
+    return number::zero();
+
+  // this cases should not happen
+  // since eval() simplifies it
+#if 0
+  if( m_expo.null() )
     return number::zero();
 
   if( m_expo.unit() )
     return m_base.diff(s,n);
+#else
+  ASSERT_MSG( ! m_expo.null() && ! m_expo.unit(), "Differentiating unevaluated power" );
+#endif
 
+  // no
   if( n > 1 )
-    return diff(s).diff(s, n-1);
+    return power::diff(s, 1).diff(s, n-1);
 
   if( !eh )
     return m_expo * m_base.diff(s) * m_base.pow( m_expo - number::one() );
 
-  return diff_log(s) * expr(this);
+  return diff_log(s) * expr( this );
 }
 
 // prod
@@ -73,17 +86,14 @@ expr power::diff(const symbol &s, unsigned n) const
 expr prod::diff(const symbol &s, unsigned n) const
 {
   if( n == 0 )
-    return expr(this);
+    return this;
 
   //! now, n >= 1
   const number &c = super::coef();
 
   //! d^n(* c) -> 0
-  if(super::is_empty())
-    return number::zero();
-
   //! d^n(* 0 ...) -> 0
-  if(c.null())
+  if( empty() || c.null() )
     return number::zero();
 
   //! d^n(* c x) -> (* c d^n(x))
@@ -94,7 +104,7 @@ expr prod::diff(const symbol &s, unsigned n) const
   }
 
   if( n > 1 )
-    return diff(s).diff(s, n-1);
+    return diff(s, 1).diff(s, n-1);
 
   //! now, n == 1
 
@@ -107,10 +117,10 @@ expr prod::diff(const symbol &s, unsigned n) const
   //! internally needs logarithm, \c epair { aka. \c power::handle }
   //! provides it gently.
 
-  expr ret;
+  expr ret ( number::zero() );
 
-  foreach( const epair &e, *this )
-    ret += e.diff_log(s);
+  foreach( const power* p, *this )
+    ret += p->diff_log(s);
 
   ret *= expr(this);
   return ret;
@@ -121,12 +131,12 @@ expr prod::diff(const symbol &s, unsigned n) const
 
 expr sum::diff(const symbol &s, unsigned n) const {
   if( n == 0 )
-    return expr(this);
+    return this;
 
   expr ret ( number::zero() );
 
-  foreach( const epair &e, *this )
-    ret += e.ptr()->diff( s, n );
+  foreach( const prod* p, *this )
+    ret += p->diff( s, n );
 
   return ret;
 }
