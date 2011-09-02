@@ -10,8 +10,7 @@
 
 namespace analysis {
 
-/*!
- * \brief Addition class
+/*!\brief Addition class
  *
  * This \c expairseq-derived class represents
  * sums as a linear combination of multiplications,
@@ -26,8 +25,8 @@ class sum
   typedef expairseq<sum, prod> super;
   REGISTER_FINAL( sum, super )
 
-private:
-  struct ep;
+//   friend class prod;
+//   friend class power;
 
 private:
   explicit sum( const number & = number::zero() );
@@ -35,6 +34,8 @@ private:
 public: // access
   using super::coef;
 
+  using super::iterator;
+  using super::reverse_iterator;
   using super::const_iterator;
   using super::const_reverse_iterator;
 
@@ -59,10 +60,11 @@ public:
   expr eval(unsigned) const;
   expr diff(const symbol&, unsigned=1) const;
   expr expand() const;
+  expr subs(const std::map<expr,expr> &) const;
 
 private:
-  void print_base(std::basic_ostream<char> &os) const
-  { os << '+'; }
+  void print_base(std::basic_ostream<char> &os) const { os << '+'; }
+  bool match_same_type(const basic &, match_map &) const;
 
 public:
   static sum* add(const sum &, const sum &);
@@ -71,8 +73,8 @@ public:
 
   static sum* sca(const number &, const sum &);
 
-  static sum* from_basic  (const basic*);
-  static sum* from_numeric(const numeric*);
+  static sum* from_basic (const basic*);
+  static sum* from_number(const number&);
 
   template< class Iter >
   static sum* from_expr_range(const Iter &b, const Iter &e);
@@ -96,21 +98,21 @@ struct expr2prod
 template< class Iter >
 inline sum* sum::from_expr_range(const Iter &b, const Iter &e)
 {
-  util::move_ptr< sum > tmp ( new sum );
+  util::scoped_ptr< sum > tmp ( new sum );
   tmp->construct_expr_range( b, e, detail::expr2prod(), functor::plus_eq<number>() );
   return tmp.release();
 }
 template< class Iter >
 inline sum* sum::from_prod_range(const number &n, const Iter &b, const Iter &e)
 {
-  util::move_ptr< sum > tmp ( new sum( n ) );
+  util::scoped_ptr< sum > tmp ( new sum( n ) );
   tmp->construct_mono_range( b, e );
   return tmp.release();
 }
 template< class Iter >
 inline sum* sum::from_mutable_prod_range(const number &n, const Iter &b, const Iter &e)
 {
-  util::move_ptr< sum > tmp ( new sum( n ) );
+  util::scoped_ptr< sum > tmp ( new sum( n ) );
   tmp->construct_mutable_mono_range( b, e );
   return tmp.release();
 }

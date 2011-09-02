@@ -18,6 +18,9 @@ class prod
   typedef expairseq<prod, power> super;
   REGISTER_FINAL( prod, super )
 
+//   friend class power;
+//   friend class sum;
+
 public:
   using super::handle;
 
@@ -27,6 +30,8 @@ private:
 public: // access
   using super::coef;
 
+  using super::iterator;
+  using super::reverse_iterator;
   using super::const_iterator;
   using super::const_reverse_iterator;
 
@@ -51,10 +56,11 @@ public:
   expr eval(unsigned) const;
   expr diff(const symbol&, unsigned=1) const;
   expr expand() const;
+  expr subs(const std::map<expr,expr> &) const;
 
 private:
-  void print_base(std::basic_ostream<char> &os) const
-  { os << '*'; }
+  void print_base(std::basic_ostream<char> &os) const { os << '*'; }
+  bool match_same_type(const basic &, match_map &) const;
 
 public:
   static prod* mul(const prod &, const prod &);
@@ -62,7 +68,7 @@ public:
   static prod* inv(const prod &);
 
   static prod* from_basic (const basic*);
-  static prod* from_numeric(const numeric*);
+  static prod* from_number(const number&);
 
   template< class Iter >
   static prod* from_expr_range(const Iter &b, const Iter &e);
@@ -88,7 +94,7 @@ struct expr2power
 template< class Iter >
 inline prod* prod::from_expr_range(const Iter &b, const Iter &e)
 {
-  util::move_ptr< prod > tmp ( new prod );
+  util::scoped_ptr< prod > tmp ( new prod );
   tmp->construct_expr_range( b, e, detail::expr2power(), functor::multiplies_eq<number>() );
   return tmp.release();
 }
@@ -96,7 +102,7 @@ template< class Iter >
 inline prod* prod::from_power_range(const number &n, const Iter &b, const Iter &e)
 {
   ASSERT( ! n.null() );
-  util::move_ptr< prod > tmp ( new prod( n ) );
+  util::scoped_ptr< prod > tmp ( new prod( n ) );
   tmp->construct_mono_range( b, e );
   return tmp.release();
 }
@@ -105,7 +111,7 @@ template< class Iter >
 inline prod* prod::from_mutable_power_range(const number &n, const Iter &b, const Iter &e)
 {
   ASSERT( ! n.null() );
-  util::move_ptr< prod > tmp ( new prod( n ) );
+  util::scoped_ptr< prod > tmp ( new prod( n ) );
   tmp->construct_mutable_mono_range( b, e );
   return tmp.release();
 }

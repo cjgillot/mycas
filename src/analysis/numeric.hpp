@@ -1,10 +1,3 @@
-/*
- * numeric.hpp
- *
- *  Created on: 20 juin 2011
- *      Author: k1000
- */
-
 #ifndef NUMERIC_HPP_
 #define NUMERIC_HPP_
 
@@ -12,7 +5,7 @@
 
 #include "algebra/real.hpp"
 
-#include<boost/intrusive_ptr.hpp>
+#include "analysis/ptr.hpp"
 
 namespace analysis {
 
@@ -22,6 +15,9 @@ class numeric
   REGISTER_FINAL( numeric, basic )
 
   friend class number;
+
+private:
+  algebra::real m_value;
 
 public:
   numeric(const numeric &);
@@ -34,12 +30,12 @@ public:
 
   static const numeric* zero()
   {
-    static boost::intrusive_ptr<const numeric> value ( new numeric( 0. ) );
+    static ptr<const numeric> value ( new numeric( 0. ) );
     return value.get();
   }
   static const numeric* one()
   {
-    static boost::intrusive_ptr<const numeric> value ( new numeric( 1. ) );
+    static ptr<const numeric> value ( new numeric( 1. ) );
     return value.get();
   }
 
@@ -58,20 +54,18 @@ public:
   virtual const prod* as_prod() const;
 
 public:
-  const numeric* plus()  const;
-  const numeric* minus() const;
+  static const numeric* add(const numeric &, const numeric&);
+  static const numeric* sub(const numeric &, const numeric&);
 
-  numeric* iadd(const numeric*);
-  numeric* isub(const numeric*);
+  static const numeric* mul(const numeric &, const numeric&);
+  static const numeric* div(const numeric &, const numeric&);
 
-  numeric* ineg();
+  static const numeric* neg(const numeric &);
+  static const numeric* inv(const numeric &);
 
-  numeric* imul(const numeric*);
-  numeric* idiv(const numeric*);
-
-  numeric* iinv();
-
-  const numeric* pow(const numeric* o) const;
+public:
+  expr pow(const expr &o) const;
+  const numeric* pow(const numeric &o) const;
 
 public:
   void print(std::basic_ostream<char> &os) const;
@@ -79,9 +73,6 @@ public:
 
   std::size_t hash() const
   { return boost::hash<algebra::real>()(m_value); }
-
-private:
-  algebra::real m_value;
 };
 
 

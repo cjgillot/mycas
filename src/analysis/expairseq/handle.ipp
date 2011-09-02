@@ -3,37 +3,40 @@
 
 #include "analysis/expairseq/handle.hpp"
 #include "analysis/basic.hpp"
+#include "analysis/expr.hpp"
 
 #include "util/assert.hpp"
+#include "util/move.hpp"
 
 namespace analysis {
 namespace epseq {
 
 // cdtor
 template<class I, class M>
-inline
-handle<I,M>::handle(const eps_t* p)
+inline handle<I,M>::
+handle(const eps_t* p)
 : m_ptr(p) { ASSERT(p); }
 
 template<class I, class M>
-inline
-handle<I,M>::handle(const handle &o)
+inline handle<I,M>::
+handle(const handle &o)
 : m_ptr(o.m_ptr) {}
 
 template<class I, class M>
-inline handle<I,M> &
-handle<I,M>::operator=(const handle &o) {
+inline handle<I,M> &handle<I,M>::
+operator=(const handle &o)
+{
   m_ptr = o.m_ptr;
   return *this;
 }
 
 template<class I, class M>
-inline
-handle<I,M>::~handle() throw() {}
+inline handle<I,M>::
+~handle() throw() {}
 
 template<class I, class M>
-inline void
-handle<I,M>::swap(handle &o) throw()
+inline void handle<I,M>::
+swap(handle &o) throw()
 { m_ptr.swap( o.m_ptr ); }
 
 // coercion
@@ -101,20 +104,19 @@ handle<I,M>::print(S &os) const
 
 template<class I, class M>
 inline typename handle<I,M>::const_pointer
-handle<I,M>::ptr() const throw()
-{ return static_cast<const_pointer>( m_ptr.get() ); }
+handle<I,M>::get() const throw()
+{ return static_cast< const_pointer >( m_ptr.get() ); }
 
 // operations implementation
 template<class I, class M>
 inline typename handle<I,M>::eps_t*
 handle<I,M>::chg_coef(const number &n) const throw()
 {
-  eps_t* ret = m_ptr->clone();
-  ret->m_coef = n;
-  return ret;
+  util::scoped_ptr< eps_t > retp ( new I( *get() ) );
+  retp->m_coef = n;
+  return retp.release();
 }
 
 }} // namespace analysis::epseq
-
 
 #endif

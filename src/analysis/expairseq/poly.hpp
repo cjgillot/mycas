@@ -15,13 +15,12 @@
 
 #include "util/null.hpp"
 #include "util/assert.hpp"
-#include "util/concept.hpp"
 
 namespace analysis {
 namespace epseq {
 
 // TODO implement portable iterators
-template<class _Tp, class _Alloc = std::allocator<_Tp> >
+template<class _Tp, class _Alloc>
 class poly
 {
   typedef container::unsafe_vector<_Tp, _Alloc> vector_type;
@@ -52,20 +51,20 @@ public: // member typedefs
 
 public: // cdtor
   explicit poly(size_type nb)
-  : m_impl( nb ) {}
+  : m_impl( nb )              { ASSERT( nb ); }
 
   poly(size_type nb, const allocator_type &a)
-  : m_impl( nb, a ) {}
+  : m_impl( nb, a )           { ASSERT( nb ); }
 
   poly(size_type nb, const value_type &x)
-  : m_impl( nb, x ) {}
+  : m_impl( nb, x )           { ASSERT( nb ); }
 
   poly(size_type nb, const value_type &x, const allocator_type &a)
-  : m_impl( nb, x, a ) {}
+  : m_impl( nb, x, a )        { ASSERT( nb ); }
 
   template<class Iterator>
   poly(std::size_t nb, Iterator first, const Iterator &last)
-  : m_impl( nb, first, last ) {}
+  : m_impl( nb, first, last ) { ASSERT( nb ); }
 
   ~poly() throw() {}
 

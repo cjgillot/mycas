@@ -44,7 +44,7 @@ std::size_t symbol_::hash() const
 { return boost::hash_value(this); }
 
 bool symbol_::has(const symbol &s) const
-{ return s.m_value.get() == this; }
+{ return s.get() == this; }
 
 
 // ident class

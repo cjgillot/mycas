@@ -4,6 +4,8 @@
 #include "analysis/expr.hpp"
 #include "analysis/numeric.hpp"
 
+#include "analysis/expr_operators.hpp"
+
 namespace analysis {
 
 // cdtor
@@ -13,23 +15,48 @@ inline void expr::swap(expr &o)
 inline expr::~expr() {}
 
 inline expr::expr( const basic* bp )
-: m_impl( bp ) {}
+: m_impl( bp ) { ASSERT( bp ); eval(); }
+
+template<class T>
+inline expr::expr( const ptr<T> &bp )
+: m_impl( bp ) { ASSERT( bp ); eval(); }
+
+// eval
+inline void expr::eval(unsigned lv) const
+{
+  if( ! m_impl->is_evaluated() )
+    m_impl->eval(lv).m_impl.swap( m_impl );
+  ASSERT( m_impl->is_evaluated() );
+}
 
 // has
 inline bool expr::has(const symbol &s) const
 { return m_impl->has(s); }
 
+inline bool expr::match(const expr &e, basic::match_map &mm) const
+{ return m_impl->match(e, mm); }
+
+// diff
+inline expr expr::diff(const symbol &s, unsigned n) const
+{ return m_impl->diff(s,n); }
+
 // expand
 inline expr expr::expand() const
-{ return m_impl->expand(); }
+{
+  const expr &ret = m_impl->is_expanded()
+  ? *this
+  : m_impl->expand();
+  ASSERT( ret.m_impl->is_expanded() );
+  return ret;
+}
+
+// subs
+inline expr expr::subs(const std::map<expr,expr> &map) const
+{ return m_impl->subs( map ); }
 
 // printing
 inline void expr::print(std::basic_ostream<char> &os) const
 { m_impl->print(os); }
-
-// pointer access
-inline const basic* expr::get() const
-{ return m_impl.get(); }
 
 // RTTI
 inline bool expr::is_numeric() const

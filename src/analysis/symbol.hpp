@@ -1,13 +1,7 @@
-/*
- * symbol.hpp
- *
- *  Created on: 3 juil. 2011
- *      Author: k1000
- */
-
 #ifndef SYMBOL_HPP_
 #define SYMBOL_HPP_
 
+#include "analysis/expr.hpp"
 #include "analysis/basic.hpp"
 #include "analysis/number.hpp"
 
@@ -82,30 +76,31 @@ private:
 };
 
 //! \brief Symbol handler
-struct symbol {
+struct symbol
+: public expr {
 
-  symbol()
-  : m_value(new symbol_) {}
-
-  symbol(const std::string &s)
-  : m_value(new ident(s)) {}
-
-  operator expr() const
-  { return expr( m_value.get() ); }
-
-  void swap(symbol &o)
-  { m_value.swap(o.m_value); }
-
-  std::size_t hash() const
-  { return m_value->hash(); }
-
-  static util::cmp_t compare(const symbol &a, const symbol &b)
-  { return a.m_value->symbol_::compare_same_type(*b.m_value); }
-
-private:
   friend class symbol_;
 
-  boost::intrusive_ptr<const symbol_> m_value;
+  symbol()
+  : expr( new symbol_ ) {}
+
+  symbol(const std::string &s)
+  : expr( new ident(s) ) {}
+
+  void swap(symbol &o)
+  { expr::swap( o ); }
+
+  const symbol_* get() const
+  { return static_cast<const symbol_*>( expr::get() ); }
+
+  std::size_t hash() const
+  { return get()->symbol_::hash(); }
+
+  static util::cmp_t compare(const symbol &a, const symbol &b)
+  {
+    // equivalent to the hash comparison in this case
+    return a.get()->symbol_::compare_same_type( *b.get() );
+  }
 };
 
 }

@@ -6,18 +6,23 @@
 
 #include "util/assert.hpp"
 
+#include "analysis/number.hpp"
+#include "analysis/numeric.hpp"
+#include "analysis/symbol.hpp"
+
+#include "analysis/power.hpp"
+#include "analysis/prod.hpp"
+#include "analysis/sum.hpp"
+
+#include "analysis/stdfunc/log.hpp"
+
 using namespace analysis;
 
 // numeric
-#include "analysis/number.hpp"
-#include "analysis/numeric.hpp"
-
 expr numeric::diff(const symbol &, unsigned n) const
 { return n ? number::zero() : this; }
 
 // symbol
-#include "analysis/symbol.hpp"
-
 expr symbol_::diff(const symbol &s, unsigned n) const
 {
   if( n == 0 )
@@ -30,20 +35,44 @@ expr symbol_::diff(const symbol &s, unsigned n) const
 }
 
 // power
-#include "analysis/power.hpp"
-#include "analysis/stdfunc/log.hpp"
+namespace {
 
-expr power::diff_log(const symbol &s) const
+/*!\brief Logarithmic differentiation
+ *
+ * This method is used internally by \c prod::diff()
+ * and \c power::diff().
+ *
+ * It returns the logarithmic derivative with respect to \c s.
+ */
+expr diff_log(const expr &base, const expr &expo, const symbol &s)
 {
-  expr ret ( number::zero() );
+  const expr &dbase = base.diff(s);
+  const expr &dexpo = expo.diff(s);
 
-  if( m_base.has(s) )
-    ret  = m_expo * m_base.diff(s) / m_base;
+  expr ret = number::zero();
 
-  if( m_expo.has(s) )
-    ret += log( m_base ) * m_expo.diff(s);
+  if( ! dbase.null() )
+    ret  = expo * dbase / base;
+
+  if( ! dexpo.null() )
+    ret += log( base ) * dexpo;
 
   return ret;
+}
+
+struct diff_log_f
+: std::unary_function<const power*, expr>
+{
+  diff_log_f( const symbol &s )
+  : sym( &s ) {}
+
+  inline expr operator()( const power* p ) const
+  { return diff_log( p->base(), p->expo(), *sym ); }
+
+private:
+  const symbol* sym;
+};
+
 }
 
 expr power::diff(const symbol &s, unsigned n) const
@@ -77,12 +106,10 @@ expr power::diff(const symbol &s, unsigned n) const
   if( !eh )
     return m_expo * m_base.diff(s) * m_base.pow( m_expo - number::one() );
 
-  return diff_log(s) * expr( this );
+  return diff_log( m_base, m_expo, s ) * expr( this );
 }
 
 // prod
-#include "analysis/prod.hpp"
-
 expr prod::diff(const symbol &s, unsigned n) const
 {
   if( n == 0 )
@@ -97,14 +124,14 @@ expr prod::diff(const symbol &s, unsigned n) const
     return number::zero();
 
   //! d^n(* c x) -> (* c d^n(x))
-  if( super::is_mono() )
+  if( super::is_monomial() )
   {
-    expr b ( super::mono() );
+    const expr &b = super::monomial();
     return expr(c) * b.diff(s, n);
   }
 
   if( n > 1 )
-    return diff(s, 1).diff(s, n-1);
+    return diff(s, 1).diff(s, --n);
 
   //! now, n == 1
 
@@ -117,27 +144,23 @@ expr prod::diff(const symbol &s, unsigned n) const
   //! internally needs logarithm, \c epair { aka. \c power::handle }
   //! provides it gently.
 
-  expr ret ( number::zero() );
+  const expr &diff_log_sum =
+    sum::from_expr_range(
+      boost::make_transform_iterator( begin(), diff_log_f( s ) )
+    , boost::make_transform_iterator( end(),   diff_log_f( s ) )
+    );
 
-  foreach( const power* p, *this )
-    ret += p->diff_log(s);
-
-  ret *= expr(this);
-  return ret;
+  return diff_log_sum * expr( this );
 }
 
 // sum
-#include "analysis/sum.hpp"
-
 expr sum::diff(const symbol &s, unsigned n) const {
   if( n == 0 )
     return this;
 
-  expr ret ( number::zero() );
-
-  foreach( const prod* p, *this )
-    ret += p->diff( s, n );
-
-  return ret;
+  return sum::from_expr_range(
+    boost::make_transform_iterator( begin(), boost::bind( &prod::diff, _1, s, n ) )
+  , boost::make_transform_iterator( end(),   boost::bind( &prod::diff, _1, s, n ) )
+  );
 }
 
