@@ -47,7 +47,7 @@ public: // member typedefs
   typedef const_pointer                         const_iterator;
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
-private:
+protected:
         allocator_type &get_allocator()       { return *this; }
   const allocator_type &get_allocator() const { return *this; }
 
@@ -83,13 +83,7 @@ public: // cdtor
   }
 
   ~unsafe_vector() throw()
-  {
-    if( m_start )
-    {
-      truncate( m_start );
-      get_allocator().deallocate( m_start, m_number );
-    }
-  }
+  { clear(); }
 
 public: // special constructors
   explicit
@@ -200,7 +194,7 @@ public: // modifiers
   void push_range(const Iterator &first, const Iterator &last)
   {
     CONCEPT_ASSERT(( boost::InputIterator<Iterator> ));
-    ASSERT( std::distance( first, last ) < m_number - size() );
+    ASSERT( std::size_t( std::distance( first, last ) ) <= m_number - size() );
     m_finish = container::uninitialized_copy( first, last, m_finish, get_allocator() );
   }
 
@@ -222,30 +216,20 @@ public: // modifiers
   void shrink()
   {} // no-op since no constant-time implementation is available
 
+  void clear()
+  {
+    if( m_start )
+    {
+      truncate( m_start );
+      get_allocator().deallocate( m_start, m_number );
+      m_number = 0;
+      m_start = m_finish = nullptr;
+    }
+  }
+
 private: // data
   size_type m_number;
   pointer m_start, m_finish;
-};
-
-template< class T, class Alloc = std::allocator<T*> >
-class ptr_unsafe_vector
-: public unsafe_vector< T* const, intrusive_allocator< Alloc > >
-{
-  typedef container::unsafe_vector< T* const, intrusive_allocator< Alloc > > super_type;
-
-public:
-  template<class A1>
-  explicit
-  ptr_unsafe_vector( const A1 &a1 )
-  : super_type( a1 ) {}
-
-  template<class A1, class A2>
-  ptr_unsafe_vector( const A1 &a1, const A2 &a2 )
-  : super_type( a1, a2 ) {}
-
-  template<class A1, class A2, class A3>
-  ptr_unsafe_vector( const A1 &a1, const A2 &a2, const A3 &a3 )
-  : super_type( a1, a2, a3 ) {}
 };
 
 } // namespace container
