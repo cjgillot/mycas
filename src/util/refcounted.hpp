@@ -34,6 +34,8 @@ private:
 
 //! \brief Non-copyable class
 struct noncopyable {
+protected:
+  noncopyable() {}
 private:
   noncopyable(const noncopyable&) ATTRIBUTE_DELETED;
   noncopyable& operator=(const noncopyable&) ATTRIBUTE_DELETED;

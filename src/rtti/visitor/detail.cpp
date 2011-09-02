@@ -75,7 +75,7 @@ struct statistic_t {
 
 invoker_t
 rtti::visitor::detail::fetch_node(
-  const vtable_node* const beg
+  const vtable_node beg[]
 , const std::size_t vsz
 , const rtti_node* rt
 ) throw() {
@@ -164,7 +164,7 @@ rtti::visitor::detail::fetch_node(
     // no match : last - beg <= 1
     //   last == beg => FAILURE()
     //   last == beg+1 and doesn't match => fallback on beg => FAILURE
-    if( ! (last - beg >> 1) ) FAILURE();
+    if( ! ( (last - beg) >> 1) ) FAILURE();
 
     --last;
     vid = last->id;

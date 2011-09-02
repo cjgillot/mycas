@@ -38,26 +38,25 @@ namespace std {
 namespace util {
 
 template<class T>
-struct move_ptr
-: private util::nonassignable
-, public operators::testable< move_ptr<T> >
+struct scoped_ptr
+: private util::noncopyable
+, public operators::testable< scoped_ptr<T> >
 {
 public: // cdtor
-  move_ptr() throw()
+  scoped_ptr() throw()
   : m_ptr( nullptr ) {}
 
-  move_ptr( T* p ) throw()
+  scoped_ptr( T* p ) throw()
   : m_ptr( p ) {}
 
-  move_ptr( move_ptr &o ) throw()
-  : m_ptr( o.m_ptr )
-  { o.m_ptr = nullptr; }
-
-  void swap( move_ptr &o )
+  void swap( scoped_ptr &o ) throw()
   { std::swap( m_ptr, o.m_ptr ); }
 
-  ~move_ptr() throw()
+  ~scoped_ptr() throw()
   { delete m_ptr; }
+
+  scoped_ptr& operator=( T* p )
+  { reset( p ); }
 
 public: // access
   T* get() const
@@ -79,7 +78,7 @@ public: // modification
 
   T* release()
   {
-    T* ret = m_ptr;
+    T* const ret = m_ptr;
     m_ptr = nullptr;
     return ret;
   }
