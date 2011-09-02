@@ -3,11 +3,14 @@
 
 #include "analysis/stdfunc/log.hpp"
 
-namespace analysis {
+using namespace analysis;
+
+template<>
+symbol log_::super::m_name( "log" );
 
 inline
 log_::log_(const expr &a)
-: super("log", a) {}
+: super(a) {}
 
 inline
 log_::log_(const log_ &o)
@@ -34,17 +37,7 @@ expr log_::diff(const symbol &s, unsigned n) const
   : ret.diff(s, --n);
 }
 
-expr log_::eval(unsigned lv) const
-{
-  const expr &a = super::arg<0>();
-  a.eval(--lv);
-
-  return expr(this);
-}
-
-expr log(const expr &a)
+expr analysis::log(const expr &a)
 {
   return expr( new log_(a) );
 }
-
-} // namespace analysis

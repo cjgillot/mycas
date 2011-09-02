@@ -7,11 +7,11 @@
 namespace analysis {
 
 class log_
-: public function<1> {
+: public function<log_, 1> {
 
-  REGISTER_CLASS( log_, function<1> )
-
-  typedef function<1> super;
+public:
+  typedef function<log_, 1> super;
+  REGISTER_CLASS( log_, super )
 
 private:
   log_(const expr &);
@@ -23,8 +23,7 @@ private:
   log_* clone() const;
 
 public:
-  expr diff(const symbol &, unsigned n = 1) const;
-  expr eval(unsigned) const;
+  expr diff(const symbol &, unsigned n) const;
 };
 
 } // namespace analysis

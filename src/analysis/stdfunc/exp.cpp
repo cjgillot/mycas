@@ -3,11 +3,14 @@
 
 #include "analysis/stdfunc/exp.hpp"
 
-namespace analysis {
+using namespace analysis;
+
+template<>
+symbol exp_::super::m_name( "exp" );
 
 inline
 exp_::exp_(const expr &a)
-: super("exp", a) {}
+: super(a) {}
 
 inline
 exp_::exp_(const exp_ &o)
@@ -36,17 +39,7 @@ expr exp_::diff(const symbol &s, unsigned n) const
   return ret;
 }
 
-expr exp_::eval(unsigned lv) const
-{
-  const expr &a = super::arg<0>();
-  a.eval(--lv);
-
-  return expr(this);
-}
-
-expr exp(const expr &a)
+expr analysis::exp(const expr &a)
 {
   return expr( new exp_(a) );
 }
-
-} // namespace analysis

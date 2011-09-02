@@ -4,32 +4,39 @@
 #include "analysis/expr.hpp"
 #include "analysis/symbol.hpp"
 
-#include "util/foreach.hpp"
-#include "util/assert.hpp"
-
-#include "algebra/compare.hpp"
+#include "analysis/function/exprseq.hpp"
 
 #include "container/unsafe_array.hpp"
 
 namespace analysis {
+namespace detail {
 
-template<unsigned N>
-class function
-: public basic
+template<class E, unsigned N>
+struct choose_container
 {
-  STATIC_ASSERT( N > 0 );
+  typedef container::unsafe_array<E, N> type;
+};
 
-  symbol m_name;
-  container::unsafe_array<expr, N> m_args;
+template<class E>
+struct choose_container<E, 0>
+{
+  typedef std::vector<E> type;
+};
+
+} // namespace detail
+
+template<class Derived, unsigned N>
+class function
+: public exprseq< typename detail::choose_container<expr, N>::type >
+{
+  typedef typename function::exprseq_ super;
+
+  static symbol m_name;
 
 protected:
   template<class InputIterator>
-  function(const std::string &name,
-    const InputIterator &b, const InputIterator &e);
-
-  function(const function &);
-
- ~function();
+  function(const InputIterator &b, const InputIterator &e)
+  : super( b, e ) {}
 
 protected:
   //! \brief Argument list sorting
@@ -43,7 +50,7 @@ protected:
    * the permutation (1 or -1).
    *
    * This function should only be used when the
-   * permutation sign is signficant,
+   * permutation sign is significant,
    * since it has a far greater time constant.
    *
    * \return \c false for 1, \c true for -1
@@ -54,67 +61,46 @@ protected:
 
   //! \brief Argument access
   const expr &arg(unsigned i) const
-  { return m_args.at(i); }
+  { return super::at(i); }
 
   //! \brief Argument access
   template<unsigned I>
   const expr &arg() const
-  { STATIC_ASSERT( I < N ); return m_args[I]; }
-
-private:
-  std::size_t hash() const
   {
-    std::size_t seed = m_name.hash();
-    foreach(const expr &e, m_args)
-      boost::hash_combine(seed, e.hash());
-    return seed;
+    STATIC_ASSERT( I < N );
+    return super::operator[](I);
   }
 
-  util::cmp_t
-  compare_same_type(const basic &o_) const
-  {
-    const function &o = static_cast<const function&>(o_);
-
-    util::cmp_t c
-      = symbol::compare(m_name, o.m_name);
-    if(c) return c;
-
-    return algebra::range_compare(m_args, o.m_args, expr::compare);
-  }
-
-  bool has(const symbol &s) const
-  {
-    foreach(const expr &e, m_args)
-      if( e.has(s) )
-        return true;
-  }
+private: // hide some of super members
+  using super::operator[];
+  using super::at;
+  using super::print_children;
 
 public:
-  void print(std::basic_ostream<char> &os) const {
-    os << '(' << m_name;
-    foreach(const expr &e, m_args)
-      os << ' ' << e;
+  void print(std::basic_ostream<char> &os) const
+  {
+    os << '(' << m_name << ' ';
+    super::print_children( os );
     os << ')';
   }
 };
 
-template<>
-class function<1>
+template<class Derived>
+class function<Derived, 1>
 : public basic
 {
-  symbol m_name;
+  static symbol m_name;
   expr   m_arg;
 
-public:
-  function(const std::string &name, const expr &a)
-  : m_name(name), m_arg(a) {}
+protected:
+  function(const expr &a)
+  : m_arg(a) {}
 
 protected:
   //! \brief Argument list sorting
   void sort() {}
 
-  /*!
-   * \brief Signed sorting
+  /*!\brief Signed sorting
    *
    * This function sorts the arguments and
    * additionally computes the sign of
