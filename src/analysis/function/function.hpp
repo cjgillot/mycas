@@ -29,8 +29,8 @@ template<class Derived, unsigned N>
 class function
 : public exprseq< typename detail::choose_container<expr, N>::type >
 {
+private:
   typedef typename function::exprseq_ super;
-
   static symbol m_name;
 
 protected:
@@ -83,6 +83,9 @@ public:
     super::print_children( os );
     os << ')';
   }
+
+private: // implemented in "derivative.hpp"
+  expr differentiate(const symbol &s) const;
 };
 
 template<class Derived>
@@ -126,7 +129,7 @@ protected:
   const expr &arg() const
   { STATIC_ASSERT( I == 0 ); return m_arg; }
 
-private:
+protected:
   std::size_t hash() const
   {
     std::size_t seed = m_name.hash();

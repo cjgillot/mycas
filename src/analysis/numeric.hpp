@@ -45,7 +45,6 @@ public:
 public:
   bool null() const;
   bool unit() const;
-  expr diff(const symbol&,unsigned) const;
   bool has(const symbol&) const;
 
 public:
@@ -66,9 +65,11 @@ public:
 public:
   expr pow(const expr &o) const;
   const numeric* pow(const numeric &o) const;
-
-public:
   void print(std::basic_ostream<char> &os) const;
+
+private:
+  expr differentiate(const symbol&) const;
+
   util::cmp_t compare_same_type(const basic&) const;
 
   std::size_t hash() const

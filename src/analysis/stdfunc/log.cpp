@@ -1,5 +1,4 @@
 #include "analysis/stdfunc.hpp"
-#include "analysis/function/function.ipp"
 
 #include "analysis/stdfunc/log.hpp"
 
@@ -12,29 +11,15 @@ inline
 log_::log_(const expr &a)
 : super(a) {}
 
-inline
-log_::log_(const log_ &o)
-: super(o) {}
-
 log_::~log_() {}
 
 log_* log_::clone() const
 { return new log_(*this); }
 
-expr log_::diff(const symbol &s, unsigned n) const
+expr log_::differentiate(const symbol &s) const
 {
-  if( n == 0 )
-    return expr(this);
-
   const expr &a = super::arg<0>();
-
-  if( ! a.has(s) )
-    return number::zero();
-
-  const expr &ret = a.diff(s) / a;
-
-  return n == 1 ? ret
-  : ret.diff(s, --n);
+  return a.diff(s) / a;
 }
 
 expr analysis::log(const expr &a)

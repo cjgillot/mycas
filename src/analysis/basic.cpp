@@ -14,6 +14,16 @@ expr basic::pow( const expr &expo ) const
   return power::from_be( this, expo );
 }
 
+expr basic::diff(const symbol &s, unsigned n)
+{
+  expr ret ( this );
+
+  for(; n != 0; --n)
+    ret = ret.get()->differentiate(s);
+
+  return ret;
+}
+
 
 util::cmp_t
 basic::compare(const basic &a, const basic &b) {

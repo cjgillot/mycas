@@ -2,7 +2,7 @@
 #define ANALYSIS_STDFUNC_EXP_HPP
 
 #include "analysis/stdfunc.hpp"
-#include "analysis/function/function.ipp"
+#include "analysis/function/function.hpp"
 
 namespace analysis {
 
@@ -14,16 +14,14 @@ public:
   REGISTER_CLASS( exp_, super )
 
 private:
-  exp_(const expr &);
-  exp_(const exp_ &);
- ~exp_();
+  explicit exp_(const expr &);
+  ~exp_();
 
+  // grant construction right
   friend expr exp(const expr&);
 
   exp_* clone() const;
-
-public:
-  expr diff(const symbol &, unsigned) const;
+  expr differentiate(const symbol &) const;
 };
 
 } // namespace analysis

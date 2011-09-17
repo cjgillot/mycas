@@ -29,9 +29,9 @@ protected:
 protected:
   void print(std::basic_ostream<char> &) const;
   bool has(const symbol&) const;
-  expr diff(const symbol&, unsigned) const;
 
 private:
+  expr differentiate(const symbol&) const;
   std::size_t hash() const;
   util::cmp_t compare_same_type(const basic&) const;
 };

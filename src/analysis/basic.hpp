@@ -44,14 +44,6 @@ public:
    */
   virtual bool unit() const;
 
-  /*!\brief Differentiation function
-   *
-   * \param s : the symbol with respect to which we differentiate
-   * \param nth : the number of differentiations
-   * \return the evaluated nth derivative of \c *this
-   */
-  virtual expr diff(const symbol &s, unsigned nth = 1) const = 0;
-
   /*!\brief Powering function
    *
    * Rationale : power of expressions often have very special
@@ -123,6 +115,23 @@ public:
   virtual expr eval(unsigned lv) const;
 
   bool is_evaluated() const;
+
+public:
+  /*!\brief Differentiation function
+   *
+   * \param s : the symbol with respect to which differentiate
+   * \param nth : the number of differentiations
+   * \return the evaluated nth derivative of \c this
+   */
+  expr diff(const symbol &s, unsigned nth = 1) const;
+
+private:
+  /*!\brief Virtual differentiation function
+   *
+   * \param s : the symbol with respect to which differentiate
+   * \return the evaluated derivative of \c this
+   */
+  virtual expr differentiate(const symbol &) const = 0;
 
 public:
   /*!\brief Expansion function

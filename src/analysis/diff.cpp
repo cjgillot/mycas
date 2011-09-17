@@ -1,15 +1,13 @@
+// common includes
 #include "analysis/expr.hpp"
 #include "analysis/basic.hpp"
 
 #include "analysis/expr.ipp"
 #include "analysis/basic.ipp"
 
-#include "util/assert.hpp"
-
-#include "analysis/number.hpp"
-#include "analysis/numeric.hpp"
 #include "analysis/symbol.hpp"
 
+#include "analysis/numeric.hpp"
 #include "analysis/power.hpp"
 #include "analysis/prod.hpp"
 #include "analysis/sum.hpp"
@@ -19,19 +17,15 @@
 using namespace analysis;
 
 // numeric
-expr numeric::diff(const symbol &, unsigned n) const
-{ return n ? number::zero() : this; }
+expr numeric::differentiate(const symbol &) const
+{ return number::zero(); }
 
 // symbol
-expr symbol_::diff(const symbol &s, unsigned n) const
+expr symbol_::differentiate(const symbol &s) const
 {
-  if( n == 0 )
-    return this;
-
-  if( n == 1 && symbol_::has(s) )
-    return number::one();
-
-  return number::zero();
+  return symbol_::has(s) // means [this == s]
+  ? number::one()
+  : number::zero();
 }
 
 // power
@@ -39,16 +33,19 @@ namespace {
 
 /*!\brief Logarithmic differentiation
  *
- * This method is used internally by \c prod::diff()
- * and \c power::diff().
+ * This method is used internally by \c prod::differentiate()
+ * and \c power::differentiate().
  *
- * It returns the logarithmic derivative with respect to \c s.
+ * It returns the logarithmic derivative with respect to \c s,
+ * ie. d( log(s) ) = d(s) / s.
  */
-expr diff_log(const expr &base, const expr &expo, const symbol &s)
+expr differentiate_log(
+  const expr &base
+, const expr &dbase
+, const expr &expo
+, const expr &dexpo
+)
 {
-  const expr &dbase = base.diff(s);
-  const expr &dexpo = expo.diff(s);
-
   expr ret = number::zero();
 
   if( ! dbase.null() )
@@ -60,107 +57,99 @@ expr diff_log(const expr &base, const expr &expo, const symbol &s)
   return ret;
 }
 
-struct diff_log_f
-: std::unary_function<const power*, expr>
-{
-  diff_log_f( const symbol &s )
-  : sym( &s ) {}
-
-  inline expr operator()( const power* p ) const
-  { return diff_log( p->base(), p->expo(), *sym ); }
-
-private:
-  const symbol* sym;
-};
-
 }
 
-expr power::diff(const symbol &s, unsigned n) const
+expr power::differentiate(const symbol &s) const
 {
-  if( n == 0 )
-    return this;
+  const expr &db = m_base.differentiate(s);
+  const expr &de = m_expo.differentiate(s);
 
-  bool bh = m_base.has(s)
-  ,    eh = m_expo.has(s);
+  const bool bh = ! db.null();
+  const bool eh = ! de.null();
 
   // trivial case
   if( !bh & !eh )
     return number::zero();
 
-  // this cases should not happen
-  // since eval() simplifies it
-#if 0
-  if( m_expo.null() )
-    return number::zero();
-
-  if( m_expo.unit() )
-    return m_base.diff(s,n);
-#else
-  ASSERT_MSG( ! m_expo.null() && ! m_expo.unit(), "Differentiating unevaluated power" );
-#endif
-
-  // no
-  if( n > 1 )
-    return power::diff(s, 1).diff(s, n-1);
-
+  // d(b^e) = e * d(b) * b^(e-1) when e is constant
   if( !eh )
-    return m_expo * m_base.diff(s) * m_base.pow( m_expo - number::one() );
+    return m_expo * db
+         * m_base.pow( m_expo - number::one() );
 
-  return diff_log( m_base, m_expo, s ) * expr( this );
+  // d(b^e) = b^e * dlog( b^e )
+  return expr(this)
+       * diff_log( m_base, db, m_expo, de );
 }
 
 // prod
-expr prod::diff(const symbol &s, unsigned n) const
-{
-  if( n == 0 )
-    return this;
+namespace {
 
-  //! now, n >= 1
+struct diff_log_f
+: std::unary_function<const power*, expr>
+{
+  const symbol* sym;
+
+  inline expr operator()( const power* p ) const
+  {
+    const expr &base = p->base();
+    const expr &expo = p->expo();
+    return diff_log(
+      base, base.diff( *sym )
+    , expo, expo.diff( *sym )
+    );
+  }
+};
+
+}
+
+expr prod::differentiate(const symbol &s) const
+{
   const number &c = super::coef();
 
-  //! d^n(* c) -> 0
-  //! d^n(* 0 ...) -> 0
+  // d(* c) -> 0
+  // d(* 0 ...) -> 0
   if( empty() || c.null() )
     return number::zero();
 
-  //! d^n(* c x) -> (* c d^n(x))
+  // d(* c x) -> (* c d(x))
   if( super::is_monomial() )
-  {
-    const expr &b = super::monomial();
-    return expr(c) * b.diff(s, n);
-  }
+    return c * super::monomial().diff(s);
 
-  if( n > 1 )
-    return diff(s, 1).diff(s, --n);
+  // We use logarithmic differentiation :
+  //   this = product_i p_i
+  // => log(this) = sum_i log(p_i)
+  // => dlog(this) = d(this)/this = sum_i dlog(p_i)
+  // => d(this) = this * sum_i dlog(p_i)
 
-  //! now, n == 1
-
-  //! We use logarithmic differentiation :
-  //!   \f[ e = \Pi_i p_i \f]
-  //! \f[ ln(e) = \sum_i ln(p_i) \Rightarrow dln(e) = de/e = \sum_i dln(p_i) \f]
-  //! so, \f[ de = e * \sum_i dln(p_i) \f]
-  //!
-  //! Since \c p_i is a \c power, and that power differentiation
-  //! internally needs logarithm, \c epair { aka. \c power::handle }
-  //! provides it gently.
-
-  const expr &diff_log_sum =
+  const diff_log_f dlf = { &s };
+  const expr &dl_sum =
     sum::from_expr_range(
-      boost::make_transform_iterator( begin(), diff_log_f( s ) )
-    , boost::make_transform_iterator( end(),   diff_log_f( s ) )
+      boost::make_transform_iterator( begin(), dlf )
+    , boost::make_transform_iterator( end(),   dlf )
     );
 
-  return diff_log_sum * expr( this );
+  return dl_sum * expr(this);
 }
 
 // sum
-expr sum::diff(const symbol &s, unsigned n) const {
-  if( n == 0 )
-    return this;
+namespace {
 
-  return sum::from_expr_range(
-    boost::make_transform_iterator( begin(), boost::bind( &prod::diff, _1, s, n ) )
-  , boost::make_transform_iterator( end(),   boost::bind( &prod::diff, _1, s, n ) )
-  );
+struct diff_prod_f
+: std::unary_function<const prod*, expr>
+{
+  const symbol* sym;
+
+  inline expr operator()( const prod* p ) const
+  { return p->prod::differentiate( *s ); }
+};
+
 }
 
+expr sum::differentiate(const symbol &s) const
+{
+  const diff_prod_f dpf = { &s };
+  return sum::from_expr_range(
+    boost::make_transform_iterator( begin(), dpf )
+  , boost::make_transform_iterator( end(),   dpf )
+  );
+}

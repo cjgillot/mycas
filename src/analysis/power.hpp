@@ -11,8 +11,7 @@
 
 namespace analysis {
 
-/*!
- * \brief This is the main power representation class
+/*!\brief This is the main power representation class
  *
  * This structure represents the power {b^e}
  * using the expair { coef=e; rest=b }.
@@ -47,7 +46,6 @@ public: // tests
 
   expr eval(unsigned) const;
   bool has(const symbol&) const;
-  expr diff(const symbol&, unsigned) const;
   expr expand() const;
   expr subs(const std::map<expr,expr> &) const;
 
@@ -55,6 +53,7 @@ public:
   void print(std::basic_ostream<char> &) const;
 
 private: // misc.
+  expr differentiate(const symbol&) const;
   util::cmp_t compare_same_type(const basic &) const;
   bool match_same_type(const basic &, match_map &) const;
 

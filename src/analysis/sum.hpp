@@ -58,11 +58,11 @@ public:
 public:
   bool null() const;
   expr eval(unsigned) const;
-  expr diff(const symbol&, unsigned=1) const;
   expr expand() const;
   expr subs(const std::map<expr,expr> &) const;
 
 private:
+  expr differentiate(const symbol&) const;
   void print_base(std::basic_ostream<char> &os) const { os << '+'; }
   bool match_same_type(const basic &, match_map &) const;
 
