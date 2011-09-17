@@ -39,7 +39,7 @@ namespace {
  * It returns the logarithmic derivative with respect to \c s,
  * ie. d( log(s) ) = d(s) / s.
  */
-expr differentiate_log(
+expr diff_log(
   const expr &base
 , const expr &dbase
 , const expr &expo
@@ -61,8 +61,8 @@ expr differentiate_log(
 
 expr power::differentiate(const symbol &s) const
 {
-  const expr &db = m_base.differentiate(s);
-  const expr &de = m_expo.differentiate(s);
+  const expr &db = m_base.diff(s);
+  const expr &de = m_expo.diff(s);
 
   const bool bh = ! db.null();
   const bool eh = ! de.null();
@@ -87,7 +87,8 @@ namespace {
 struct diff_log_f
 : std::unary_function<const power*, expr>
 {
-  const symbol* sym;
+  diff_log_f(const symbol* s)
+  : sym(s) {}
 
   inline expr operator()( const power* p ) const
   {
@@ -98,6 +99,9 @@ struct diff_log_f
     , expo, expo.diff( *sym )
     );
   }
+
+private:
+  const symbol* sym;
 };
 
 }
@@ -113,7 +117,7 @@ expr prod::differentiate(const symbol &s) const
 
   // d(* c x) -> (* c d(x))
   if( super::is_monomial() )
-    return c * super::monomial().diff(s);
+    return c * super::monomial()->power::differentiate(s);
 
   // We use logarithmic differentiation :
   //   this = product_i p_i
@@ -121,7 +125,7 @@ expr prod::differentiate(const symbol &s) const
   // => dlog(this) = d(this)/this = sum_i dlog(p_i)
   // => d(this) = this * sum_i dlog(p_i)
 
-  const diff_log_f dlf = { &s };
+  const diff_log_f dlf ( &s );
   const expr &dl_sum =
     sum::from_expr_range(
       boost::make_transform_iterator( begin(), dlf )
@@ -132,24 +136,10 @@ expr prod::differentiate(const symbol &s) const
 }
 
 // sum
-namespace {
-
-struct diff_prod_f
-: std::unary_function<const prod*, expr>
-{
-  const symbol* sym;
-
-  inline expr operator()( const prod* p ) const
-  { return p->prod::differentiate( *s ); }
-};
-
-}
-
 expr sum::differentiate(const symbol &s) const
 {
-  const diff_prod_f dpf = { &s };
   return sum::from_expr_range(
-    boost::make_transform_iterator( begin(), dpf )
-  , boost::make_transform_iterator( end(),   dpf )
+    boost::make_transform_iterator( begin(), boost::bind( &prod::differentiate, _1, s ) )
+  , boost::make_transform_iterator( end(),   boost::bind( &prod::differentiate, _1, s ) )
   );
 }

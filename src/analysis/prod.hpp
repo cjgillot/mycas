@@ -19,7 +19,7 @@ class prod
   REGISTER_FINAL( prod, super )
 
 //   friend class power;
-//   friend class sum;
+  friend class sum;
 
 public:
   using super::handle;

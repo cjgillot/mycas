@@ -21,7 +21,7 @@ class power
 
   REGISTER_FINAL( power, basic )
 
-//   friend class prod;
+  friend class prod;
 //   friend class sum;
 
 public:

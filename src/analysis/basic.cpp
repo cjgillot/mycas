@@ -14,7 +14,7 @@ expr basic::pow( const expr &expo ) const
   return power::from_be( this, expo );
 }
 
-expr basic::diff(const symbol &s, unsigned n)
+expr basic::diff(const symbol &s, unsigned n) const
 {
   expr ret ( this );
 

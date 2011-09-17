@@ -1,6 +1,7 @@
 #include "analysis/stdfunc.hpp"
-
 #include "analysis/stdfunc/exp.hpp"
+
+#include "analysis/expr_operators.hpp"
 
 using namespace analysis;
 
