@@ -7,3 +7,4 @@ file(GLOB_RECURSE hdr *.hpp *.ipp)
 
 add_library(analysis ${src} ${hdr})
 target_link_libraries(analysis algebra)
+target_link_libraries(analysis rtti)

@@ -13,76 +13,63 @@ using namespace analysis;
 const unsigned expr::default_eval_depth = 10;
 
 // tests
-bool expr::null() const {
+bool expr::null() const
+{
   if( m_impl->null() ) {
-    expr( number::zero() ).m_impl.swap(m_impl);
+//     expr( number::zero() ).swap( *this );
     return true;
   }
   return false;
 }
-bool expr::unit() const {
+bool expr::unit() const
+{
   if( m_impl->unit() ) {
-    expr( number::one() ).m_impl.swap(m_impl);
+//     expr( number::one() ).swap( *this );
     return true;
   }
   return false;
 }
 
-void expr::eval(unsigned lv) const {
-  m_impl->eval(lv).m_impl.swap(m_impl);
-}
+#define PREPARE( argp, arg, klass )       \
+  ptr< const klass > argp ( (arg).get()->as_##klass() )
 
-expr expr::diff(const symbol &s, unsigned n) const
-{ eval(); return m_impl->diff(s,n); }
-
-
-#define PREPARE_SELF(klass)   \
-  const klass* ap =   get()->as_##klass()
-
-#define OPERATE_SELF( klass, op )   \
-  PREPARE_SELF( klass );            \
-  expr ret ( klass::op( *ap ) );    \
-  ret.eval();                       \
-  return ret // ;
-
-#define PREPARE_OTHER(klass)  \
-  const klass* bp = b.get()->as_##klass()
-
-#define PREPARE(klass)        \
-  PREPARE_OTHER(klass);       \
-  PREPARE_SELF (klass) // ;
-
-#define OPERATE( klass, op )        \
-  PREPARE( klass );                 \
+#define OPERATE_BIN( klass, op )    \
+  PREPARE( ap, a, klass );          \
+  PREPARE( bp, b, klass );          \
   expr ret ( klass::op( *ap, *bp) );\
   ret.eval();                       \
   return ret // ;
 
-#define OPERATOR( op, klass, name )             \
-  expr expr::operator op( const expr &b ) const \
-  { OPERATE( klass, name ); }
+#define BINARY( klass, name ) \
+  expr expr::name(const expr &a, const expr &b) \
+  { OPERATE_BIN( klass, name ); }
 
-OPERATOR( +, sum , add )
-OPERATOR( -, sum , sub )
+BINARY( sum , add )
+BINARY( sum , sub )
 
-OPERATOR( *, prod, mul )
-OPERATOR( /, prod, div )
+BINARY( prod, mul )
+BINARY( prod, div )
 
-#undef OPERATOR
-#undef OPERATE
-#undef PREPARE
-#undef PREPARE_OTHER
+#undef BINARY
+#undef OPERATE_BIN
+
+#define OPERATE_UN( klass, op )     \
+  PREPARE( ap, *this, klass );      \
+  expr ret ( klass::op( *ap ) );    \
+  ret.eval();                       \
+  return ret // ;
 
 #define UNARY( klass, name )        \
   expr expr::name() const           \
-  { OPERATE_SELF( klass, name ); }
+  { OPERATE_UN( klass, name ); }
 
 UNARY( sum , neg )
 UNARY( prod, inv )
 
 #undef UNARY
-#undef OPERATE_SELF
-#undef PREPARE_SELF
+#undef OPERATE_UN
+
+#undef PREPARE
 
 expr expr::pow(const expr &o) const
 {

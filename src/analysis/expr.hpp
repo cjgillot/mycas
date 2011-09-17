@@ -6,14 +6,13 @@
 #include "util/compare.hpp"
 #include "util/attribute.hpp"
 
+#include "analysis/ptr.hpp"
+#include "analysis/basic.hpp"
 #include "analysis/forward.hpp"
-
-#include <boost/intrusive_ptr.hpp>
 
 namespace analysis {
 
-/*!
- * \brief Expression class
+/*!\brief Expression class
  *
  * \c expr is an intrusive pointer class,
  * forwarding \c basic operations.
@@ -35,6 +34,20 @@ public:
   //! \param b a non-null pointer to a \c basic instance
   expr(const basic*);
 
+  template<class T>
+  expr(const ptr<T> &);
+
+public: // ptr<> behaviour
+  operator const ptr<const basic> &() const { return m_impl; }
+
+  const basic* get() const { return m_impl.get(); }
+//   const basic &operator *() const { return m_impl.operator*(); }
+//   const basic *operator->() const { return m_impl.operator->(); }
+
+private:
+  static const unsigned default_eval_depth;
+  void eval(unsigned = default_eval_depth) const;
+
 public:
   //! \brief Nullity test
   bool null() const;
@@ -44,37 +57,27 @@ public:
   //! \brief Printing
   void print(std::basic_ostream<char> &os) const;
 
-  static const unsigned default_eval_depth;
-  void eval(unsigned = default_eval_depth) const;
-
   bool has(const symbol&) const;
   expr diff(const symbol&, unsigned=1) const;
   expr expand() const;
+  bool match(const expr &, basic::match_map &) const;
+  expr subs(const std::map<expr,expr> &) const;
 
 public: // RTTI
-  //! \brief \c basic pointer access
-  const basic* get() const;
-
   bool is_numeric() const;
   template<class T> bool     is_a() const;
   template<class T> const T* as_a() const;
   template<class T> bool     is_exactly_a() const;
 
 public:
-  friend expr operator+(const expr &a)
-  { return a; }
-  friend expr operator-(const expr &a)
-  { return a.neg(); }
-
-  expr operator+(const expr&) const;
-  expr operator-(const expr&) const;
-
   expr neg() const;
-
-  expr operator*(const expr&) const;
-  expr operator/(const expr&) const;
-
   expr inv() const;
+
+  static expr add(const expr&, const expr&);
+  static expr sub(const expr&, const expr&);
+
+  static expr mul(const expr&, const expr&);
+  static expr div(const expr&, const expr&);
 
   expr pow(const expr &) const;
 
@@ -88,19 +91,19 @@ public:
     return *this;
   }
 
-#define OP_EQ(op)               \
+#define OP_EQ( op, name )       \
   expr &                        \
   operator op##=(const expr &o) \
   {                             \
-    ( *this op o )              \
+    expr::name( *this, o )      \
       .swap( *this );           \
     return *this;               \
   }
 
-  OP_EQ(+)
-  OP_EQ(-)
-  OP_EQ(*)
-  OP_EQ(/)
+  OP_EQ( +, add )
+  OP_EQ( -, sub )
+  OP_EQ( *, mul )
+  OP_EQ( /, div )
 
 #undef OP_EQ
 
@@ -111,11 +114,10 @@ public:
   std::size_t hash() const;
 
 private:
-  /*!
-   * \brief Shared pointer representation
+  /*!\brief Shared pointer representation
    * \invariant m_impl != 0
    */
-  mutable boost::intrusive_ptr<const basic> m_impl;
+  mutable ptr<const basic> m_impl;
 };
 
 std::basic_ostream<char> &operator<<(std::basic_ostream<char> &, const expr &);
@@ -123,5 +125,17 @@ std::basic_ostream<char> &operator<<(std::basic_ostream<char> &, const expr &);
 expr pow(const expr &, const expr &);
 
 } // namespace analysis
+
+namespace std {
+
+template<>
+struct less< analysis::expr >
+: public std::binary_function< bool, const analysis::expr &, const analysis::expr & >
+{
+  inline bool operator()( const analysis::expr &a, const analysis::expr &b ) const
+  { return analysis::expr::compare( a, b ) < 0; }
+};
+
+}
 
 #endif /* EXPR_HPP_ */

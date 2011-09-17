@@ -9,13 +9,18 @@ const sum*   basic::as_sum()   const { return sum  ::from_basic(this); }
 const prod*  basic::as_prod()  const { return prod ::from_basic(this); }
 const power* basic::as_power() const { return power::from_basic(this); }
 
-expr basic::eval( unsigned ) const
-{ return this; }
-
 expr basic::pow( const expr &expo ) const
 {
-  expr ret ( power::from_be( this, expo ) );
-  ret.eval();
+  return power::from_be( this, expo );
+}
+
+expr basic::diff(const symbol &s, unsigned n)
+{
+  expr ret ( this );
+
+  for(; n != 0; --n)
+    ret = ret.get()->differentiate(s);
+
   return ret;
 }
 

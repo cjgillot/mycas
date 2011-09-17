@@ -1,99 +1,97 @@
 #ifndef NUMBER_HPP
 #define NUMBER_HPP
 
-#include "analysis/ptr.hpp"
-#include "analysis/ptr.ipp"
+#include "analysis/expr.hpp"
 
 #include "analysis/numeric.hpp"
-#include "analysis/expr.hpp"
 
 #include "operators.hpp"
 
 namespace analysis {
 
 class number
-: public boost::field_operators1<number
-, operators::printable<number
+: public expr
+, public operators::printable<number
 , operators::ordered<number
-> > > {
-
-  typedef ptr<numeric> impl_t;
-  impl_t m_impl;
+> > {
 
 public:
-  number(const number &);
-  number &operator=(const number &);
   void swap(number &);
 
   number(const numeric*);
-
   number(double v);
-  ~number();
 
 public:
-  operator expr() const;
-
-private:
-  numeric* cow()
-  { return m_impl.cow(); }
-
-public:
-  inline bool
-  null() const
-  { return m_impl.null(); }
-  inline bool
-  unit() const
-  { return m_impl.unit(); }
+  inline bool null() const { return get()->numeric::null(); }
+  inline bool unit() const { return get()->numeric::unit(); }
 
   inline const numeric*
   get() const
-  { return m_impl.get(); }
+  { return static_cast<const numeric*>( expr::get() ); }
 
   static const number &zero()
   {
-    static const number value ( 0. );
+    static const number value ( numeric::zero() );
     return value;
   }
   static const number &one()
   {
-    static const number value ( 1. );
+    static const number value ( numeric::one() );
     return value;
   }
 
-  number eval(unsigned) const;
+public:
+  friend number operator+(const number &a) { return a; }
+  friend number operator-(const number &a) { return a.neg(); }
+
+#define OP( op, name )                  \
+  friend number operator op             \
+    (const number &a, const number &b)  \
+  {                                     \
+    return numeric::name(               \
+      *a.get(), *b.get()                \
+    );                                  \
+  }
+
+  OP( +, add )
+  OP( -, sub )
+  OP( *, mul )
+  OP( /, div )
+
+#undef OP
+
+  number neg() const { return numeric::neg( *get() ); }
+  number inv() const { return numeric::inv( *get() ); }
+
+  number pow (const number &expo) const
+  { return get()->numeric::pow( *expo.get() ); }
 
 public:
-  friend number operator+(const number &a)
-  { return a; }
-  friend number operator-(number a)
-  { return a.ineg(); }
 
-  number &operator+=(const number &);
-  number &operator-=(const number &);
+#define CMPND_OP( op )                      \
+  number &operator op##=( const number &o ) \
+  { ( *this op o ).swap( *this ); return *this; }
 
-  number &ineg();
-  number   neg() const
-  { return number(*this).ineg(); }
+  CMPND_OP( + )
+  CMPND_OP( - )
+  CMPND_OP( * )
+  CMPND_OP( / )
 
-  number &operator*=(const number &);
-  number &operator/=(const number &);
+#undef CMPND_OP
 
-  number &iinv();
-  number   inv() const
-  { return number(*this).iinv(); }
-
-  number  pow (const number &) const;
+  number &ineg() { neg().swap( *this ); return *this; }
+  number &iinv() { inv().swap( *this ); return *this; }
 
 public:
   inline void
   print(std::basic_ostream<char> &os) const
-  { m_impl.print(os); }
+  { get()->numeric::print(os); }
 
   static util::cmp_t
   compare(const number &, const number &);
 
   std::size_t hash() const
-  { return m_impl.get()->numeric::hash(); }
+  { return get()->numeric::hash(); }
 };
 
 

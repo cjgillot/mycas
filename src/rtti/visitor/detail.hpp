@@ -32,7 +32,7 @@ fetch_node(
 
 //! \brief Vtable initialization procedure
 extern void
-ATTRIBUTE_PURE ATTRIBUTE_NONNULL(1)
+ATTRIBUTE_NONNULL(1)
 sort_nodes(
   vtable_node* vt
 , const std::size_t vsz

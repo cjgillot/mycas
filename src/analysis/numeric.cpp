@@ -1,16 +1,9 @@
-/*
- * numeric.cpp
- *
- *  Created on: 21 juin 2011
- *      Author: k1000
- */
-
 #include "numeric.hpp"
 
 #include "sum.hpp"
 #include "prod.hpp"
 
-namespace analysis {
+using namespace analysis;
 
 numeric::numeric(const numeric &o)
 : basic(o), m_value(o.m_value) {}
@@ -34,57 +27,55 @@ bool numeric::null() const
 bool numeric::unit() const
 { return algebra::unit(m_value); }
 
-const numeric* numeric::plus()  const { return this; }
-const numeric* numeric::minus() const { return clone()->ineg(); }
+#define OP( op, name )                  \
+  const numeric* numeric::name(         \
+    const numeric &a, const numeric &b  \
+  ) {                                   \
+    return new numeric(                 \
+      a.m_value op b.m_value            \
+    );                                  \
+  }
 
-numeric* numeric::iadd(const numeric* o) {
-  if(o) m_value += o->m_value;
-  return this;
-}
-numeric* numeric::isub(const numeric* o) {
-  if(o) m_value -= o->m_value;
-  return this;
-}
+OP( +, add )
+OP( -, sub )
+OP( *, mul )
+OP( /, div )
 
-numeric* numeric::ineg() {
-  m_value = -m_value;
-  return this;
-}
+#undef OP
 
-numeric* numeric::imul(const numeric* o) {
-  if(o) m_value *= o->m_value;
-  return this;
-}
-numeric* numeric::idiv(const numeric* o) {
-  if(o) m_value /= o->m_value;
-  return this;
+const numeric* numeric::neg(const numeric &a) {
+  return new numeric( - a.m_value );
 }
 
-numeric* numeric::iinv() {
-  m_value = 1. / m_value;
-  return this;
+const numeric* numeric::inv(const numeric &a) {
+  return new numeric( 1. / a.m_value );
 }
 
+expr
+numeric::pow(const expr &expo) const {
+  return expo.is_numeric()
+  ? pow( *expo.as_a< numeric >() )
+  : basic::pow( expo );
+}
 const numeric*
-numeric::pow(const numeric* o) const {
-  if(!o) return number::one().get();
-  return new numeric(std::pow(m_value, o->m_value));
+numeric::pow(const numeric &expo) const {
+  if( expo.null() )
+    return one();
+  if( expo.unit() )
+    return this;
+  return new numeric( std::pow(m_value, expo.m_value) );
 }
 
 void numeric::print(std::basic_ostream<char> &os) const
 { os << m_value; }
 
-bool
-numeric::is_numeric() const
-{ return true; }
-const sum*
-numeric::as_sum() const
-{ return sum::from_numeric(this); }
-const prod*
-numeric::as_prod() const
-{ return prod::from_numeric(this); }
+bool numeric::is_numeric() const { return true; }
 
-util::cmp_t numeric::compare_same_type(const basic &o) const {
+const sum*  numeric::as_sum () const { return sum::from_number(this); }
+const prod* numeric::as_prod() const { return prod::from_number(this); }
+
+util::cmp_t numeric::compare_same_type(const basic &o) const
+{
   return algebra::compare(
     m_value
   , static_cast<const numeric&>(o).m_value
@@ -92,86 +83,24 @@ util::cmp_t numeric::compare_same_type(const basic &o) const {
 }
 
 
-bool numeric::has(const symbol&) const
-{ return false; }
+bool numeric::has(const symbol&) const { return false; }
 
 
 // ****** number ****** //
-number::number(const number &o)
-: m_impl(o.m_impl) {}
-number &number::operator=(const number &o) {
-  m_impl = o.m_impl;
-  return *this;
-}
 void number::swap(number &o)
-{ m_impl.swap(o.m_impl); }
+{ expr::swap( o ); }
 
 
 number::number(const numeric* n)
-: m_impl(n) {}
+: expr(n) {}
 
 number::number(double v)
-: m_impl(new numeric(v)) {}
-number::~number() {}
-
-number::operator expr() const
-{ return expr(get()); }
-
-number number::eval(unsigned) const
-{ return *this; }
-
-number &number::operator+=(const number &o) {
-  if(!get()) return *this = o;
-  cow()->iadd(o.get());
-  return *this;
-}
-number &number::operator-=(const number &o) {
-  if(!get()) return (*this = o).ineg();
-  cow()->isub(o.get());
-  return *this;
-}
-
-number &number::ineg() {
-  if(!get()) return *this;
-  cow()->ineg();
-  return *this;
-}
-
-number &number::operator*=(const number &o) {
-  if(!get()) return *this;
-  cow()->imul(o.get());
-  return *this;
-}
-number &number::operator/=(const number &o) {
-  if(!get()) return *this;
-  cow()->idiv(o.get());
-  return *this;
-}
-
-number &number::iinv() {
-  assert(get());
-  cow()->iinv();
-  return *this;
-}
-
-number number::pow(const number &o) const {
-  if(!get())
-    return number::zero();
-  return get()->pow(o.get());
-}
-
-namespace {
-
-struct comparator {
-  inline util::cmp_t
-  operator()(const numeric &a, const numeric &b)
-  { return a.numeric::compare_same_type(b); }
-};
-
-}
+: expr(new numeric(v)) {}
 
 util::cmp_t
 number::compare(const number &a, const number &b)
-{ return impl_t::compare(a.m_impl, b.m_impl, comparator()); }
-
+{
+  util::cmp_t c = util::compare( a.hash(), b.hash() );
+  if( c ) return c;
+  return a.get()->numeric::compare_same_type( *b.get() );
 }

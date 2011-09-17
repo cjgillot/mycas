@@ -4,7 +4,7 @@
 #include "analysis/expr.ipp"
 #include "analysis/basic.ipp"
 
-namespace analysis {
+using namespace analysis;
 
 // ************** power handle implementation **********//
 
@@ -55,37 +55,33 @@ bool power::unit() const {
 
 expr power::eval(unsigned lv) const {
   if(lv == 0)
-    return basic::eval(lv);
+    return basic::eval( lv );
   --lv;
 
-  const expr &e = m_expo, &b = m_base;
-  e.eval(lv); b.eval(lv);
-
   bool
-    en = e.null(),
-    eu = e.unit(),
-    bn = b.null(),
-    bu = b.unit();
+    en = m_expo.null(),
+    eu = m_expo.unit(),
+    bn = m_base.null(),
+    bu = m_base.unit();
 
-  if(en | bu)
+  if( en | bu )
     return number::one();
 
-  if(eu)
-    return b;
+  if( eu )
+    return m_base;
 
   // FIXME (^ 0 x)
-  if(bn)
-    return expr(0);
+  if( bn )
+    return number::zero();
 
   // TODO :
   // (^ (^ a b) c) -> (^ a (* b c)) if(x > 0 && c real)
 
-  if(e.is_numeric()) {
+  if(m_expo.is_numeric()) {
 
-    if(b.is_numeric()) {
-      const number
-        basis = b.as_a<numeric>(),
-        expon = e.as_a<numeric>();
+    if(m_base.is_numeric()) {
+      const number &basis = m_base.as_a<numeric>();
+      const number &expon = m_expo.as_a<numeric>();
       return basis.pow(expon);
     }
 
@@ -94,7 +90,7 @@ expr power::eval(unsigned lv) const {
 
   }
 
-  return basic::eval(++lv);
+  return basic::eval( lv );
 }
 
 bool power::has(const symbol &s) const
@@ -139,9 +135,3 @@ power::from_be(const expr &b, const expr &e)
 const power*
 power::from_basic(const basic* b)
 { return from_be( b, number::one() ); }
-
-const power*
-power::from_numeric(const numeric* n)
-{ return from_basic( n ); }
-
-}

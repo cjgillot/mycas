@@ -30,7 +30,7 @@ private:
   friend class boost::iterator_core_access;
 
   const Mono* dereference() const
-  { return super::base_reference()->ptr(); }
+  { return super::base_reference()->get(); }
 };
 
 }} // namespace analysis::epseq

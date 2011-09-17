@@ -11,8 +11,7 @@
 
 namespace analysis {
 
-/*!
- * \brief This is the main power representation class
+/*!\brief This is the main power representation class
  *
  * This structure represents the power {b^e}
  * using the expair { coef=e; rest=b }.
@@ -22,7 +21,8 @@ class power
 
   REGISTER_FINAL( power, basic )
 
-  friend class prod;
+//   friend class prod;
+//   friend class sum;
 
 public:
   struct handle;
@@ -46,30 +46,23 @@ public: // tests
 
   expr eval(unsigned) const;
   bool has(const symbol&) const;
-  expr diff(const symbol&, unsigned) const;
   expr expand() const;
+  expr subs(const std::map<expr,expr> &) const;
 
-public: // misc.
-  util::cmp_t compare_same_type(const basic &) const;
+public:
   void print(std::basic_ostream<char> &) const;
+
+private: // misc.
+  expr differentiate(const symbol&) const;
+  util::cmp_t compare_same_type(const basic &) const;
+  bool match_same_type(const basic &, match_map &) const;
 
 private:
   std::size_t hash() const;
 
-  /*!
-   * \brief Logarithmic differentiation
-   *
-   * This method is used internally by \c prod::diff()
-   * and \c power::diff().
-   *
-   * It returns the logarithmic derivative with respect to \c s.
-   */
-  expr diff_log(const symbol &s) const;
-
 public: // static
   static const power* from_be(const expr &b, const expr &e);
   static const power* from_basic(const basic*);
-  static const power* from_numeric(const numeric*);
 
 private: // data
   expr m_base, m_expo;
@@ -105,7 +98,8 @@ public: // tests
   { return m_ptr->m_expo.null(); }
 
   static util::cmp_t compare(const handle &a, const handle &b);
-  static util::cmp_t deep_compare(const handle &a, const handle &b) {
+  static util::cmp_t deep_compare(const handle &a, const handle &b)
+  {
     util::cmp_t c = util::compare( a.hash() , b.hash() );
     if(c) return c;
     return a.m_ptr->power::compare_same_type(*b.m_ptr);
@@ -119,11 +113,11 @@ public: // misc
   void print(S &os) const
   { m_ptr->power::print(os); }
 
-  const_pointer ptr() const
+  const_pointer get() const
   { return m_ptr.get(); }
 
 private: // data
-  boost::intrusive_ptr<const power> m_ptr;
+  ptr<const power> m_ptr;
 };
 
 }

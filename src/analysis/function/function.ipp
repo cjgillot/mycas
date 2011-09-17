@@ -1,44 +1,17 @@
 #ifndef FUNCTION_IPP
 #define FUNCTION_IPP
 
-#include <algorithm>
-#include <boost/array.hpp>
-
 #include "analysis/function/function.hpp"
 
 #include "analysis/expr.ipp"
 #include "analysis/basic.ipp"
 
+#include <algorithm>
+#include <boost/array.hpp>
+
+#include "container/unsafe_vector.hpp"
+
 namespace analysis {
-
-template<unsigned N>
-template<class InputIterator>
-function<N>::function(
-  const std::string   &n,
-  const InputIterator &b,
-  const InputIterator &e
-)
-: m_name(n)
-, m_args(b,e)
-{}
-
-template<unsigned N>
-function<N>::function(const function &o)
-: basic(o)
-, m_name(o.m_name)
-, m_args(o.m_args)
-{}
-
-
-template<unsigned N>
-function<N>::~function()
-{}
-
-template<unsigned N>
-inline void
-function<N>::sort()
-{ std::sort(m_args.begin(), m_args.end()); }
-
 namespace detail {
 
 // utility iterator class for sign_sort
@@ -99,52 +72,37 @@ struct less_pair {
   { return a.first < b.first; }
 };
 
-} // namespace detail
+template<class Tmp, class Perm, class Self>
+void do_sort( Tmp &tmp, Perm &perm, Self &self )
+{
+  //! sorting according to the \c expr only
+  std::sort(
+    tmp.begin()
+  , tmp.end()
+  , detail::less_pair()
+  );
 
-template<unsigned N>
-inline bool
-function<N>::sign_sort() {
-  typedef unsigned index_t;
+  //! get back sorted \c m_args and the permutation
+  boost::copy(
+    tmp,
 
-  typedef boost::array<index_t, N> perm_t;
-  perm_t perm;
-
-  //! sort an indexed vector
-  {
-    //! temporary indexed array to be sorted
-    typedef std::pair< expr, index_t > pair_t;
-    typedef container::unsafe_array< pair_t, N > tmp_t;
-
-    tmp_t tmp (
-      detail::indexer( m_args.begin() )
-    , detail::indexer( m_args.end() )
-    );
-
-    //! sorting according to the \c expr only
-    std::sort(
-      tmp.begin()
-    , tmp.end()
-    , detail::less_pair()
-    );
-
-    //! get back sorted \c m_args and the permutation
-    boost::copy(
-      tmp,
-
-      boost::make_zip_iterator(
-        boost::make_tuple(
-          m_args.begin()
-        , perm.begin()
-        )
+    boost::make_zip_iterator(
+      boost::make_tuple(
+        self.begin()
+      , perm.begin()
       )
-    );
-  }
+    )
+  );
+}
 
+template<class Cont>
+bool sign_perm( std::size_t sz, Cont &perm )
+{
   //! now compute the sign, via the number of even cycles in \c perm
   bool sign = false; // empty permutation ( = identity ) is even
-  for( std::size_t i = N; i != 0; --i )
+  for( ; sz != 0; --sz )
   {
-    const unsigned start = perm[ i ];
+    const unsigned start = perm[ sz ];
 
     // if not marked
     if( start != unsigned( -1 ) )
@@ -168,6 +126,77 @@ function<N>::sign_sort() {
   }
   return sign;
 }
+
+template<unsigned N>
+struct do_sign_sort
+{
+  template<class F>
+  inline bool apply( F &self )
+  {
+    typedef unsigned index_t;
+
+    typedef boost::array<index_t, N> perm_t;
+    perm_t perm;
+
+    //! sort an indexed vector
+    {
+      //! temporary indexed array to be sorted
+      typedef std::pair< expr, index_t > pair_t;
+      typedef container::unsafe_array< pair_t, N > tmp_t;
+
+      tmp_t tmp (
+        detail::indexer( self.begin() )
+      , detail::indexer( self.end() )
+      );
+
+      do_sort( tmp, perm, self );
+    }
+
+    return detail::sign_perm( N, perm );
+  }
+};
+
+template<>
+struct do_sign_sort<0>
+{
+  template<class F>
+  inline bool apply( F &self )
+  {
+    typedef unsigned index_t;
+
+    const std::size_t sz = self.size();
+
+    typedef container::unsafe_vector<index_t> perm_t;
+    perm_t perm ( sz, 0 );
+
+    //! sort an indexed vector
+    {
+      //! temporary indexed array to be sorted
+      typedef std::pair< expr, index_t > pair_t;
+      typedef container::unsafe_vector< pair_t > tmp_t;
+
+      tmp_t tmp (
+        sz
+      , detail::indexer( self.begin() )
+      , detail::indexer( self.end() )
+      );
+
+      do_sort( tmp, perm, self );
+    }
+
+    return detail::sign_perm( sz, perm );
+  }
+};
+
+} // namespace detail
+
+template<class D, unsigned N>
+inline void function<D, N>::sort()
+{ std::sort( this->begin(), this->end() ); }
+
+template<class D, unsigned N>
+bool function<D,N>::sign_sort()
+{ return detail::do_sign_sort<N>::apply( *this ); }
 
 }
 

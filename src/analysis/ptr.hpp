@@ -1,84 +1,56 @@
-/*
- * ptr.hpp
- *
- *  Created on: 4 juil. 2011
- *      Author: k1000
- */
-
 #ifndef PTR_HPP_
 #define PTR_HPP_
 
 #include <boost/intrusive_ptr.hpp>
 #include "util/compare.hpp"
 
+#include "util/null.hpp"
+
+#include <boost/utility/enable_if.hpp>
+#include <boost/type_traits/is_convertible.hpp>
+
 namespace analysis {
 
-// uses Copy On Write idiom
+// template alias
 template<class T>
-class ptr {
+class ptr
+: public boost::intrusive_ptr<T>
+{
 
-private:
-  //! \invariant m_ptr != 0
-  mutable boost::intrusive_ptr<const T> m_ptr;
+  typedef boost::intrusive_ptr<T> super;
 
-private:
-  //! \brief Disabled default constructor
-  ptr();
+  struct enabler {};
 
 public:
-  //! \brief Copy constructor
-  ptr(const ptr &);
+  ptr() {}
 
-  //! \brief Assignement operator
-  ptr &operator=(const ptr&);
+  ptr(T* p)
+  : super( p ) {}
+
+  template<class U>
+  ptr(U* p)
+  : super( p ) {}
+
+  // default copy ctor
+  template<class U>
+  ptr(const ptr<U> &p
+  , T* = static_cast< U* >( nullptr ) // enabler
+  )
+  : super( p.get() ) {}
+
+  // default assignment
+  template<class U>
+  ptr& operator=(const ptr<U> &p)
+  {
+    super::operator=( p );
+    return *this;
+  }
 
   //! \brief Non-throwing swap
-  void swap(ptr &);
+  void swap(ptr &o)
+  { super::swap( o ); }
 
-  //! \brief Destructor
-  ~ptr();
-
-  //! \brief Explicit pointer constructor
-  explicit
-  ptr(const T*);
-
-public:
-  /*!
-   * \brief Copy-On-Write function
-   *
-   * This function shall be called before any
-   * modifying operation on the pointed object.
-   * This call is the only way to get a non-const pointer.
-   */
-  T* cow();
-
-  //! \brief Pointer access
-  const T* get() const
-  { return m_ptr.get(); }
-
-  //! \brief Pointer modification
-  void reset(const T* p) // const
-  { assert(p); m_ptr.reset(p); }
-
-
-  //! \brief Nullity test
-  bool null() const;
-  //! \brief Unity test
-  bool unit() const;
-
-  //! \brief Evaluation function
-  const T*
-  eval(unsigned lv) const;
-
-
-  //! \brief Printing function
-  void print(std::basic_ostream<char> &os) const;
-
-
-  //! \brief Comparison template function
-  template<class Compare>
-  static util::cmp_t
-  compare(const ptr &a, const ptr &b, Compare cmp);
+  // default destructor
 };
 
 }

@@ -22,13 +22,13 @@ void visit(
 
 }} // namespace rtti::visitor
 
-#define MAKE_VISITABLE( klass ) \
-  template<class Visitor>       \
-  inline void                   \
-  accept( const Visitor &v )    \
-  {                             \
-    ::rtti::visitor::visit      \
-      ( v, *this );             \
+#define MAKE_VISITABLE( klass )   \
+  template<class Visitor>         \
+  inline void                     \
+  accept( const Visitor &v ) const\
+  {                               \
+    ::rtti::visitor::visit        \
+      ( v, *this );               \
   }
 
 #define VISITOR_TLIST( sequence, tail )                     \

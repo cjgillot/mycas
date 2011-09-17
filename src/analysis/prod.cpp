@@ -4,6 +4,8 @@
 #include "analysis/expr.ipp"
 #include "analysis/basic.ipp"
 
+#include "analysis/expairseq.tpp"
+
 using namespace analysis;
 
 prod::prod(const number &n)
@@ -13,7 +15,7 @@ prod::prod(const number &n)
 prod* prod::mul(const prod &a, const prod &b)
 {
   const number &c = a.coef() * b.coef();
-  util::move_ptr< prod > tmp ( new prod( c ) );
+  util::scoped_ptr< prod > tmp ( new prod( c ) );
   tmp->construct_add( a, b );
   return tmp.release();
 }
@@ -21,7 +23,7 @@ prod* prod::div(const prod &a, const prod &b)
 {
   ASSERT( ! b.coef().null() );
   const number &c = a.coef() / b.coef();
-  util::move_ptr< prod > tmp ( new prod( c ) );
+  util::scoped_ptr< prod > tmp ( new prod( c ) );
   tmp->construct_sub( a, b );
   return tmp.release();
 }
@@ -29,7 +31,7 @@ prod* prod::inv(const prod &b)
 {
   ASSERT( ! b.coef().null() );
   const number &c = b.coef().inv();
-  util::move_ptr< prod > tmp ( new prod( c ) );
+  util::scoped_ptr< prod > tmp ( new prod( c ) );
   tmp->construct_neg( b );
   return tmp.release();
 }
@@ -47,12 +49,12 @@ bool prod::unit() const {
 // static members
 prod* prod::from_basic(const basic* a)
 {
-  boost::intrusive_ptr<const power> pa = a->as_power();
-  util::move_ptr<prod> tmp ( new prod( number::one() ) );
+  ptr<const power> pa = a->as_power();
+  util::scoped_ptr<prod> tmp ( new prod( number::one() ) );
   tmp->construct_monomial( pa.get() );
   return tmp.release();
 }
-prod* prod::from_numeric(const numeric* n)
+prod* prod::from_number(const number &n)
 {
   return new prod(n);
 }
@@ -63,31 +65,30 @@ expr prod::eval(unsigned lv) const {
 
   // (* c) -> c
   if( empty() )
-    return c.eval(lv);
+    return c;
 
   // (* 0 ...) -> 0
   if( c.null() )
     return number::zero();
 
   if( lv == 0 )
-    return expr(this);
-  --lv;
+    return basic::eval( 0 );
 
   // (* c x) ?
-  if( super::is_mono() )
+  if( super::is_monomial() )
   {
-    expr b ( super::mono() );
-    b.eval(lv);
+    const power* mono = super::monomial();
+    const expr &x = mono->eval( lv - 1 );
 
     // (* 1 x) -> x
     if( c.unit() )
-      return b;
+      return x;
 
     // expand the addition
     // (* c (+ c' a...)) -> (+ cc' ca...)
-    if( b.is_a< sum >() )
-      return expr( sum::sca( c, *b.as_a< sum >() ) );
+    if( x.is_a< sum >() )
+      return sum::sca( c, *x.as_a< sum >() );
   }
 
-  return basic::eval(++lv);
+  return basic::eval( lv );
 }
