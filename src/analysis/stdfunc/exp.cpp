@@ -1,7 +1,7 @@
 #include "analysis/stdfunc.hpp"
 #include "analysis/stdfunc/exp.hpp"
 
-#include "analysis/expr_operators.hpp"
+#include "analysis/expr.ipp"
 
 using namespace analysis;
 
@@ -24,5 +24,5 @@ expr exp_::differentiate(const symbol &s) const
 
 expr analysis::exp(const expr &a)
 {
-  return expr( new exp_(a) );
+  return new exp_(a);
 }

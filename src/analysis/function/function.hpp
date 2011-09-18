@@ -42,8 +42,7 @@ protected:
   //! \brief Argument list sorting
   void sort();
 
-  /*!
-   * \brief Signed sorting
+  /*!\brief Signed sorting
    *
    * This function sorts the arguments and
    * additionally computes the sign of

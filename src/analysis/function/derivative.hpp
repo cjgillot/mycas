@@ -52,10 +52,10 @@ private:
   {
     const derivative &o = static_cast<const derivative&>(o_);
 
-    util::cmp_t c = symbol::compare(m_name, o.m_name);
+    util::cmp_t c = symbol::compare( m_name, o.m_name );
     if(c) return c;
 
-    c = util::compare(m_map.size(), o.m_map.size());
+    c = util::compare( m_map.size(), o.m_map.size() );
     if(c) return c;
 
     { // prefer do this here, since expr::compare can recurse
@@ -76,7 +76,7 @@ private:
       }
     }
 
-    return expr::compare(m_arg, o.m_arg);
+    return super::compare_same_type(o);
   }
 
 private:

@@ -67,7 +67,7 @@ protected:
   {
     std::size_t seed = 0u;
     foreach( const expr &a, m_container )
-      boost::hash_combine(seed, a.hash());
+      boost::hash_combine( seed, a.hash() );
     return seed;
   }
 

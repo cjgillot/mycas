@@ -1,15 +1,14 @@
 #include "analysis/stdfunc.hpp"
 #include "analysis/stdfunc/log.hpp"
 
-#include "analysis/expr_operators.hpp"
+#include "analysis/expr.ipp"
 
 using namespace analysis;
 
 template<>
 symbol log_::super::m_name( "log" );
 
-inline
-log_::log_(const expr &a)
+inline log_::log_(const expr &a)
 : super(a) {}
 
 log_::~log_() {}
@@ -25,5 +24,5 @@ expr log_::differentiate(const symbol &s) const
 
 expr analysis::log(const expr &a)
 {
-  return expr( new log_(a) );
+  return new log_(a);
 }
