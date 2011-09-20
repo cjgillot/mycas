@@ -100,6 +100,8 @@ protected:
     }
     os << ')';
   }
+
+  expr subs(const exmap &) const;
 };
 
 } // namespace analysis

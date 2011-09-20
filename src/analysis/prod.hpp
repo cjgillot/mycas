@@ -60,7 +60,7 @@ public:
 private:
   expr differentiate(const symbol&) const;
   void print_base(std::basic_ostream<char> &os) const { os << '*'; }
-  bool match_same_type(const basic &, match_map &) const;
+  bool match_same_type(const basic &, match_stack &) const;
 
 public:
   static prod* mul(const prod &, const prod &);

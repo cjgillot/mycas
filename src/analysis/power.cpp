@@ -50,7 +50,7 @@ bool power::null() const {
   return m_base.null();
 }
 bool power::unit() const {
-  return m_expo.null() | m_base.unit();
+  return m_expo.null() || m_base.unit();
 }
 
 expr power::eval(unsigned lv) const {

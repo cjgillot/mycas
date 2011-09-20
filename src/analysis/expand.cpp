@@ -294,7 +294,7 @@ ptr<const basic> prod_expand(const prod &self)
   { // trivial case ?
     foreach( const power* p, self )
       if( ( ! p->expo().is_numeric() )
-        | ( ! p->base().is_a< symbol_ >() ) )
+       || ( ! p->base().is_a< symbol_ >() ) )
         goto nontrivial;
 
     self.basic::expand();
@@ -313,7 +313,7 @@ ptr<const basic> prod_expand(const prod &self)
     // avoid the case : expanded * expanded sum
     foreach( const power* p, self )
       if( ( p->expo().is_numeric() )
-        & ( p->base().is_a< sum >() ) )
+       && ( p->base().is_a< sum >() ) )
         goto has_sum;
 
     return self.basic::expand();

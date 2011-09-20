@@ -6,8 +6,6 @@
 #include "analysis/forward.hpp"
 #include "analysis/register.hpp"
 
-#include <map>
-
 namespace analysis {
 
 /*!\brief Base expression class
@@ -55,7 +53,7 @@ public:
    */
   virtual expr pow(const expr &expo) const;
 
-public: // has/match/subs
+public: // has
   /*!\brief Has function
    *
    * \param s : a symbol
@@ -63,7 +61,9 @@ public: // has/match/subs
    */
   virtual bool has(const symbol &) const;
 
-  typedef std::map< unsigned, expr > match_map;
+public: // match
+  typedef std::map<unsigned, expr> match_map;
+  typedef std::deque<std::pair<unsigned, expr> > match_stack;
 
   /*!\brief Match function
    *
@@ -77,6 +77,10 @@ public: // has/match/subs
    */
   bool match(const expr &, match_map &) const;
 
+protected:
+  virtual bool match_same_type(const basic &, match_stack &) const;
+
+public: // subs
   /*!\brief Subs function
    *
    * \param mm : a match map
@@ -86,10 +90,7 @@ public: // has/match/subs
    *   if <tt>match( p, mm )</tt> returns \c false,
    *   \c mm must not be modified.
    */
-  virtual expr subs(const std::map<expr, expr> &) const;
-
-protected:
-  virtual bool match_same_type(const basic &, match_map &) const;
+  virtual expr subs(const exmap &) const;
 
 public:
   /*!\brief Evaluation function

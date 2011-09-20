@@ -61,7 +61,7 @@ public:
   expr diff(const symbol&, unsigned=1) const;
   expr expand() const;
   bool match(const expr &, basic::match_map &) const;
-  expr subs(const std::map<expr,expr> &) const;
+  expr subs(const exmap &) const;
 
 public: // RTTI
   bool is_numeric() const;
