@@ -1,3 +1,6 @@
+add_subdirectory(integer)
+add_subdirectory(modular)
+
 file(GLOB_RECURSE src *.cpp *.c)
 file(GLOB_RECURSE hdr *.hpp *.ipp)
 
