@@ -24,7 +24,6 @@ double fmpq_get_d(const fmpq_t);
 
 /* cmp */
 int fmpz_cmp_d(const fmpz_t, double);
-int fmpq_cmp_d(const fmpq_t, double);
 
 int fmpz_cmpabs_ui(const fmpz_t, ulong);
 
@@ -44,6 +43,12 @@ void mpfr_set_fq(mpfr_ptr, const fmpq_t, mpfr_rnd_t);
 /* 2exp */
 void fmpq_mul_2exp(fmpq_t, const fmpq_t, ulong);
 void fmpq_div_2exp(fmpq_t, const fmpq_t, ulong);
+
+/* bitwise */
+void fmpz_com(fmpz_t, const fmpz_t);
+void fmpz_and(fmpz_t, const fmpz_t, const fmpz_t);
+void fmpz_ior(fmpz_t, const fmpz_t, const fmpz_t);
+void fmpz_xor(fmpz_t, const fmpz_t, const fmpz_t);
 
 }
 
@@ -96,10 +101,10 @@ struct __gmp_unary_minus
   { mpfr_neg(f, g, MpFrC::get_rnd()); }
 };
 
-// struct __gmp_unary_com
-// {
-//   static void eval(fmpz_t z, const fmpz_t w) { fmpz_com(z, w); }
-// };
+struct __gmp_unary_com
+{
+  static void eval(fmpz_t z, const fmpz_t w) { fmpz_com(z, w); }
+};
 
 struct __gmp_binary_plus
 {
@@ -552,23 +557,23 @@ struct __gmp_binary_modulus
   }
 };
 
-// struct __gmp_binary_and
-// {
-//   static void eval(fmpz_t z, const fmpz_t w, const fmpz_t v)
-//   { fmpz_and(z, w, v); }
-// };
-//
-// struct __gmp_binary_ior
-// {
-//   static void eval(fmpz_t z, const fmpz_t w, const fmpz_t v)
-//   { fmpz_ior(z, w, v); }
-// };
-//
-// struct __gmp_binary_xor
-// {
-//   static void eval(fmpz_t z, const fmpz_t w, const fmpz_t v)
-//   { fmpz_xor(z, w, v); }
-// };
+struct __gmp_binary_and
+{
+  static void eval(fmpz_t z, const fmpz_t w, const fmpz_t v)
+  { fmpz_and(z, w, v); }
+};
+
+struct __gmp_binary_ior
+{
+  static void eval(fmpz_t z, const fmpz_t w, const fmpz_t v)
+  { fmpz_ior(z, w, v); }
+};
+
+struct __gmp_binary_xor
+{
+  static void eval(fmpz_t z, const fmpz_t w, const fmpz_t v)
+  { fmpz_xor(z, w, v); }
+};
 
 struct __gmp_binary_lshift
 {
@@ -3955,16 +3960,16 @@ __GMP_DEFINE_INCREMENT_OPERATOR(mpfr, fun, eval_fun)
 
 __GMP_DEFINE_UNARY_FUNCTION(operator+, __gmp_unary_plus)
 __GMP_DEFINE_UNARY_FUNCTION(operator-, __gmp_unary_minus)
-// __GMP_DEFINE_UNARY_FUNCTION(operator~, __gmp_unary_com)
+__GMP_DEFINE_UNARY_FUNCTION(operator~, __gmp_unary_com)
 
 __GMP_DEFINE_BINARY_FUNCTION(operator+, __gmp_binary_plus)
 __GMP_DEFINE_BINARY_FUNCTION(operator-, __gmp_binary_minus)
 __GMP_DEFINE_BINARY_FUNCTION(operator*, __gmp_binary_multiplies)
 __GMP_DEFINE_BINARY_FUNCTION(operator/, __gmp_binary_divides)
 __GMP_DEFINE_BINARY_FUNCTION(operator%, __gmp_binary_modulus)
-// __GMP_DEFINE_BINARY_FUNCTION(operator&, __gmp_binary_and)
-// __GMP_DEFINE_BINARY_FUNCTION(operator|, __gmp_binary_ior)
-// __GMP_DEFINE_BINARY_FUNCTION(operator^, __gmp_binary_xor)
+__GMP_DEFINE_BINARY_FUNCTION(operator&, __gmp_binary_and)
+__GMP_DEFINE_BINARY_FUNCTION(operator|, __gmp_binary_ior)
+__GMP_DEFINE_BINARY_FUNCTION(operator^, __gmp_binary_xor)
 
 __GMP_DEFINE_BINARY_FUNCTION_UI(operator<<, __gmp_binary_lshift)
 __GMP_DEFINE_BINARY_FUNCTION_UI(operator>>, __gmp_binary_rshift)
@@ -4056,9 +4061,9 @@ __GMPZ_DEFINE_COMPOUND_OPERATOR(operator*=, __gmp_binary_multiplies)
 __GMPZ_DEFINE_COMPOUND_OPERATOR(operator/=, __gmp_binary_divides)
 __GMPZ_DEFINE_COMPOUND_OPERATOR(operator%=, __gmp_binary_modulus)
 
-// __GMPZZ_DEFINE_COMPOUND_OPERATOR(operator&=, __gmp_binary_and)
-// __GMPZZ_DEFINE_COMPOUND_OPERATOR(operator|=, __gmp_binary_ior)
-// __GMPZZ_DEFINE_COMPOUND_OPERATOR(operator^=, __gmp_binary_xor)
+__GMPZZ_DEFINE_COMPOUND_OPERATOR(operator&=, __gmp_binary_and)
+__GMPZZ_DEFINE_COMPOUND_OPERATOR(operator|=, __gmp_binary_ior)
+__GMPZZ_DEFINE_COMPOUND_OPERATOR(operator^=, __gmp_binary_xor)
 
 __GMPZ_DEFINE_COMPOUND_OPERATOR_UI(operator<<=, __gmp_binary_lshift)
 __GMPZ_DEFINE_COMPOUND_OPERATOR_UI(operator>>=, __gmp_binary_rshift)

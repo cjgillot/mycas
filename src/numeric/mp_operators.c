@@ -50,15 +50,10 @@ int fmpz_cmp_d(const fmpz_t z, double d)
   else
     return ( *z < d ) ? -1 : ( *z > d );
 }
-int fmpq_cmp_d(const fmpq_t z, double d)
-{
-  /* TODO */
-  return 0;
-}
 
 int fmpq_cmpabs_ui(const fmpq_t z, ulong a)
 {
-  int ret = 0;
+  int ret;
   fmpz_t tmp = { 0 };
 
   fmpz_mul_ui(tmp, fmpq_denref(z), a);
@@ -154,6 +149,8 @@ void mpfr_set_fq(mpfr_ptr f, const fmpq_t q, mpfr_rnd_t rnd)
 }
 
 /* 2exp */
+#if 1
+
 static void _fmpq_mul_2exp(fmpz_t qn, fmpz_t qd, const fmpz_t rn, const fmpz_t rd, ulong e)
 {
   /* FIXME : overflow ? */
@@ -169,6 +166,83 @@ static void _fmpq_mul_2exp(fmpz_t qn, fmpz_t qd, const fmpz_t rn, const fmpz_t r
     fmpz_mul_2exp( qd, rd, de - e );
   }
 }
+
+#else
+
+#include "mpir.h"
+#include "mpir/gmp-impl.h"
+#include "mpir/longlong.h"
+
+#define mpq_mul_2exp  static mpq_dummy_mul_2e
+#define mpq_div_2exp  static mpq_dummy_div_2e
+
+#include "mpir/mpq/md_2exp.c"
+
+static void _fmpq_mul_2exp(fmpz_t qn, fmpz_t qd, const fmpz_t rn, const fmpz_t rd, ulong e)
+{
+  ulong plow = 0;
+
+  mpz_t rn_tmp; mpz_srcptr rn_p = 0; int rn_set = 0;
+
+  mpq_t qn_tmp; mpz_ptr qn_p = 0; int qn_set = 0;
+  mpq_t qd_tmp; mpz_ptr qd_p = 0; int qd_set = 0;
+
+  if( ! COEFF_IS_MPZ( *rd ) )
+  {
+    count_trailing_zeros( rd, plow )
+
+    if( plow < e )
+    {
+      qd = rd >> plow;
+      fmpz_mul_2exp( qn, rn, e - plow );
+    }
+    else
+    {
+      qd = rd >> e;
+      if( qn != rn )
+        fmpz_set( qn, rn );
+    }
+
+    return;
+  }
+
+#define BIND( x )                   \
+  if( COEFF_IS_MPZ( *x ) )          \
+    x##_p = COEFF_TO_PTR( *x );     \
+  else                              \
+  {                                 \
+    mpz_init_set_si( x##_tmp, *x ); \
+    x##_set = 1;                    \
+  }
+
+  BIND( rn ) BIND( qn ) BIND( qd )
+
+#undef BIND
+
+  mord_2exp( qn_p, qd_p, rn_p, COEFF_TO_PTR( *qd ), e );
+
+#define UNBIND( x )       \
+  if( x##_set )           \
+    mpz_clear( x##_tmp );
+
+  UNBIND( rn )
+
+#undef UNBIND
+
+#define UNBIND( x )               \
+  if( x##_set )                   \
+  {                               \
+    fmpz_set_mpz( *x, x##_tmp );  \
+    mpz_clear( x##_tmp );         \
+  }
+
+  UNBIND( qn ) UNBIND( qd )
+
+#undef UNBIND
+}
+
+#endif
+
 void fmpq_mul_2exp(fmpq_t q, const fmpq_t r, ulong e)
 {
   _fmpq_mul_2exp( fmpq_numref(q), fmpq_denref(q), fmpq_numref(r), fmpq_denref(r), e );
@@ -176,4 +250,122 @@ void fmpq_mul_2exp(fmpq_t q, const fmpq_t r, ulong e)
 void fmpq_div_2exp(fmpq_t q, const fmpq_t r, ulong e)
 {
   _fmpq_mul_2exp( fmpq_denref(q), fmpq_numref(q), fmpq_denref(r), fmpq_numref(r), e );
+}
+
+/* bitwise */
+void fmpz_com(fmpz_t r, const fmpz_t a)
+{
+  if( COEFF_IS_MPZ( *a ) )
+  {
+    mpz_com( _fmpz_promote( r ), COEFF_TO_PTR( *a ) );
+    _fmpz_demote_val( r );
+  }
+
+  else
+    fmpz_set_ui( r, ~ *a );
+}
+
+void fmpz_and(fmpz_t r, const fmpz_t a, const fmpz_t b)
+{
+  mpz_t tmp;
+
+  if( COEFF_IS_MPZ( *a ) )
+  {
+    if( COEFF_IS_MPZ( *b ) )
+    {
+      mpz_and( _fmpz_promote( r ), COEFF_TO_PTR( *a ), COEFF_TO_PTR( *b ) );
+      _fmpz_demote_val( r );
+    }
+
+    else {
+      mpz_set_ui( tmp, *b );
+      mpz_and( _fmpz_promote( r ), COEFF_TO_PTR( *a ), tmp );
+      mpz_clear( tmp );
+      _fmpz_demote_val( r );
+    }
+  }
+
+  else
+  {
+    if( COEFF_IS_MPZ( *a ) )
+    {
+      mpz_set_ui( tmp, *a );
+      mpz_and( _fmpz_promote( r ), tmp, COEFF_TO_PTR( *b ) );
+      mpz_clear( tmp );
+      _fmpz_demote_val( r );
+    }
+
+    else
+      fmpz_set_ui( r, *a & *b );
+  }
+}
+
+void fmpz_ior(fmpz_t r, const fmpz_t a, const fmpz_t b)
+{
+  mpz_t tmp;
+
+  if( COEFF_IS_MPZ( *a ) )
+  {
+    if( COEFF_IS_MPZ( *b ) )
+    {
+      mpz_ior( _fmpz_promote( r ), COEFF_TO_PTR( *a ), COEFF_TO_PTR( *b ) );
+      _fmpz_demote_val( r );
+    }
+
+    else {
+      mpz_set_ui( tmp, *b );
+      mpz_ior( _fmpz_promote( r ), COEFF_TO_PTR( *a ), tmp );
+      mpz_clear( tmp );
+      _fmpz_demote_val( r );
+    }
+  }
+
+  else
+  {
+    if( COEFF_IS_MPZ( *a ) )
+    {
+      mpz_set_ui( tmp, *a );
+      mpz_ior( _fmpz_promote( r ), tmp, COEFF_TO_PTR( *b ) );
+      mpz_clear( tmp );
+      _fmpz_demote_val( r );
+    }
+
+    else
+      fmpz_set_ui( r, *a | *b );
+  }
+}
+
+void fmpz_xor(fmpz_t r, const fmpz_t a, const fmpz_t b)
+{
+  mpz_t tmp;
+
+  if( COEFF_IS_MPZ( *a ) )
+  {
+    if( COEFF_IS_MPZ( *b ) )
+    {
+      mpz_xor( _fmpz_promote( r ), COEFF_TO_PTR( *a ), COEFF_TO_PTR( *b ) );
+      _fmpz_demote_val( r );
+    }
+
+    else {
+      mpz_set_ui( tmp, *b );
+      mpz_xor( _fmpz_promote( r ), COEFF_TO_PTR( *a ), tmp );
+      mpz_clear( tmp );
+      _fmpz_demote_val( r );
+    }
+  }
+
+  else
+  {
+    if( COEFF_IS_MPZ( *a ) )
+    {
+      mpz_set_ui( tmp, *a );
+      mpz_xor( _fmpz_promote( r ), tmp, COEFF_TO_PTR( *b ) );
+      mpz_clear( tmp );
+      _fmpz_demote_val( r );
+    }
+
+    else
+      fmpz_set_ui( r, *a ^ *b );
+  }
 }
