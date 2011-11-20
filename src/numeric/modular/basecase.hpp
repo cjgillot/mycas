@@ -1,23 +1,24 @@
-#ifndef NUMERIC_MODULAR_WDSZ_HPP
-#define NUMERIC_MODULAR_WDSZ_HPP
+#ifndef NUMERIC_MODULAR_BASE_HPP
+#define NUMERIC_MODULAR_BASE_HPP
 
 #include "numeric/modular/ring_base.hpp"
 
-#include <flint.h>
-#include <nmod_vec.h>
+#include <fmpz.h>
 
 namespace numeric {
 
 namespace detail_modular {
 
-class wordsize_ring
+class basecase_ring
 : public modular_ring
 {
-  nmod_t modulus;
+protected:
+  fmpz_t modulus;
+  //fmpz_t preinv;
 
 public:
-  wordsize_ring(unsigned long);
-  virtual ~wordsize_ring();
+  basecase_ring(const fmpz_t);
+  virtual ~basecase_ring();
 
 public:
   typedef modular_ring::obj_t obj_t;

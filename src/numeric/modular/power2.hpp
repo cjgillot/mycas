@@ -1,23 +1,20 @@
-#ifndef NUMERIC_MODULAR_WDSZ_HPP
-#define NUMERIC_MODULAR_WDSZ_HPP
+#ifndef NUMERIC_MODULAR_POW2_HPP
+#define NUMERIC_MODULAR_POW2_HPP
 
 #include "numeric/modular/ring_base.hpp"
-
-#include <flint.h>
-#include <nmod_vec.h>
 
 namespace numeric {
 
 namespace detail_modular {
 
-class wordsize_ring
+class power2_ring
 : public modular_ring
 {
-  nmod_t modulus;
+  unsigned long mask;
 
 public:
-  wordsize_ring(unsigned long);
-  virtual ~wordsize_ring();
+  power2_ring(unsigned long);
+  virtual ~power2_ring();
 
 public:
   typedef modular_ring::obj_t obj_t;
