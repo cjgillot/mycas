@@ -42,11 +42,11 @@ void BIND0( clear, fmpz_clear )
 
 void BIND1( neg,   fmpz_neg )
 
-void integer_ring::incr(obj_t r, const obj_t a) const
-{ fmpz_add_ui( rop, op1, 1 ); }
+void integer_ring::incr(obj_t r) const
+{ fmpz_add_ui( rop, rop, 1 ); }
 
-void integer_ring::decr(obj_t r, const obj_t a) const
-{ fmpz_sub_ui( rop, op1, 1 ); }
+void integer_ring::decr(obj_t r) const
+{ fmpz_sub_ui( rop, rop, 1 ); }
 
 // binary
 

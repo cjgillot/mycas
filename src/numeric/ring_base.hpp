@@ -24,8 +24,8 @@ public:
 public: // any kind of aliasing is allowed
   virtual void neg(obj_t, const obj_t) const = 0;
 
-  virtual void incr(obj_t, const obj_t) const = 0;
-  virtual void decr(obj_t, const obj_t) const = 0;
+  virtual void incr(obj_t) const = 0;
+  virtual void decr(obj_t) const = 0;
 
   virtual void add(obj_t, const obj_t, const obj_t) const = 0;
   virtual void sub(obj_t, const obj_t, const obj_t) const = 0;
@@ -36,7 +36,7 @@ public: // any kind of aliasing is allowed
   virtual void addmul(obj_t, const obj_t, const obj_t) const = 0;
   virtual void submul(obj_t, const obj_t, const obj_t) const = 0;
 
-  virtual bool pow(obj_t, const obj_t, long) const = 0;
+  virtual void pow(obj_t, const obj_t, unsigned long) const = 0;
 
   virtual bool equal(const obj_t, const obj_t) const = 0;
   virtual int  cmp(const obj_t, const obj_t) const = 0;
