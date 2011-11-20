@@ -1,6 +1,12 @@
 # Ignore kate backup files
 *~
 
+# Ignore project files
+*.kdev4
+/.kdev4
+.project
+.cproject
+
 # Ignore build and doc folders
 /build
 /doc
