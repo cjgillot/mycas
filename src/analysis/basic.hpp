@@ -62,9 +62,6 @@ public: // has
   virtual bool has(const symbol &) const;
 
 public: // match
-  typedef std::map<unsigned, expr> match_map;
-  typedef std::deque<std::pair<unsigned, expr> > match_stack;
-
   /*!\brief Match function
    *
    * \param p : a pattern
@@ -75,10 +72,10 @@ public: // match
    *   if <tt>match( p, mm )</tt> returns \c false,
    *   \c mm must not be modified.
    */
-  bool match(const expr &, match_map &) const;
+  bool match(const expr &, match_state &) const;
 
 protected:
-  virtual bool match_same_type(const basic &, match_stack &) const;
+  virtual bool match_same_type(const basic &, match_state &) const;
 
 public: // subs
   /*!\brief Subs function

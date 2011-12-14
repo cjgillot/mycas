@@ -50,4 +50,15 @@ class number;
 
 }
 
+namespace analysis {
+namespace match_detail {
+
+class match_state;
+
+}
+
+using match_detail::match_state;
+
+}
+
 #endif /* FORWARD_HPP_ */

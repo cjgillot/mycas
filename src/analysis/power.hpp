@@ -55,7 +55,7 @@ public:
 private: // misc.
   expr differentiate(const symbol&) const;
   util::cmp_t compare_same_type(const basic &) const;
-  bool match_same_type(const basic &, match_stack &) const;
+  bool match_same_type(const basic &, match_state &) const;
 
 private:
   std::size_t hash() const;

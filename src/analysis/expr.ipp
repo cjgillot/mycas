@@ -33,7 +33,7 @@ inline void expr::eval(unsigned lv) const
 inline bool expr::has(const symbol &s) const
 { return m_impl->has(s); }
 
-inline bool expr::match(const expr &e, basic::match_map &mm) const
+inline bool expr::match(const expr &e, match_state &mm) const
 { return m_impl->match(e, mm); }
 
 // diff

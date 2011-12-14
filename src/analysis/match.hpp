@@ -4,6 +4,8 @@
 #include "analysis/basic.hpp"
 #include "analysis/symbol.hpp"
 
+#include "analysis/match_state.hpp"
+
 namespace analysis {
 
 class wildcard;

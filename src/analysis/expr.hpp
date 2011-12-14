@@ -60,7 +60,7 @@ public:
   bool has(const symbol&) const;
   expr diff(const symbol&, unsigned=1) const;
   expr expand() const;
-  bool match(const expr &, basic::match_map &) const;
+  bool match(const expr &, match_state &) const;
   expr subs(const exmap &) const;
 
 public: // RTTI
