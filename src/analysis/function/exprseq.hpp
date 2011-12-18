@@ -3,11 +3,6 @@
 
 #include "analysis/basic.hpp"
 
-#include "util/foreach.hpp"
-#include "util/assert.hpp"
-
-#include "algebra/compare.hpp"
-
 namespace analysis {
 
 template<class Cont>
@@ -63,43 +58,13 @@ public: // range
   typename container_type::const_reference at(std::size_t i) const { return m_container.at(i); }
 
 protected:
-  std::size_t hash() const
-  {
-    std::size_t seed = 0u;
-    foreach( const expr &a, m_container )
-      boost::hash_combine( seed, a.hash() );
-    return seed;
-  }
+  std::size_t hash() const;
 
-  util::cmp_t compare_same_type(const basic &o_) const
-  {
-    const exprseq &o = static_cast<const exprseq&>(o_);
+  util::cmp_t compare_same_type(const basic &o_) const;
 
-    return algebra::range_compare( m_container, o.m_container, expr::compare );
-  }
+  bool has(const symbol &s) const;
 
-  bool has(const symbol &s) const
-  {
-    foreach(const expr &e, m_container)
-      if( e.has(s) )
-        return true;
-  }
-
-  void print_children(std::basic_ostream<char> &os) const
-  {
-    os << '(';
-    if( size() > 0 )
-    {
-      const_iterator
-        it = begin()
-      , en = end();
-
-      os << *it;
-      while( ++it != en )
-        os << ' ' << *it;
-    }
-    os << ')';
-  }
+  void print_children(std::basic_ostream<char> &os) const;
 
   expr subs(const exmap &) const;
 };

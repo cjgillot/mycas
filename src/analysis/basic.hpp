@@ -87,7 +87,10 @@ public: // subs
    *   if <tt>match( p, mm )</tt> returns \c false,
    *   \c mm must not be modified.
    */
-  virtual expr subs(const exmap &) const;
+  virtual expr subs(const exmap &) const = 0;
+
+protected:
+  expr subs_once(const exmap &) const;
 
 public:
   /*!\brief Evaluation function

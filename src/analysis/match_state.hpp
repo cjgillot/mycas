@@ -52,6 +52,29 @@ public:
 
 public:
   // inherited from container
+
+  const expr &at(unsigned id) const
+  {
+    const_iterator it = find( id ), en = end();
+    if( it == en )
+      throw std::out_of_range();
+    return *it;
+  }
+  expr &at(unsigned id)
+  {
+    iterator it = find( id ), en = end();
+    if( it == en )
+      throw std::out_of_range();
+    return *it;
+  }
+
+  const expr &operator[](unsigned id) const
+  { return *find( id ); }
+  expr &operator[](unsigned id)
+  { return *find( id ); }
+
+  std::map as_map() const
+  { return std::map( begin(), end() ); }
 };
 
 }}

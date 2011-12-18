@@ -5,20 +5,19 @@
 
 using namespace analysis;
 
-expr basic::subs(const exmap &map) const
+expr basic::subs_once(const exmap &map) const
 {
-  expr ret ( this );
-  exmap::const_iterator end = map.end(), it = end;
+  exmap::const_iterator end = map.end()
+      , it = map.find( this );
 
-  for(;;)
-  {
-    it = map.find( ret );
+  if( it != end )
+    return it->second.subs( map );
 
-    if( it == end )
-      return ret;
+  match_state s;
 
-    ret = it->second;
-  }
+  for( it =  map.begin(); it != end; ++it )
+    if( match( it->first, match ) )
+      return it->second.subs( s.as_map() );
 }
 
 static ptr<const basic>   sum_subs(const   sum &, const exmap &);
@@ -131,16 +130,3 @@ expr  prod::subs(const exmap &map) const
 
 expr power::subs(const exmap &map) const
 { return power_subs( *this, map )->basic::subs( map ); }
-
-#include "analysis/function/exprseq.hpp"
-
-template<class C>
-expr exprseq<C>::subs(const exmap &map) const
-{
-  const ptr<exprseq<C> > &ret = this->clone();
-
-  foreach( typename C::reference item, *ret )
-    item = item->subs( map );
-
-  return ret;
-}
