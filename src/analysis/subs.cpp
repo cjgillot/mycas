@@ -3,6 +3,18 @@
 
 #include "analysis/expr.ipp"
 
+#include "analysis/match_state.hpp"
+
+#include <vector>
+#include "util/move.hpp"
+
+#include "analysis/expairseq.ipp"
+
+#include "analysis/sum.hpp"
+#include "analysis/prod.hpp"
+
+#include "util/functor.hpp"
+
 using namespace analysis;
 
 expr basic::subs_once(const exmap &map) const
@@ -16,13 +28,11 @@ expr basic::subs_once(const exmap &map) const
   match_state s;
 
   for( it =  map.begin(); it != end; ++it )
-    if( match( it->first, match ) )
-      return it->second.subs( s.as_map() );
-}
+    if( match( it->first, s ) )
+      return it->second.subs( s.as_exmap() );
 
-static ptr<const basic>   sum_subs(const   sum &, const exmap &);
-static ptr<const basic>  prod_subs(const  prod &, const exmap &);
-static ptr<const basic> power_subs(const power &, const exmap &);
+  return this;
+}
 
 namespace {
 
@@ -61,28 +71,14 @@ private:
 template<>
 inline ptr<const basic> subser<power>::subs_fnc( const power* p ) const
 {
-  return power_subs( *p, *m_map );
+  return p->power::subs( *m_map );
 }
 
 template<>
-inline ptr<const basic> subser<prod>::operator()( const prod* p ) const
+inline ptr<const basic> subser<prod>::subs_fnc( const prod* p ) const
 {
-  return prod_subs( *p, *m_map );
+  return p->prod::subs( *m_map );
 }
-
-}
-
-#include <vector>
-#include "util/move.hpp"
-
-#include "analysis/expairseq.ipp"
-
-#include "analysis/sum.hpp"
-#include "analysis/prod.hpp"
-
-#include "util/functor.hpp"
-
-namespace {
 
 template<class Eps, class Mono, class F>
 ptr<const Eps> eps_subs(const Eps &self, const exmap &map, F nadd)
@@ -104,29 +100,28 @@ ptr<const Eps> eps_subs(const Eps &self, const exmap &map, F nadd)
 
 }
 
-ptr<const basic>   sum_subs( const sum &self, const exmap &map )
-{ return eps_subs< sum,  prod>( self, map, functor::plus_eq<number>() ); }
-
-ptr<const basic>  prod_subs( const prod &self, const exmap &map )
-{ return eps_subs<prod, power>( self, map, functor::multiplies_eq<number>() ); }
-
-ptr<const basic> power_subs( const power &self, const exmap &map )
+expr   sum::subs( const exmap &map ) const
 {
-  const expr &b = self.base().subs( map );
-  const expr &e = self.expo().subs( map );
-
-  if( ( b.get() != self.base().get() )
-   || ( e.get() != self.expo().get() ) )
-    return b.pow( e ).subs( map );
-
-  return &self;
+//   print( std::cerr ); std::cerr << std::endl;
+  return eps_subs< sum,  prod>( *this, map, functor::plus_eq<number>() )
+    ->subs_once( map );
 }
 
-expr   sum::subs(const exmap &map) const
-{ return   sum_subs( *this, map )->basic::subs( map ); }
+expr  prod::subs( const exmap &map ) const
+{
+//   print( std::cerr ); std::cerr << std::endl;
+  return eps_subs<prod, power>( *this, map, functor::multiplies_eq<number>() )
+    ->subs_once( map );
+}
 
-expr  prod::subs(const exmap &map) const
-{ return  prod_subs( *this, map )->basic::subs( map ); }
+expr power::subs( const exmap &map ) const
+{
+  const expr &b = base().subs( map );
+  const expr &e = expo().subs( map );
 
-expr power::subs(const exmap &map) const
-{ return power_subs( *this, map )->basic::subs( map ); }
+  if( ( b.get() != base().get() )
+   || ( e.get() != expo().get() ) )
+    return b.pow( e ).get()->subs_once( map );
+
+  return subs_once( map );
+}

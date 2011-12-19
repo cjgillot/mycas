@@ -46,6 +46,14 @@ std::size_t symbol_::hash() const
 bool symbol_::has(const symbol &s) const
 { return s.get() == this; }
 
+expr symbol_::subs(const exmap &m) const
+{
+  exmap::const_iterator it = m.find( this ), en = m.end();
+  if( it != en )
+    return it->second;
+  return this;
+}
+
 
 // ident class
 ident::ident(const std::string &n)

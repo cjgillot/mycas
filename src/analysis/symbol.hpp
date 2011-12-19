@@ -30,6 +30,8 @@ protected:
   void print(std::basic_ostream<char> &) const;
   bool has(const symbol&) const;
 
+  expr subs(const exmap &) const;
+
 private:
   expr differentiate(const symbol&) const;
   std::size_t hash() const;

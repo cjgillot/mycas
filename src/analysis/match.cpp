@@ -4,6 +4,7 @@
 #include "analysis/expr.ipp"
 
 using namespace analysis;
+using match_detail::wildcard_;
 
 bool matched_wild_p( const wildcard_ &pattern, match_state &mm )
 {

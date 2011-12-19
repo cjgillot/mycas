@@ -1,10 +1,13 @@
 #ifndef ANALYSIS_MATCH_STATE_HPP
 #define ANALYSIS_MATCH_STATE_HPP
 
+#include "analysis/match.hpp"
+
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/sequenced_index.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/member.hpp>
+#include <utility>
 
 namespace analysis {
 namespace match_detail {
@@ -28,6 +31,7 @@ struct match_state_types {
 class match_state
 : public match_state_types::container
 {
+  typedef match_state_types::pair_t pair_t;
   match_state_types::container::nth_index<1>::type &stack;
 
 public:
@@ -37,8 +41,6 @@ public:
 public:
   void push_state(unsigned id, const expr &e)
   { stack.push_front( std::make_pair( id, e ) ); }
-
-  unsigned top_state() const { return stack.front().first; }
 
   void pop_state(size_t sz) const
   {
@@ -57,24 +59,36 @@ public:
   {
     const_iterator it = find( id ), en = end();
     if( it == en )
-      throw std::out_of_range();
-    return *it;
+      throw std::out_of_range("match_state::at()");
+    return it->second;
   }
   expr &at(unsigned id)
   {
     iterator it = find( id ), en = end();
     if( it == en )
-      throw std::out_of_range();
-    return *it;
+      throw std::out_of_range("match_state::at() [const]");
+    return const_cast<expr&>( it->second );
   }
 
   const expr &operator[](unsigned id) const
-  { return *find( id ); }
+  { return find( id )->second; }
   expr &operator[](unsigned id)
-  { return *find( id ); }
+  { return const_cast<expr&>( find( id )->second ); }
 
-  std::map as_map() const
-  { return std::map( begin(), end() ); }
+  exmap as_exmap() const
+  {
+    exmap ret;
+    exmap::iterator it = ret.end();
+    foreach( const pair_t &p, *this )
+    {
+      it = ret.insert( it,
+        std::make_pair(
+          wildcard( p.first, wildcard::unbound_tag() )
+        , p.second
+      ) );
+    }
+    return ret;
+  }
 };
 
 }}

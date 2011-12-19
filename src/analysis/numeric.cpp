@@ -84,7 +84,7 @@ util::cmp_t numeric::compare_same_type(const basic &o) const
 
 
 bool numeric::has(const symbol&) const { return false; }
-
+expr numeric::subs(const exmap &) const { return this; }
 
 // ****** number ****** //
 void number::swap(number &o)

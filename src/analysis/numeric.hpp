@@ -66,6 +66,7 @@ public:
   expr pow(const expr &o) const;
   const numeric* pow(const numeric &o) const;
   void print(std::basic_ostream<char> &os) const;
+  expr subs(const exmap &) const;
 
 private:
   expr differentiate(const symbol&) const;

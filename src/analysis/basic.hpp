@@ -74,7 +74,7 @@ public: // match
    */
   bool match(const expr &, match_state &) const;
 
-protected:
+private:
   virtual bool match_same_type(const basic &, match_state &) const;
 
 public: // subs
@@ -89,7 +89,7 @@ public: // subs
    */
   virtual expr subs(const exmap &) const = 0;
 
-protected:
+// protected: // g++ rejects power::subs when protected
   expr subs_once(const exmap &) const;
 
 public:
