@@ -7,10 +7,12 @@
 namespace analysis {
 
 class exp_
-: public function<exp_, 1> {
+: public function<1>
+{
+  static symbol m_name;
 
 public:
-  typedef function<exp_, 1> super;
+  typedef function<1> super;
   REGISTER_CLASS( exp_, super )
 
 private:

@@ -9,38 +9,64 @@
 
 namespace analysis {
 
-template<class Func, unsigned N>
+template<unsigned N>
 class derivative
-: public function<
-    derivative<Func,N>
-  , N
-  >
+: public function<N>
 {
 private:
-  typedef derivative<Func,N> self;
-  typedef function<self,N> super;
+  typedef derivative<N> self;
+  typedef function<N> super;
 
 public:
   REGISTER_FINAL( self, super )
 
 private:
   typedef std::map<unsigned, unsigned> diff_map;
+  using super::m_name;
 
 public:
+  typedef typename super::iterator_tag iterator_tag;
+
   template<class InputIterator>
   derivative(
     const InputIterator &b
   , const InputIterator &e
   , const diff_map &ds
+  , const symbol &n
+  , iterator_tag
   )
-  : super( b, e ), m_map(ds) {}
+  : super( n, b, e, iterator_tag() )
+  , m_map(ds) {}
+
+#define CT_ARGS( z, n, data )  \
+  , BOOST_PP_CAT( arg, n )
+
+#define ARGS( z, n, data )  \
+  , const expr &BOOST_PP_CAT( arg, n )
+
+#define CT_ONE( z, n, data )  \
+  op_t::construct( n, this->super::get_container(), arg##n );
+
+#define CTOR( z, n, data )  \
+  template<class Dummy>     \
+  derivative( const Dummy &name, const diff_map &ds BOOST_PP_REPEAT_##z( n, ARGS, data ) ) \
+  : super( name BOOST_PP_REPEAT_##z( n, CT_ARGS, data ) ) \
+  , m_map(ds) {}
+
+  BOOST_PP_REPEAT_FROM_TO( 1, 20, CTOR, () )
+
+#undef CTOR
+#undef CT_ONE
+#undef ARGS
+#undef CT_ARGS
 
 private:
   derivative* clone() const
-  { return new derivative(this); }
+  { return new derivative( *this ); }
 
 private:
   expr differentiate(const symbol &s) const;
+
   std::size_t hash() const
   {
     std::size_t seed = super::hash();
@@ -48,6 +74,7 @@ private:
     boost::hash_range(seed, m_map.begin(), m_map.end());
     return seed;
   }
+
   util::cmp_t compare_same_type(const basic &o_) const
   {
     const derivative &o = static_cast<const derivative&>(o_);
@@ -62,7 +89,6 @@ private:
       typedef typename diff_map::const_iterator iter_t;
 
       const iter_t &e1 =   m_map.end();
-      const iter_t &e2 = o.m_map.end();
 
       iter_t i1 =   m_map.begin();
       iter_t i2 = o.m_map.begin();
@@ -79,17 +105,28 @@ private:
     return super::compare_same_type(o);
   }
 
+  void print(std::basic_ostream<char> &os) const
+  {
+    os << '(' << "D[";
+    typedef std::pair<unsigned, unsigned> pair_t;
+    foreach( const pair_t &d, m_map )
+      os << d.first << '@' << d.second << ' ';
+    os << "]" << m_name << ' ';
+    super::print_children(os);
+    os << ')';
+  }
+
 private:
   diff_map m_map;
 
-  friend expr function<D,N>::differentiate(const symbol &s) const;
+  friend class function<N>;
 };
 
-template<class D, unsigned N>
-expr function<D,N>::differentiate(const symbol &s) const
+template<unsigned N>
+expr function<N>::differentiate(const symbol &s) const
 {
-  typedef derivative<D,N> fd_t;
-  typedef fd_t::diff_map dm_t;
+  typedef derivative<N> fd_t;
+  typedef typename fd_t::diff_map dm_t;
 
   typedef typename super::const_iterator iter_t;
 
@@ -106,15 +143,16 @@ expr function<D,N>::differentiate(const symbol &s) const
 
     if( dit.null() ) continue;
 
-    const expr &fd = new fd_t( be, en, dm_t(1, std::make_pair(n,0)) );
+    const ptr<fd_t> &fd = new fd_t( be, en, dm_t(), m_name, iterator_tag() );
+    ++fd->m_map[n];
     ret += dit * fd;
   }
 
   return ret;
 }
 
-template<class D, unsigned N>
-expr derivative<D,N>::differentiate(const symbol &s) const
+template<unsigned N>
+expr derivative<N>::differentiate(const symbol &s) const
 {
   typedef typename super::const_iterator iter_t;
 
@@ -131,101 +169,12 @@ expr derivative<D,N>::differentiate(const symbol &s) const
 
     if( dit.null() ) continue;
 
-    const ptr<derivative> &fd = new derivative( be, en, m_map );
+    const ptr<derivative> &fd = new derivative( be, en, m_map, m_name, iterator_tag() );
     ++fd->m_map[n];
     ret += dit * expr(fd);
   }
 
   return ret;
-}
-
-template<class Func>
-class derivative
-: public function<
-    derivative<Func,1>
-  , 1
-  >
-{
-private:
-  typedef derivative<Func,1> self;
-  typedef function<self,1> super;
-
-public:
-  REGISTER_FINAL( self, super )
-
-public:
-  template<class InputIterator>
-  derivative(const expr &arg, const unsigned n)
-  : super( arg ), m_order(n) {}
-
-private:
-  derivative* clone() const
-  { return new derivative(this); }
-
-private:
-  expr differentiate(const symbol &s) const;
-  std::size_t hash() const
-  {
-    std::size_t seed = super::hash();
-    boost::hash_combine(seed, m_order);
-    return seed;
-  }
-  util::cmp_t compare_same_type(const basic &o_) const
-  {
-    const derivative &o = static_cast<const derivative&>(o_);
-
-    util::cmp_t c = util::compare(m_order, o.m_order);
-    if(c) return c;
-
-    return super::compare_same_type(o_);
-  }
-
-private:
-  unsigned m_order;
-
-  friend expr function<D,1>::differentiate(const symbol &s) const;
-};
-
-template<class D>
-expr function<D,1>::differentiate(const symbol &s) const
-{
-  typedef derivative<D,N> fd_t;
-
-  typedef typename super::const_iterator iter_t;
-
-  const iter_t &be = super::begin();
-  const iter_t &en = super::end();
-
-  iter_t it = be;
-
-  const expr &da = arg<0>().diff(s);
-
-  if( dit.null() )
-    return number::zero();
-
-  const expr &fd = new fd_t( arg, 1 );
-  return da * fd;
-}
-
-template<class D>
-expr derivative<D,1>::differentiate(const symbol &s) const
-{
-  typedef derivative<D,N> fd_t;
-
-  typedef typename super::const_iterator iter_t;
-
-  const iter_t &be = super::begin();
-  const iter_t &en = super::end();
-
-  iter_t it = be;
-
-  const expr &da = super::arg<0>().diff(s);
-
-  if( dit.null() )
-    return number::zero();
-
-  const expr &fd = new fd_t( arg, 1 + m_order );
-  return da * fd;
 }
 
 } // namespace analysis

@@ -2,14 +2,16 @@
 #include "analysis/stdfunc/exp.hpp"
 
 #include "analysis/expr.ipp"
+#include "analysis/function/function.ipp"
+#include "analysis/function/match.ipp"
 
 using namespace analysis;
 
 template<>
-symbol exp_::super::m_name( "exp" );
+symbol exp_::m_name( "exp" );
 
 inline exp_::exp_(const expr &a)
-: super(a) {}
+: super(m_name, a) {}
 
 exp_::~exp_() {}
 

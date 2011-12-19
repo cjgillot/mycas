@@ -2,14 +2,16 @@
 #include "analysis/stdfunc/log.hpp"
 
 #include "analysis/expr.ipp"
+#include "analysis/function/function.ipp"
+#include "analysis/function/match.ipp"
 
 using namespace analysis;
 
 template<>
-symbol log_::super::m_name( "log" );
+symbol log_::m_name( "log" );
 
 inline log_::log_(const expr &a)
-: super(a) {}
+: super(m_name, a) {}
 
 log_::~log_() {}
 

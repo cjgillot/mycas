@@ -5,6 +5,7 @@
 
 #include "analysis/expr.ipp"
 #include "analysis/basic.ipp"
+#include "analysis/function/exprseq.ipp"
 
 #include <algorithm>
 #include <boost/array.hpp>
@@ -17,7 +18,7 @@ namespace detail {
 // utility iterator class for sign_sort
 template<class Iter>
 class indexer_t
-: boost::iterator_adaptor<
+: public boost::iterator_adaptor<
     indexer_t<Iter> // Derived
   , Iter // Base
   , std::pair<
@@ -46,7 +47,7 @@ private:
 
   void increment()
   {
-    super_type::increment();
+    ++super_type::base_reference();
     ++m_index;
   }
 
@@ -120,7 +121,7 @@ bool sign_perm( std::size_t sz, Cont &perm )
 
       } while(curr != start);
 
-      if( length & 1 == 0 )
+      if( ( length & 1 ) == 0 )
         sign = ! sign;
     }
   }
@@ -131,7 +132,7 @@ template<unsigned N>
 struct do_sign_sort
 {
   template<class F>
-  inline bool apply( F &self )
+  static inline bool apply( F &self )
   {
     typedef unsigned index_t;
 
@@ -160,7 +161,7 @@ template<>
 struct do_sign_sort<0>
 {
   template<class F>
-  inline bool apply( F &self )
+  static inline bool apply( F &self )
   {
     typedef unsigned index_t;
 
@@ -190,14 +191,16 @@ struct do_sign_sort<0>
 
 } // namespace detail
 
-template<class D, unsigned N>
-inline void function<D, N>::sort()
+template<unsigned N>
+inline void function<N>::sort()
 { std::sort( this->begin(), this->end() ); }
 
-template<class D, unsigned N>
-bool function<D,N>::sign_sort()
+template<unsigned N>
+bool function<N>::sign_sort()
 { return detail::do_sign_sort<N>::apply( *this ); }
 
 }
+
+#include "analysis/function/derivative.hpp"
 
 #endif

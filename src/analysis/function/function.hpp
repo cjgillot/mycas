@@ -8,6 +8,9 @@
 
 #include "container/unsafe_array.hpp"
 
+#include "util/assert.hpp"
+#include <boost/preprocessor/repeat.hpp>
+
 namespace analysis {
 namespace detail {
 
@@ -23,20 +26,88 @@ struct choose_container<E, 0>
   typedef std::vector<E> type;
 };
 
+template<class, unsigned N, unsigned n>
+struct make_dependant {
+  enum { value = ( N == n ) };
+};
+
+template<class D, unsigned n>
+struct make_dependant<D, 0, n> {
+  enum { value = 1 };
+};
+
+template<unsigned N>
+struct construction
+{
+  typedef typename choose_container<expr, N>::type cont_t;
+  static typename cont_t::unsafe_tag tag() { return typename cont_t::unsafe_tag(); }
+
+  static void reserve( unsigned, cont_t & )
+  {}
+
+  static void construct( unsigned n, cont_t &cont, const expr &value )
+  {
+    cont.get_allocator().construct( cont.begin() + n, value );
+  }
+};
+
+template<>
+struct construction<0>
+{
+  typedef typename choose_container<expr, 0>::type cont_t;
+  static typename cont_t::allocator_type tag() { return typename cont_t::allocator_type(); }
+
+  static void reserve( unsigned n, cont_t &cont )
+  { cont.reserve( n ); }
+
+  static void construct( unsigned, cont_t &cont, const expr &value )
+  {
+    cont.push_back( value );
+  }
+};
+
 } // namespace detail
 
-template<class Derived, unsigned N>
+template<unsigned N>
 class function
 : public exprseq< typename detail::choose_container<expr, N>::type >
 {
+  REGISTER_CLASS( function<N>, basic )
+
 private:
   typedef typename function::exprseq_ super;
-  static symbol m_name;
 
 protected:
+  const symbol &m_name;
+
+public:
+  struct iterator_tag {};
+
   template<class InputIterator>
-  function(const InputIterator &b, const InputIterator &e)
-  : super( b, e ) {}
+  function(const symbol &n, const InputIterator &b, const InputIterator &e, iterator_tag)
+  : super( b, e ), m_name(n) {}
+
+#define ARGS( z, n, data )  \
+  , const expr &BOOST_PP_CAT( arg, n )
+
+#define CT_ONE( z, n, data )  \
+  op_t::construct( n, this->super::get_container(), arg##n );
+
+#define CTOR( z, n, data )  \
+  template<class Dummy>     \
+  function( const Dummy &name BOOST_PP_REPEAT_##z( n, ARGS, data ) ) \
+  : super( detail::construction<N>::tag() ), m_name( name ) { \
+    STATIC_ASSERT(( detail::make_dependant<Dummy, N, n>::value ));  \
+    typedef detail::construction<N> op_t;  \
+    op_t::reserve( n, this->super::get_container() ); \
+    BOOST_PP_REPEAT_##z( n, CT_ONE, data ); \
+  }
+
+  BOOST_PP_REPEAT_FROM_TO( 1, 20, CTOR, () )
+
+#undef CTOR
+#undef CT_ONE
+#undef ARGS
 
 protected:
   //! \brief Argument list sorting
@@ -73,85 +144,25 @@ protected:
 private: // hide some of super members
   using super::operator[];
   using super::at;
+
+protected:
   using super::print_children;
 
 public:
+  function* clone() const
+  {
+    return new function( *this );
+  }
+
   void print(std::basic_ostream<char> &os) const
   {
     os << '(' << m_name << ' ';
-    super::print_children( os );
+    print_children(os);
     os << ')';
   }
 
-private: // implemented in "derivative.hpp"
+protected: // implemented in "derivative.hpp"
   expr differentiate(const symbol &s) const;
-};
-
-template<class Derived>
-class function<Derived, 1>
-: public basic
-{
-  static symbol m_name;
-  expr   m_arg;
-
-protected:
-  function(const expr &a)
-  : m_arg(a) {}
-
-protected:
-  //! \brief Argument list sorting
-  void sort() {}
-
-  /*!\brief Signed sorting
-   *
-   * This function sorts the arguments and
-   * additionally computes the sign of
-   * the permutation (1 or -1).
-   *
-   * This function should only be used when the
-   * permutation sign is signficant,
-   * since it has a far grater time constant.
-   *
-   * \return \c false for 1, \c true for -1
-   *
-   * \see sort()
-   */
-  bool sign_sort()
-  { return false; }
-
-  //! \brief Argument access
-  const expr &arg(unsigned n) const
-  { ASSERT( n == 0 ); return m_arg; }
-
-  //! \brief Argument access
-  template<unsigned I>
-  const expr &arg() const
-  { STATIC_ASSERT( I == 0 ); return m_arg; }
-
-protected:
-  std::size_t hash() const
-  {
-    std::size_t seed = m_name.hash();
-    boost::hash_combine(seed, m_arg.hash());
-    return seed;
-  }
-
-  util::cmp_t compare_same_type(const basic &o_) const
-  {
-    const function &o = static_cast<const function&>(o_);
-
-    util::cmp_t c = symbol::compare(m_name, o.m_name);
-    if(c) return c;
-
-    return expr::compare(m_arg, o.m_arg);
-  }
-
-  bool has(const symbol &s) const
-  { return m_arg.has(s); }
-
-public:
-  void print(std::basic_ostream<char> &os) const
-  { os << '(' << m_name << ' ' << m_arg << ')'; }
 };
 
 }

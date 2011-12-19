@@ -7,6 +7,9 @@
 
 #include "util/foreach.hpp"
 #include "util/assert.hpp"
+#include "util/move.hpp"
+
+#include "analysis/match_state.hpp"
 
 namespace analysis {
 
@@ -33,12 +36,12 @@ bool exprseq<C>::has(const symbol &s) const
   foreach(const expr &e, m_container)
     if( e.has(s) )
       return true;
+  return false;
 }
 
 template<class C>
 void exprseq<C>::print_children(std::basic_ostream<char> &os) const
 {
-  os << '(';
   if( size() > 0 )
   {
     const_iterator
@@ -49,46 +52,57 @@ void exprseq<C>::print_children(std::basic_ostream<char> &os) const
     while( ++it != en )
       os << ' ' << *it;
   }
-  os << ')';
 }
 
 template<class C>
-expr exprseq<C>::match(const match_state &map) const
+bool exprseq<C>::match_same_type(const basic &o, match_state &mm) const
 {
-  util::scoped_ptr<exprseq<C> > ret;
+  const exprseq &pat = static_cast<const exprseq&>( o );
 
-  size_t index = 0;
-  const_iterator it = begin(), en = end();
-  for( ; it != en; ++it, ++index )
+  if( size() != pat.size() )
+    return false;
+
+  std::stack< std::pair<unsigned, std::pair<expr,expr> > > backtrack;
+
+  typedef std::list< std::pair<expr, expr> > list_t;
+  list_t ops;
   {
-    const expr &orig = *it;
-    const expr &imag = orig.subs( map );
-
-    if( orig.get() == imag.get() )
-      continue;
-
-    ret.reset( this->clone() );
-    iterator it2 = ret->begin(); en = ret->end();
-    for( ; index != 0; ++it2, --index );
-    for( ; it2 != en; ++it2 )
-      *it2 = it2->subs( map );
-    break;
+    const_iterator i1 =     begin(), e1 = end(),
+                   i2 = pat.begin(), e2 = pat.end();
+    for( ; i1 != e1 && i2 != e2; ++i1, ++i2 )
+      ops.push_back( std::make_pair( *i1, *i2 ) );
   }
 
-  if( !ret )
-    return this->subs_once(map);
 
-  const expr &re = ret.release();
-  if( dynamic_cast<exprseq>(re.get()) )
-    return re.get()->subs_once( map );
+  for( list_t::iterator it = ops.begin(), en = ops.end(); it != en; ++it )
+  {
+    const std::size_t state = mm.size_state();
 
-  return re;
+    if( it->first.match( it->second, mm ) )
+    {
+      if( state != mm.size_state() )
+        backtrack.push( std::make_pair( state, *it ) );
+
+      ops.erase( it );
+      it = ops.begin(); en = ops.end();
+      continue;
+    }
+
+    if( backtrack.empty() )
+      return false;
+
+    ops.push_back( backtrack.top().second );
+    mm.pop_state(  backtrack.top().first );
+    it = ops.begin(); en = ops.end();
+  }
+
+  return true;
 }
 
 template<class C>
 expr exprseq<C>::subs(const exmap &map) const
 {
-  util::scoped_ptr<exprseq<C> > ret;
+  util::scoped_ptr<exprseq> ret;
 
   size_t index = 0;
   const_iterator it = begin(), en = end();
@@ -100,7 +114,7 @@ expr exprseq<C>::subs(const exmap &map) const
     if( orig.get() == imag.get() )
       continue;
 
-    ret.reset( this->clone() );
+    ret.reset( static_cast<exprseq*>( this->clone() ) );
     iterator it2 = ret->begin(); en = ret->end();
     for( ; index != 0; ++it2, --index );
     for( ; it2 != en; ++it2 )
@@ -109,11 +123,11 @@ expr exprseq<C>::subs(const exmap &map) const
   }
 
   if( !ret )
-    return this->subs_once(map);
+    return this->basic::subs_once(map);
 
   const expr &re = ret.release();
   // TODO get rid of dynamic_cast here
-  if( dynamic_cast<exprseq>(re.get()) )
+  if( dynamic_cast<const exprseq*>(re.get()) )
     return re.get()->subs_once( map );
 
   return re;

@@ -31,6 +31,9 @@ protected:
   // default dtor
 
 public: // range
+  container_type &get_container() { return m_container; }
+  const container_type &get_container() const { return m_container; }
+
   typedef typename container_type::iterator               iterator;
   typedef typename container_type::const_iterator         const_iterator;
   typedef typename container_type::reverse_iterator       reverse_iterator;
@@ -66,6 +69,7 @@ protected:
 
   void print_children(std::basic_ostream<char> &os) const;
 
+  bool match_same_type(const basic &, match_state &) const;
   expr subs(const exmap &) const;
 };
 

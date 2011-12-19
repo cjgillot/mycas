@@ -69,16 +69,16 @@ private:
   pointer       address()       { return static_cast<      pointer>( storage_type::address() ); }
   const_pointer address() const { return static_cast<const_pointer>( storage_type::address() ); }
 
+public:
         allocator_type &get_allocator()       { return *this; }
   const allocator_type &get_allocator() const { return *this; }
 
 public: // cdtor
   unsafe_array(const unsafe_array &o)
-  : _Tp_alloc_type( o.get_allocator() )
+  : _Tp_alloc_type( o.get_allocator() ), storage_type()
   {
-    pointer
-       cur =   address()
-    , ocur = o.address();
+    pointer        cur =   address();
+    const_pointer ocur = o.address();
 
     for(
       std::size_t cnt = N;
@@ -92,9 +92,8 @@ public: // cdtor
   {
     get_allocator() = o.get_allocator();
 
-    pointer
-       cur =   address()
-    , ocur = o.address();
+    pointer        cur =   address();
+    const_pointer ocur = o.address();
 
     for(
       std::size_t cnt = N;
@@ -102,6 +101,8 @@ public: // cdtor
       --cnt, ++cur, ++ocur
     )
       *cur = *ocur;
+
+    return *this;
   }
 
   void swap(unsafe_array &o)
@@ -135,7 +136,7 @@ public: // cdtor
 public: // constructors from range
   template< class Iterator >
   unsafe_array(Iterator b, const Iterator &e)
-  : _Tp_alloc_type()
+  : _Tp_alloc_type(), storage_type()
   {
     ASSERT( std::distance( b, e ) == N );
 
@@ -158,7 +159,7 @@ public: // constructors from range
 
   template< class Iterator >
   unsafe_array(Iterator b, const Iterator &e, const allocator_type &a)
-  : _Tp_alloc_type( a )
+  : _Tp_alloc_type( a ), storage_type()
   {
     ASSERT( std::distance( b, e ) == N );
 
@@ -178,6 +179,11 @@ public: // constructors from range
     // redundant with the distance assert
     ASSERT( b == e );
   }
+
+public: // unsafe mode
+  struct unsafe_tag {};
+  unsafe_array( unsafe_tag )
+  : _Tp_alloc_type(), storage_type() {}
 
 public: // access
   bool empty() const          { return false; }
