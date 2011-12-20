@@ -111,7 +111,7 @@ private:
     typedef std::pair<unsigned, unsigned> pair_t;
     foreach( const pair_t &d, m_map )
       os << d.first << '@' << d.second << ' ';
-    os << "]" << m_name << ' ';
+    os << m_name << "]" << ' ';
     super::print_children(os);
     os << ')';
   }

@@ -174,7 +174,7 @@ struct printer
   template<class T>
    void
   operator()(const T &x)
-  { x.print(os << ' '); }
+  { expr(x).print(os << ' '); }
 };
 
 }
