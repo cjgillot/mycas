@@ -1,7 +1,17 @@
 #include "mp_operators.hpp"
 
-fmpq_class a;
+#include "number.hpp"
 
-fmpq_class b = a << 5;
+using namespace numeric;
 
-int main() {}
+int main()
+{
+  number a ( 3 ), b( 2 );
+  number c = fmpq_class( 2.5 );
+
+  std::cout << std::boolalpha << (c / b.inv()).is_integer() << std::endl;
+
+//   std::cout << c.pow( a ) << std::endl;
+
+  return 0;
+}
