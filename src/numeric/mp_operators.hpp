@@ -8,11 +8,7 @@
 #include <cstdlib>
 #include <stdexcept>
 
-#include <flint.h>
-#include <fmpz.h>
-#include <fmpq.h>
-
-#include <mpfr.h>
+#include "flint.hpp"
 
 extern "C" {
 
@@ -32,13 +28,13 @@ int fmpq_cmp_ui(const fmpq_t, ulong, ulong);
 int fmpq_cmp_si(const fmpq_t,  long, ulong);
 
 /* set */
-int fmpz_set_str(fmpz_t, const char*, int);
+#define STR(x) (const_cast<char*>(x))
+// int fmpz_set_str(fmpz_t, const char*, int);
 int fmpq_set_str(fmpq_t, const char*, int);
 
 void fmpz_set_q(fmpz_t, const fmpq_t);
 
 void mpfr_set_fz(mpfr_ptr, const fmpz_t, mpfr_rnd_t);
-void mpfr_set_fq(mpfr_ptr, const fmpq_t, mpfr_rnd_t);
 
 /* 2exp */
 void fmpq_mul_2exp(fmpq_t, const fmpq_t, ulong);
@@ -53,13 +49,13 @@ void fmpz_xor(fmpz_t, const fmpz_t, const fmpz_t);
 }
 
 // routines in gmpfrxx.cpp
-std::istream& operator>> (std::istream &, fmpz_t);
-std::ostream& operator<< (std::ostream &, fmpq_t);
-std::istream& operator>> (std::istream &, mpfr_ptr);
+std::istream& fmpfr_parse(std::istream &, fmpz_t);
+std::istream& fmpfr_parse(std::istream &, fmpq_t);
+std::istream& fmpfr_parse(std::istream &, mpfr_ptr);
 
-std::ostream& operator<< (std::ostream &, const fmpz_t);
-std::istream& operator>> (std::istream &, const fmpq_t);
-std::ostream& operator<< (std::ostream &, mpfr_srcptr);
+std::ostream& fmpfr_print(std::ostream &, const fmpz_t);
+std::ostream& fmpfr_print(std::ostream &, const fmpq_t);
+std::ostream& fmpfr_print(std::ostream &, mpfr_srcptr);
 
 void fmpz_set_mpfr(fmpz_t w, mpfr_srcptr u);
 void fmpq_set_mpfr(fmpq_t w, mpfr_srcptr u);
@@ -1834,7 +1830,7 @@ public:
   explicit __gmp_expr(const char *s)
   {
     fmpz_init(mp);
-    if( fmpz_set_str(mp, s, 0) != 0)
+    if( fmpz_set_str(mp, STR(s), 0) != 0)
     {
       fmpz_clear (mp);
       throw std::invalid_argument ("fmpz_set_str");
@@ -1843,7 +1839,7 @@ public:
   __gmp_expr(const char *s, int base)
   {
     fmpz_init(mp);
-    if( fmpz_set_str(mp, s, base) != 0)
+    if( fmpz_set_str(mp, STR(s), base) != 0)
     {
       fmpz_clear (mp);
       throw std::invalid_argument ("fmpz_set_str");
@@ -1852,7 +1848,7 @@ public:
   explicit __gmp_expr(const std::string &s)
   {
     fmpz_init(mp);
-    if (fmpz_set_str (mp, s.c_str(), 0) != 0)
+    if (fmpz_set_str (mp, STR(s.c_str()), 0) != 0)
       {
         fmpz_clear (mp);
         throw std::invalid_argument ("fmpz_set_str");
@@ -1861,7 +1857,7 @@ public:
   __gmp_expr(const std::string &s, int base)
   {
     fmpz_init(mp);
-    if (fmpz_set_str(mp, s.c_str(), base) != 0)
+    if (fmpz_set_str(mp, STR(s.c_str()), base) != 0)
       {
         fmpz_clear (mp);
         throw std::invalid_argument ("fmpz_set_str");
@@ -1902,22 +1898,22 @@ public:
 
   __gmp_expr & operator=(const char *s)
   {
-    if (fmpz_set_str (mp, s, 0) != 0)
+    if (fmpz_set_str (mp, STR(s), 0) != 0)
       throw std::invalid_argument ("fmpz_set_str");
     return *this;
   }
   __gmp_expr & operator=(const std::string &s)
   {
-    if (fmpz_set_str(mp, s.c_str(), 0) != 0)
+    if (fmpz_set_str(mp, STR(s.c_str()), 0) != 0)
       throw std::invalid_argument ("fmpz_set_str");
     return *this;
   }
 
   // string input/output functions
   int set_str(const char *s, int base)
-  { return fmpz_set_str(mp, s, base); }
+  { return fmpz_set_str(mp, STR(s), base); }
   int set_str(const std::string &s, int base)
-  { return fmpz_set_str(mp, s.c_str(), base); }
+  { return fmpz_set_str(mp, STR(s.c_str()), base); }
   std::string get_str(int base = 10) const
   {
     __gmp_alloc_cstring temp(fmpz_get_str(0, base, mp));
@@ -2001,7 +1997,7 @@ public:
 
   __gmp_expr(float f)  { fmpq_init(mp); fmpq_set_d(mp, f); }
   __gmp_expr(double d) { fmpq_init(mp); fmpq_set_d(mp, d); }
-  // __gmp_expr(long double ld) { fmpq_init(mp); fmpq_set_ld(mp, ld); }
+//   __gmp_expr(long double ld) { fmpq_init(mp); fmpq_set_ld(mp, ld); }
 
   explicit __gmp_expr(const char *s)
   {
@@ -2024,7 +2020,7 @@ public:
   explicit __gmp_expr(const std::string &s)
   {
     fmpq_init (mp);
-    if (fmpq_set_str (mp, s.c_str(), 0) != 0)
+    if (fmpq_set_str (mp, STR(s.c_str()), 0) != 0)
       {
         fmpq_clear (mp);
         throw std::invalid_argument ("fmpq_set_str");
@@ -2033,7 +2029,7 @@ public:
   __gmp_expr(const std::string &s, int base)
   {
     fmpq_init(mp);
-    if (fmpq_set_str (mp, s.c_str(), base) != 0)
+    if (fmpq_set_str (mp, STR(s.c_str()), base) != 0)
       {
         fmpq_clear (mp);
         throw std::invalid_argument ("fmpq_set_str");
@@ -2046,6 +2042,7 @@ public:
     fmpq_init(mp);
     fmpz_set(fmpq_numref(mp), num.get_fmpz_t());
     fmpz_set(fmpq_denref(mp), den.get_fmpz_t());
+    fmpq_canonicalise(mp);
   }
 
   ~__gmp_expr() { fmpq_clear(mp); }
@@ -2090,7 +2087,7 @@ public:
   }
   __gmp_expr & operator=(const std::string &s)
   {
-    if (fmpq_set_str(mp, s.c_str(), 0) != 0)
+    if (fmpq_set_str(mp, STR(s.c_str()), 0) != 0)
       throw std::invalid_argument ("fmpq_set_str");
     return *this;
   }
@@ -2099,7 +2096,7 @@ public:
   int set_str(const char *s, int base)
   { return fmpq_set_str(mp, s, base); }
   int set_str(const std::string &s, int base)
-  { return fmpq_set_str(mp, s.c_str(), base); }
+  { return fmpq_set_str(mp, STR(s.c_str()), base); }
   std::string get_str(int base = 10) const
   {
     __gmp_alloc_cstring temp(fmpq_get_str(0, base, mp));
@@ -2223,10 +2220,10 @@ public:
   { mpfr_init_set_d(mp, d, MpFrC::get_rnd()); }
   __gmp_expr(double d, unsigned long int prec)
   { mpfr_init2(mp, prec); mpfr_set_d(mp, d, MpFrC::get_rnd()); }
-  // __gmp_expr(long double ld)
-  // { mpfr_init_set_d(mp, ld, MpFrC::get_rnd()); }
-  // __gmp_expr(long double ld, unsigned long int prec)
-  // { mpfr_init2(mp, prec); mpfr_set_d(mp, ld, MpFrC::get_rnd()); }
+  __gmp_expr(long double ld)
+  { mpfr_init_set_d(mp, ld, MpFrC::get_rnd()); }
+  __gmp_expr(long double ld, unsigned long int prec)
+  { mpfr_init2(mp, prec); mpfr_set_d(mp, ld, MpFrC::get_rnd()); }
 
   explicit __gmp_expr(const char *s)
   {
@@ -2247,7 +2244,7 @@ public:
   }
   explicit __gmp_expr(const std::string &s)
   {
-    if (mpfr_init_set_str(mp, s.c_str(),
+    if (mpfr_init_set_str(mp, STR(s.c_str()),
         MpFrC::get_base(), MpFrC::get_rnd()) != 0)
       {
         mpfr_clear (mp);
@@ -2257,7 +2254,7 @@ public:
   __gmp_expr(const std::string &s, unsigned long int prec, int base = 0)
   {
     mpfr_init2(mp, prec);
-    if (mpfr_set_str(mp, s.c_str(), base, MpFrC::get_rnd()) != 0)
+    if (mpfr_set_str(mp, STR(s.c_str()), base, MpFrC::get_rnd()) != 0)
       {
         mpfr_clear (mp);
         throw std::invalid_argument ("mpfr_set_str");
@@ -2302,8 +2299,8 @@ public:
   { mpfr_set_d(mp, f, MpFrC::get_rnd()); return *this; }
   __gmp_expr & operator=(double d)
   { mpfr_set_d(mp, d, MpFrC::get_rnd()); return *this; }
-  // __gmp_expr & operator=(long double ld)
-  // { mpfr_set_ld(mp, ld); return *this; }
+  __gmp_expr & operator=(long double ld)
+  { mpfr_set_ld(mp, ld, MpFrC::get_rnd()); return *this; }
 
   __gmp_expr & operator=(const char *s)
   {
@@ -2313,7 +2310,7 @@ public:
   }
   __gmp_expr & operator=(const std::string &s)
   {
-    if (mpfr_set_str(mp, s.c_str(), MpFrC::get_base(), MpFrC::get_rnd()) != 0)
+    if (mpfr_set_str(mp, STR(s.c_str()), MpFrC::get_base(), MpFrC::get_rnd()) != 0)
       throw std::invalid_argument ("mpfr_set_str");
     return *this;
   }
@@ -2322,7 +2319,7 @@ public:
   int set_str(const char *s, int base)
   { return mpfr_set_str(mp, s, base, MpFrC::get_rnd()); }
   int set_str(const std::string &s, int base)
-  { return mpfr_set_str(mp, s.c_str(), base, MpFrC::get_rnd()); }
+  { return mpfr_set_str(mp, STR(s.c_str()), base, MpFrC::get_rnd()); }
   std::string get_str(mp_exp_t &expo, int base = 10, size_t size = 0) const
   {
     __gmp_alloc_cstring temp(mpfr_get_str(0, &expo, base, size, mp,
@@ -2389,7 +2386,7 @@ template <class T>
 inline std::ostream & operator<<
 (std::ostream &o, const __gmp_expr<T, T> &expr)
 {
-  return o << expr.__get_mp();
+  return fmpfr_print( o, expr.__get_mp() );
 }
 
 template <class T, class U>
@@ -2397,19 +2394,19 @@ inline std::ostream & operator<<
 (std::ostream &o, const __gmp_expr<T, U> &expr)
 {
   __gmp_expr<T, T> temp(expr);
-  return o << temp.__get_mp();
+  return fmpfr_print( o, temp.__get_mp() );
 }
 
 
 template <class T>
 inline std::istream & operator>>(std::istream &i, __gmp_expr<T, T> &expr)
 {
-  return i >> expr.__get_mp();
+  return fmpfr_parse( i, expr.__get_mp() );
 }
 
 inline std::istream & operator>>(std::istream &i, fmpq_class &q)
 {
-  i >> q.get_fmpq_t();
+  fmpfr_parse( i, q.get_fmpq_t() );
   // q.canonicalize(); // you might want to uncomment this
   return i;
 }
@@ -2511,14 +2508,14 @@ inline void __gmp_set_expr(mpfr_ptr f, const __gmp_expr<fmpz_t, T> &expr)
 template <class T>
 inline void __gmp_set_expr(mpfr_ptr f, const fmpq_class &q)
 {
-  mpfr_set_fq(f, q.get_fmpq_t(), MpFrC::get_rnd());
+  fmpq_get_mpfr(f, q.get_fmpq_t(), MpFrC::get_rnd());
 }
 
 template <class T>
 inline void __gmp_set_expr(mpfr_ptr f, const __gmp_expr<fmpq_t, T> &expr)
 {
   fmpq_class temp(expr);
-  mpfr_set_fq(f, temp.get_fmpq_t(), MpFrC::get_rnd());
+  fmpq_get_mpfr(f, temp.get_fmpq_t(), MpFrC::get_rnd());
 }
 
 template <>
