@@ -16,26 +16,29 @@ class numeric
 
   friend class number;
 
-private:
-  algebra::real m_value;
-
 public:
   numeric(const numeric &);
   numeric &operator=(const numeric &);
   void swap(numeric &);
 
 public:
-  numeric(double v);
-  ~numeric();
+  numeric(const number &n)
+  : m_value( n ) {}
+
+  template<class T>
+  numeric(T v)
+  : m_value( v ) {}
+
+  ~numeric() {}
 
   static const numeric* zero()
   {
-    static ptr<const numeric> value ( new numeric( 0. ) );
+    static ptr<const numeric> value ( new numeric( 0 ) );
     return value.get();
   }
   static const numeric* one()
   {
-    static ptr<const numeric> value ( new numeric( 1. ) );
+    static ptr<const numeric> value ( new numeric( 1 ) );
     return value.get();
   }
 
@@ -46,6 +49,10 @@ public:
   bool null() const;
   bool unit() const;
   bool has(const symbol&) const;
+
+public:
+  const number &get() const
+  { return m_value; }
 
 public:
   virtual bool is_numeric() const;
@@ -74,11 +81,14 @@ private:
   util::cmp_t compare_same_type(const basic&) const;
 
   std::size_t hash() const
-  { return boost::hash<algebra::real>()(m_value); }
+  { return m_value.hash(); }
+
+private:
+  number m_value;
 };
 
 
-}
+} // namespace analysis
 
 
 #endif /* NUMERIC_HXX_ */

@@ -3,7 +3,7 @@
 
 #include "analysis/basic.hpp"
 
-#include "analysis/expairseq.hpp"
+#include "analysis/vectorseq/vectorseq.hpp"
 #include "analysis/power.hpp"
 
 #include "util/functor.hpp"
@@ -11,11 +11,11 @@
 namespace analysis {
 
 class prod
-: public expairseq<prod, power> {
+: public vectorseq<prod, power> {
 
   // grant access to super
-  friend class expairseq<prod, power>;
-  typedef expairseq<prod, power> super;
+  friend class vectorseq<prod, power>;
+  typedef vectorseq<prod, power> super;
   REGISTER_FINAL( prod, super )
 
 //   friend class power;

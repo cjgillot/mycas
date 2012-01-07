@@ -4,7 +4,7 @@
 namespace analysis {
 
 template<class Impl, class Mono>
-class expairseq;
+class vectorseq;
 
 //! \brief Concept class for handle
 template<class H, class Mono>
@@ -15,7 +15,7 @@ namespace epseq {
 template<class I, class M>
 struct handle;
 
-//! \brief Polynomial container embedded in the \ref expairseq
+//! \brief Polynomial container embedded in the \ref vectorseq
 template<class T, class Alloc = std::allocator<T> >
 class poly;
 

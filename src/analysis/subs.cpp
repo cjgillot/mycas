@@ -8,7 +8,7 @@
 #include <vector>
 #include "util/move.hpp"
 
-#include "analysis/expairseq.ipp"
+#include "analysis/vectorseq/vectorseq.ipp"
 
 #include "analysis/sum.hpp"
 #include "analysis/prod.hpp"

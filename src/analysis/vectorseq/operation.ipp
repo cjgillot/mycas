@@ -2,7 +2,7 @@
 #define EXPAIRSEQ_OPERATION_IPP
 
 #include "container/unsafe_vector.hpp"
-#include "analysis/expairseq/poly.hpp"
+#include "analysis/vectorseq/poly.hpp"
 
 #include <functional>
 #include <boost/range.hpp>
@@ -41,11 +41,7 @@ std::size_t distance_ra( const Iter &a, const Iter &b )
 //! \brief Construct a vector from an unsorted range of \c epair
 template<class epair, class Iter>
 poly<epair>*
-do_range_mutable(
-    Iter beg
-  , const Iter &end
-  , std::size_t &hash
-) {
+do_range_mutable( Iter beg, const Iter &end ) {
   CONCEPT_ASSERT(( boost::Mutable_RandomAccessIterator<Iter> ));
 
   typedef poly<epair> vec_t;
@@ -79,10 +75,7 @@ do_range_mutable(
 
       // no collision, commit and update
       if( ! buf.null() )
-      {
-        hash ^= buf.hash();
         ret->push_back( buf );
-      }
 
       // load new value in buf
       buf = *beg;
@@ -90,10 +83,7 @@ do_range_mutable(
 
     // commit remaining
     if( ! buf.null() )
-    {
-      hash ^= buf.hash();
       ret->push_back( buf );
-    }
   }
 
   ret->shrink();
@@ -104,17 +94,14 @@ do_range_mutable(
 //! \brief Construct a vector from an unsorted range of \c epair
 template<class epair, class Iter>
 poly<epair>*
-do_range_const(
-    const Iter &beg
-  , const Iter &end
-  , std::size_t &hash
-) {
+do_range_const( const Iter &beg
+              , const Iter &end ) {
   CONCEPT_ASSERT(( boost::InputIterator<Iter> ));
 
   typedef std::vector<epair> vec_t;
   vec_t tmp ( beg, end );
 
-  return do_range_mutable<epair>( tmp.begin(), tmp.end(), hash );
+  return do_range_mutable<epair>( tmp.begin(), tmp.end() );
 }
 
 }} // namespace analysis::epseq

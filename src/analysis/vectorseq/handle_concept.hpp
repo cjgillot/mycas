@@ -49,7 +49,10 @@ public:
     cmp = H::compare( h, h ); // comparison
     cmp = H::deep_compare( h, h ); // deep comparison
 
-    hash = h.hash(); // hashing
+    // hashing, see hash.hpp
+    hash = h.      hash();
+    hash = h. coef_hash();
+    hash = h.value_hash();
 
     h.print( os ); // printing
   }

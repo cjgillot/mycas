@@ -1,9 +1,9 @@
-#ifndef EXPAIRSEQ_IPP_
-#define EXPAIRSEQ_IPP_
+#ifndef VECTORSEQ_IPP_
+#define VECTORSEQ_IPP_
 
 #include "analysis/numeric.hpp"
-#include "analysis/expairseq.hpp"
-#include "analysis/expairseq/operation.ipp"
+#include "analysis/vectorseq/vectorseq.hpp"
+#include "analysis/vectorseq/operation.ipp"
 
 #include <boost/range.hpp>
 
@@ -15,22 +15,22 @@ namespace analysis {
 // ***** simple cdtor ***** //
 
 template<class I, class M>
-inline expairseq<I,M>::
-expairseq(const number &n)
+inline vectorseq<I,M>::
+vectorseq(const number &n)
 : m_coef( n )
 , m_poly( /* null */ )
 , m_hash( 0ul )
 {}
 
 template<class I, class M>
-inline expairseq<I,M>::
-~expairseq() {}
+inline vectorseq<I,M>::
+~vectorseq() {}
 
 // ***** named constructors ***** //
 
 //!\brief Monomial construction
 template<class I, class M>
-inline void expairseq<I,M>::
+inline void vectorseq<I,M>::
 construct_monomial( const M* p )
 {
   const epair &ep = p;
@@ -45,7 +45,7 @@ construct_monomial( const M* p )
 /*!\name Monomial-range construction
   *
   * Given a number and an unsorted container of <tt>const Mono*</tt>,
-  * construct a new expairseq.
+  * construct a new vectorseq.
   *
   * Complexity : linearithmic in the range size
   *
@@ -54,7 +54,7 @@ construct_monomial( const M* p )
 //@{
 template<class I, class M>
 template<class Iter>
-inline void expairseq<I,M>::
+inline void vectorseq<I,M>::
 construct_mono_range( const Iter &beg, const Iter &en )
 {
   CONCEPT_ASSERT(( boost::InputIterator<Iter> ));
@@ -64,7 +64,7 @@ construct_mono_range( const Iter &beg, const Iter &en )
 
 template<class I, class M>
 template<class Iter>
-inline void expairseq<I,M>::
+inline void vectorseq<I,M>::
 construct_mutable_mono_range( const Iter &beg, const Iter &en )
 {
   CONCEPT_ASSERT(( boost::Mutable_RandomAccessIterator<Iter> ));
@@ -76,7 +76,7 @@ construct_mutable_mono_range( const Iter &beg, const Iter &en )
 
 /*!\brief Expression range construction
   *
-  * Given a range of expression, construct an \c expairseq from it
+  * Given a range of expression, construct an \c vectorseq from it
   *
   * \param beg the first iterator
   * \param end the last iterator
@@ -85,7 +85,7 @@ construct_mutable_mono_range( const Iter &beg, const Iter &en )
   */
 template<class I, class M>
 template<class Iter, class EM, class NA>
-inline void expairseq<I,M>::
+inline void vectorseq<I,M>::
 construct_expr_range( Iter beg, const Iter &en, EM emono, NA nadd )
 {
   CONCEPT_ASSERT(( boost::InputIterator<Iter> ));
@@ -107,7 +107,7 @@ construct_expr_range( Iter beg, const Iter &en, EM emono, NA nadd )
 
     else if( ex.is_a<I>() )
     { // needs flattening
-      const expairseq &eps = *ex.as_a<I>();
+      const vectorseq &eps = *ex.as_a<I>();
 
       nadd( m_coef, eps.coef() );
 
@@ -143,7 +143,7 @@ construct_expr_range( Iter beg, const Iter &en, EM emono, NA nadd )
   */
 template<class I, class M>
 template<class F>
-inline std::vector<expr>* expairseq<I,M>::
+inline std::vector<expr>* vectorseq<I,M>::
 map_children( F f ) const
 {
   if( ! m_poly )
@@ -190,4 +190,4 @@ map_children( F f ) const
 
 } // namespace analysis
 
-#endif // EXPAIRSEQ_IPP
+#endif // VECTORSEQ_IPP

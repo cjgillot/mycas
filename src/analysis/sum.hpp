@@ -3,7 +3,7 @@
 
 #include "analysis/basic.hpp"
 
-#include "analysis/expairseq.hpp"
+#include "analysis/vectorseq/vectorseq.hpp"
 #include "analysis/prod.hpp"
 
 #include "util/functor.hpp"
@@ -12,17 +12,17 @@ namespace analysis {
 
 /*!\brief Addition class
  *
- * This \c expairseq-derived class represents
+ * This \c vectorseq-derived class represents
  * sums as a linear combination of multiplications,
  * whose coefficients are pure \c number's.
  *
  * Printing : (+ c m1 m2 m3 ...)
  */
 class sum
-: public expairseq<sum, prod> {
+: public vectorseq<sum, prod> {
 
-  friend class expairseq<sum, prod>;
-  typedef expairseq<sum, prod> super;
+  friend class vectorseq<sum, prod>;
+  typedef vectorseq<sum, prod> super;
   REGISTER_FINAL( sum, super )
 
 //   friend class prod;

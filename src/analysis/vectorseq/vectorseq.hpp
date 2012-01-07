@@ -1,12 +1,13 @@
-#ifndef EXPAIRSEQ_HPP_
-#define EXPAIRSEQ_HPP_
+#ifndef VECTORSEQ_HPP
+#define VECTORSEQ_HPP
 
-#include "analysis/expairseq/epseqfwd.hpp"
+#include "analysis/vectorseq/vseqfwd.hpp"
 
 #include "analysis/number.hpp" // for number
 
-#include "analysis/expairseq/handle_concept.hpp" // for handle
-#include "analysis/expairseq/iterator.hpp" // for eps_iterator
+#include "analysis/vectorseq/vectorseq_base.hpp"
+#include "analysis/vectorseq/handle_concept.hpp" // for handle
+#include "analysis/vectorseq/iterator.hpp" // for eps_iterator
 
 #include "analysis/ptr.hpp"
 
@@ -27,10 +28,10 @@ namespace analysis {
  * \param Mono : the monomial class
  */
 template<class Impl, class Mono>
-class expairseq
-: public basic {
+class vectorseq
+: public vectorseq_detail::vectorseq_base {
 
-private: // These types shall never get outside expairseq
+private: // These types shall never get outside vectorseq
   typedef typename Mono::handle epair;
   CONCEPT_ASSERT(( ExpairseqHandle<epair, Mono> ));
 
@@ -45,19 +46,19 @@ protected: // This type will be inherited and specialized by derived
   friend class epseq::handle<Impl, Mono>;
 
 public: // simple cdtor
-  explicit expairseq(const number &n);
-  virtual ~expairseq();
+  explicit vectorseq(const number &n);
+  virtual ~vectorseq();
 
-  virtual expairseq* clone() const = 0;
+  virtual vectorseq* clone() const = 0;
 
 protected: // named constructors, none modifies the coefficient
   void construct_monomial(const Mono*);
 
-  void construct_add(const expairseq &, const expairseq &);
-  void construct_sub(const expairseq &, const expairseq &);
-  void construct_neg(const expairseq &);
+  void construct_add(const vectorseq &, const vectorseq &);
+  void construct_sub(const vectorseq &, const vectorseq &);
+  void construct_neg(const vectorseq &);
 
-  void construct_sca(const number &, const expairseq &);
+  void construct_sca(const number &, const vectorseq &);
 
   template<class Iter> void construct_mono_range        (const Iter &, const Iter &);
   template<class Iter> void construct_mutable_mono_range(const Iter &, const Iter &);
@@ -66,14 +67,9 @@ protected: // named constructors, none modifies the coefficient
   template<class Iter, class EMono, class NAdd>
   void construct_expr_range(Iter beg, const Iter &en, EMono emono, NAdd nadd);
 
-public: // access
-  const number &coef() const  { return m_coef; }
-
 protected: // access from derived
   bool     is_monomial() const    { return m_poly && m_poly->size() == 1; }
   const Mono* monomial() const    { ASSERT( is_monomial() ); return m_poly->begin()->get(); }
-
-  number &coef() { return m_coef; }
 
 public: // range
   /*!\name Range operations
@@ -105,9 +101,9 @@ public: // range
   /*!\}*/
 
 private: // comparison
-  std::size_t hash() const;
+  using vectorseq_base::hash;
 
-  util::cmp_t partial_compare(const expairseq &) const;
+  util::cmp_t partial_compare(const vectorseq &) const;
   util::cmp_t compare_same_type(const basic &) const;
 
 public:
@@ -121,14 +117,11 @@ private: // member data
   //! \brief Shared polynomial vector
   //! \invariant an empty polynomial is represented by \c nullptr
   ptr<const poly_t> m_poly;
-
-  //! \brief Hash value of \c m_poly
-  std::size_t m_hash;
 };
 
 } // namespace analysis
 
-#include "analysis/expairseq/handle.ipp"
-#include "analysis/expairseq.ipp"
+#include "analysis/vectorseq/handle.ipp"
+#include "analysis/vectorseq.ipp"
 
 #endif /* EXPAIRSEQ_HPP_ */

@@ -1,7 +1,7 @@
 #ifndef EXPAIRSEQ_HANDLE_IPP
 #define EXPAIRSEQ_HANDLE_IPP
 
-#include "analysis/expairseq/handle.hpp"
+#include "analysis/vectorseq/handle.hpp"
 #include "analysis/basic.hpp"
 #include "analysis/expr.hpp"
 

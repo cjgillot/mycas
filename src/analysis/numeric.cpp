@@ -43,13 +43,11 @@ OP( /, div )
 
 #undef OP
 
-const numeric* numeric::neg(const numeric &a) {
-  return new numeric( - a.m_value );
-}
+const numeric* numeric::neg(const numeric &a)
+{ return new numeric( a.m_value.neg() ); }
 
-const numeric* numeric::inv(const numeric &a) {
-  return new numeric( 1. / a.m_value );
-}
+const numeric* numeric::inv(const numeric &a)
+{ return new numeric( a.m_value.inv() ); }
 
 expr
 numeric::pow(const expr &expo) const {
@@ -74,33 +72,12 @@ bool numeric::is_numeric() const { return true; }
 const sum*  numeric::as_sum () const { return sum::from_number(this); }
 const prod* numeric::as_prod() const { return prod::from_number(this); }
 
-util::cmp_t numeric::compare_same_type(const basic &o) const
+util::cmp_t numeric::compare_same_type(const basic &o_) const
 {
-  return algebra::compare(
-    m_value
-  , static_cast<const numeric&>(o).m_value
-  );
+  const numeric &o = static_cast<const numeric&>(o);
+  return number::compare( m_value, o.m_value );
 }
 
 
 bool numeric::has(const symbol&) const { return false; }
 expr numeric::subs(const exmap &) const { return this; }
-
-// ****** number ****** //
-void number::swap(number &o)
-{ expr::swap( o ); }
-
-
-number::number(const numeric* n)
-: expr(n) {}
-
-number::number(double v)
-: expr(new numeric(v)) {}
-
-util::cmp_t
-number::compare(const number &a, const number &b)
-{
-  util::cmp_t c = util::compare( a.hash(), b.hash() );
-  if( c ) return c;
-  return a.get()->numeric::compare_same_type( *b.get() );
-}

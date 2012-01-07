@@ -2,11 +2,11 @@
 #define EXPAIRSEQ_TPP_
 
 #include "analysis/numeric.hpp"
-#include "analysis/expairseq.hpp"
+#include "analysis/vectorseq/vectorseq.hpp"
 
-#include "analysis/expairseq.ipp"
+#include "analysis/vectorseq/vectorseq.ipp"
 
-#include "analysis/expairseq/operation.tpp"
+#include "analysis/vectorseq/operation.tpp"
 
 #include <boost/range.hpp>
 
@@ -26,7 +26,7 @@ namespace analysis {
 // operation constructors
 /*!\name Operation constructors
   *
-  * Given two \c expairseq, these constructors build
+  * Given two \c vectorseq, these constructors build
   * a merge depending on the call tag.
   *
   * Complexity : linear
@@ -36,10 +36,10 @@ namespace analysis {
   */
 //@{
 template<class I, class M>
-void expairseq<I,M>::
-construct_add( const expairseq &a, const expairseq &b )
+void vectorseq<I,M>::
+construct_add( const vectorseq &a, const vectorseq &b )
 {
-  m_hash = a.m_hash ^ b.m_hash;
+  vectorseq_base::construct_add( a, b );
 
   if( ! b.m_poly )
     m_poly = a.m_poly;
@@ -48,39 +48,43 @@ construct_add( const expairseq &a, const expairseq &b )
     m_poly = b.m_poly;
 
   else
-    m_poly.reset( epseq::do_add( *a.m_poly, *b.m_poly, m_hash ) );
+    m_poly.reset( epseq::do_add( *a.m_poly, *b.m_poly ) );
 }
 
 template<class I, class M>
-void expairseq<I,M>::
-construct_sub( const expairseq &a, const expairseq &b )
+void vectorseq<I,M>::
+construct_sub( const vectorseq &a, const vectorseq &b )
 {
-  m_hash = a.m_hash;
+  vectorseq_base::construct_sub( a, b );
 
   if( ! b.m_poly )
     m_poly = a.m_poly;
 
   else if( ! a.m_poly )
-    m_poly.reset( epseq::do_neg( *b.m_poly, m_hash ) );
+    m_poly.reset( epseq::do_neg( *b.m_poly ) );
 
   else
-    m_poly.reset( epseq::do_sub( *a.m_poly, *b.m_poly, m_hash ) );
+    m_poly.reset( epseq::do_sub( *a.m_poly, *b.m_poly ) );
 }
 
 template<class I, class M>
-void expairseq<I,M>::
-construct_neg( const expairseq &a )
+void vectorseq<I,M>::
+construct_neg( const vectorseq &a )
 {
+  vectorseq_base::construct_neg( a, b );
+  
   if(a.m_poly)
-    m_poly.reset( epseq::do_neg( *a.m_poly, m_hash ) );
+    m_poly.reset( epseq::do_neg( *a.m_poly ) );
 }
 
 template<class I, class M>
-void expairseq<I,M>::
-construct_sca( const number &n, const expairseq &a )
+void vectorseq<I,M>::
+construct_sca( const number &n, const vectorseq &a )
 {
+  vectorseq_base::construct_sca( a, b );
+  
   if(a.m_poly)
-    m_poly.reset( epseq::do_sca( *a.m_poly, n, m_hash ) );
+    m_poly.reset( epseq::do_sca( *a.m_poly, n ) );
 }
 //@}
 /*!\}*/
@@ -89,19 +93,11 @@ construct_sca( const number &n, const expairseq &a )
 
 // ***** comparison ***** //
 template<class I, class M>
-std::size_t expairseq<I,M>::
-hash() const
+util::cmp_t vectorseq<I,M>::
+partial_compare(const vectorseq &o) const
 {
-  std::size_t seed = 0;
-  boost::hash_combine(seed, m_coef.hash());
-  boost::hash_combine(seed, m_hash);
-  return seed;
-}
+  // hash compare already done
 
-template<class I, class M>
-util::cmp_t expairseq<I,M>::
-partial_compare(const expairseq &o) const
-{
   // trivial case
   if( m_poly.get() == o.m_poly.get() )
     return 0;
@@ -110,10 +106,6 @@ partial_compare(const expairseq &o) const
     return -1; // since m_poly != o.m_poly
   else if( ! o.m_poly )
     return +1;
-
-  util::cmp_t c
-    = util::compare( m_hash, o.m_hash );
-  if(c) return c;
 
   const poly_t
     &a = *  m_poly
@@ -126,40 +118,38 @@ partial_compare(const expairseq &o) const
     d1 = a.size()
   , d2 = b.size();
 
-  c = util::compare( d1, d2 );
+  util::cmp_t c = util::compare( d1, d2 );
   if(c) return c;
 
   // lexicographical comparison now
   typename poly_t::const_iterator
     i1 = a.begin(), i2 = b.begin();
 
-  for(; d1 != 0; --d1) {
+  for(; d1 != 0; --d1)
+  {
     c = epair::deep_compare( *i1, *i2 );
-    if(c)
-      return c;
+    if(c) return c;
   }
 
   // now, we know we have equality -> unify
   util::unify_ptr(
-    const_cast<expairseq&>(*this).m_poly
-  , const_cast<expairseq&>(o)    .m_poly
+    const_cast<vectorseq&>(*this).m_poly
+  , const_cast<vectorseq&>(o)    .m_poly
   );
   return 0;
 }
 
 template<class I, class M>
-util::cmp_t expairseq<I,M>::
+util::cmp_t vectorseq<I,M>::
 compare_same_type(const basic &o_) const
 {
-  const expairseq &o = static_cast<const expairseq&>(o_);
-  util::cmp_t c
-    = number::compare(m_coef, o.m_coef);
+  const vectorseq &o = static_cast<const vectorseq&>( o_ );
+  util::cmp_t c = vectorseq_base::compare_same_type( o );
   if(c) return c;
   return partial_compare(o);
 }
 
-namespace detail
-{
+namespace detail {
 
 struct printer
 {
@@ -180,7 +170,7 @@ struct printer
 }
 
 template<class I, class M>
-void expairseq<I,M>::
+void vectorseq<I,M>::
 print(std::basic_ostream<char> &os) const
 {
   os << '(';
@@ -191,7 +181,7 @@ print(std::basic_ostream<char> &os) const
 }
 
 template<class I, class M>
-bool expairseq<I,M>::
+bool vectorseq<I,M>::
 has(const symbol &s) const
 {
   if(! m_poly) return false;

@@ -5,7 +5,7 @@
 #include "analysis/basic.hpp"
 #include "analysis/numeric.hpp"
 
-#include "analysis/expairseq.hpp"
+#include "analysis/vectorseq/vectorseq.hpp"
 
 #include "util/concept.hpp"
 

@@ -1,4 +1,4 @@
-add_subdirectory(expairseq)
+add_subdirectory(vectorseq)
 add_subdirectory(function)
 add_subdirectory(stdfunc)
 

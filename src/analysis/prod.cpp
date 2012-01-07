@@ -4,7 +4,7 @@
 #include "analysis/expr.ipp"
 #include "analysis/basic.ipp"
 
-#include "analysis/expairseq.tpp"
+#include "analysis/vectorseq/vectorseq.tpp"
 
 using namespace analysis;
 

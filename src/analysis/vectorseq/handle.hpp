@@ -1,7 +1,7 @@
 #ifndef EXPAIRSEQ_HANDLE_HPP
 #define EXPAIRSEQ_HANDLE_HPP
 
-#include "analysis/expairseq/handle_concept.hpp"
+#include "analysis/vectorseq/handle_concept.hpp"
 
 #include "analysis/ptr.hpp"
 
@@ -16,7 +16,7 @@ struct handle
 : private util::implement_concept< ExpairseqHandle< handle<I,M>, I > >
 {
 private:
-  typedef expairseq<I, M> eps_t;
+  typedef vectorseq<I, M> eps_t;
 
 public:
   typedef const I* const_pointer;
@@ -51,7 +51,9 @@ public: // tests & comparison
   static util::cmp_t compare(const handle &a, const handle &b);
   static util::cmp_t deep_compare(const handle &a, const handle &b);
 
-  std::size_t hash() const;
+  std::size_t       hash() const;
+  std::size_t  coef_hash() const;
+  std::size_t value_hash() const;
 
 public: // printing
   template<class S>
