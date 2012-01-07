@@ -34,13 +34,31 @@ struct identity
 
 using std::negate;
 
-#define OP(name, op)                            \
-  template<class T, class U=T, class R=T>       \
-  struct name                                   \
-  : std::binary_function<T, U, R> {             \
-    inline R                                    \
-    operator()(const T &a, const U &b) const    \
-    { return a op b; }                          \
+namespace detail {
+
+template<class T>
+struct call
+{ typedef T type; }
+
+template<class T>
+struct call<T&>
+{ typedef T type; }
+
+template<class T>
+struct call<const T&>
+{ typedef const T &type; }
+
+}
+
+#define C( T ) typename call<T>::type
+
+#define OP(name, op)                        \
+  template<class T, class U=T, class R=T>   \
+  struct name                               \
+  : std::binary_function<T, U, R> {         \
+    inline R                                \
+    operator()( C(T) a, C(U) b) const       \
+    { return a op b; }                      \
   }
 
 #define OP_REV(name, op)                        \
@@ -48,7 +66,7 @@ using std::negate;
   struct name                                   \
   : std::binary_function<U, T, R> {             \
     inline R                                    \
-    operator()(const U &b, const T &a) const    \
+    operator()( C(T) a, C(U) b) const           \
     { return a op b; }                          \
   }
 
@@ -58,10 +76,10 @@ using std::negate;
   : std::unary_function<U, R> {                 \
     T a;                                        \
     inline                                      \
-    name(const T &a_)                           \
+    name( C(T) a_ ) const                       \
     : a(a_) {}                                  \
     inline R                                    \
-    operator()(const U &b) const                \
+    operator()( C(U) b ) const                  \
     { return a op b; }                          \
   }
 
@@ -71,10 +89,10 @@ using std::negate;
   : std::unary_function<T, R> {                 \
     U b;                                        \
     inline                                      \
-    name(const U &b_)                           \
+    name( C(U) b_ )                             \
     : b(b_) {}                                  \
     inline R                                    \
-    operator()(const T &a) const                \
+    operator()( C(T) a ) const                  \
     { return a op b; }                          \
   }
 
@@ -83,7 +101,7 @@ using std::negate;
   struct name                                   \
   : std::binary_function<T &, U, T &> {         \
     inline T &                                  \
-    operator()(T &a, const U &b) const          \
+    operator()(T &a, C(U) b) const              \
     { return a op b; }                          \
   }
 
@@ -109,7 +127,7 @@ using std::negate;
     name(T &a_)                                 \
     : a(a_) {}                                  \
     inline T &                                  \
-    operator()(const U &b)                      \
+    operator()( C(U) b)                         \
     { return a op b; }                          \
   }
 
