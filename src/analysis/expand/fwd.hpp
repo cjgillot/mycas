@@ -25,16 +25,16 @@
 namespace analysis {
 namespace expand_detail {
 
-template<class handle, class RRangen class ARange>
-void expand_heap(RRange &, const ARange &, const ARange &);
+template<class handle, class RRange, class ARange>
+void expand_heap( RRange &, const ARange &, const ARange & );
 
 ptr<const sum>  expand_sum_sum ( const sum  &, const sum & );
 ptr<const sum>  expand_prod_sum( const expr &, const sum & );
 ptr<const sum>  expand_sum_pow ( const sum  &, unsigned long );
 
-ptr<const basic>   sum_expand( const sum   & );
-ptr<const basic>  prod_expand( const prod  & );
-ptr<const basic> power_expand( const power & );
+expr   sum_expand( const sum   & );
+expr  prod_expand( const prod  & );
+expr power_expand( const power & );
 
 }} // namespace analysis::expand_detail
 

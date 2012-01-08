@@ -3,6 +3,17 @@
 namespace analysis {
 namespace expand_detail {
 
+namespace {
+
+struct prod_expander
+: std::unary_function<const prod*, ptr<const basic> >
+{
+  inline ptr<const basic> operator()( const prod* ep ) const
+  { return prod_expand( *ep ); }
+};
+
+}
+
 expr sum_expand(const sum &self)
 {
   typedef std::vector< expr > exvec_t;
@@ -29,8 +40,8 @@ expr sum_expand(const sum &self)
     );
   retp->coef() += self.coef();
 
-  foreach( const prod* p, *retp )
-    p->basic::expand();
+//   foreach( const prod* p, *retp )
+//     p->basic::expand();
 
   return retp->basic::expand();
 }

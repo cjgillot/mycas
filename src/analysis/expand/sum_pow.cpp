@@ -3,25 +3,27 @@
 namespace analysis {
 namespace expand_detail {
 
-/*!\brief Expand a power of a sum
- *
- */
-static ptr<const sum>
+ptr<const sum>
 expand_sum_pow( const sum &a, unsigned long e )
 {
-  ptr<const sum> ret = sum::from_number( number::zero() );
-  ptr<const sum> pow = a;
+  ptr<const sum> pow = &a;
 
-  for(;;)
+  if( ! e )
+    return sum::from_number( 1 );
+
+  for(; ! (e & 1); e >>= 1 )
+    pow = expand_sum_sum( *pow, *pow );
+
+  // [e] odd
+  ptr<const sum> ret = pow;
+  e >>= 1;
+
+  for(; e ; e >>= 1)
   {
+    pow = expand_sum_sum( *pow, *pow );
+
     if( e & 1 )
       ret = expand_sum_sum( *ret, *pow );
-
-    e >>= 1;
-    if( !e )
-      break;
-
-    expand_sum_sum( *pow, *pow );
   }
 
   return ret;

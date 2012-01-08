@@ -32,6 +32,15 @@ struct heap_obj
     ++git;
   }
 
+  heap_obj(const heap_obj &o)
+  : heap_obj_base( o )
+  , f( o.f ), git( o.git ), gen( o.gen )
+  , cur( o.cur )
+  {}
+
+  heap_obj &operator=(heap_obj o)
+  { o.swap( *this ); return *this; }
+
   ~heap_obj() {}
 
   void swap( heap_obj &o )
@@ -52,17 +61,17 @@ struct heap_obj
   void next()
   {
     ASSERT( git != gen );
-    cur = f + *git;
+    cur = f * *git;
     hash = cur.sort_hash();
     ++git;
   }
 
 private:
-  epair cur;
-  const epair f;
+  epair f;
 
-  Iter git;
-  const Iter gen;
+  Iter git, gen;
+
+  epair cur;
 };
 
 struct predicate
@@ -73,42 +82,48 @@ struct predicate
 > {
   typedef heap_obj_base hob;
 
+  // reverse predicate to have a min-heap
   inline bool
   operator()( const hob &a, const hob &b ) const
-  { return a.hash < b.hash; }
+  { return a.hash > b.hash; }
 };
 
-/*!Heap multiplication (n < m)
+/*!\brief Heap multiplication
  *
- * Multiplication : n*m
- * Comparison : n*m*lg(n)
- * Space : n
+ * Complexity ( n < m )
+ * - Multiplication : n*m
+ * - Comparison : n*m*lg(n)
+ * - Space : n
  */
-template<class handle, class RRangen class ARange>
+template<class handle, class RRange, class ARange>
 void expand_heap(RRange &ret, const ARange &F, const ARange &G)
 {
   if( F.size() > G.size() )
   {
-    expand_heap( ret, G, F );
+    expand_heap<handle>( ret, G, F );
     return;
   }
 
-  std::vector<heap_obj<epair> > heap;
+  typedef typename ARange::const_iterator iter_t;
+  typedef heap_obj<handle, iter_t> ho_t;
+
+  std::vector<ho_t> heap;
   heap.reserve( F.size() );
 
   std::make_heap( heap.begin(), heap.end(), predicate() );
 
-  foreach( const handle &f, F ) {
-    heap.push_back( heap_obj( f, G.begin(), G.end() ) );
+  foreach( const handle &f, F )
+  {
+    heap.push_back( ho_t( f, G.begin(), G.end() ) );
     std::push_heap( heap.begin(), heap.end(), predicate() );
   }
 
   ASSERT( ! heap.empty() );
 
-  // TODO encourage coefficient cancelling
+  // TODO help coefficient cancelling
   while( ! heap.empty() )
   {
-    const heap_obj &ho = heap.front();
+    const ho_t &ho = heap.front();
     ret.push_back( ho.get().get() );
 
     if( ho.valid() )
@@ -119,7 +134,7 @@ void expand_heap(RRange &ret, const ARange &F, const ARange &G)
     }
     else
     {
-      std:: pop_heap( heap.begin(), heap.end(), predicate() );
+      std::pop_heap( heap.begin(), heap.end(), predicate() );
       heap.pop_back();
     }
   }

@@ -4,6 +4,16 @@
 namespace analysis {
 namespace expand_detail {
 
+template<class RRange, class Iter>
+void scale_range( RRange &ret, const number &n, Iter beg, const Iter &end )
+{
+  for(; beg != end; ++beg )
+  {
+    const prod::handle h = *beg;
+    ret.push_back( h.sca( n ).get() );
+  }
+}
+
 /*!\brief Expand the product of two sums
  *
  * Complexity :
@@ -21,54 +31,32 @@ expand_sum_sum( const sum &a, const sum &b )
 
   ASSERT( ! a.empty() && ! b.empty() );
 
-  // to be initialized later, at the end of next block
-  ptr< sum > retp;
+  pvector_t seq ( ( a.size() + 1 ) * ( b.size() + 1 ) );
 
   { // sum by coefficient scaling
     const number &ac = a.coef();
     const number &bc = b.coef();
 
-    // scaled products
-    pvector_t scaled ( a.size() + b.size() );
-
     if( ! ac.null() )
     {
       if( ac.unit() )
-        scaled.push_range( b.begin(), b.end() );
-      else {
-        util::scoped_ptr< sum > sp ( sum::sca( ac, b ) );
-        scaled.push_range( sp->begin(), sp->end() );
-      }
+        seq.push_range( b.begin(), b.end() );
+      else
+        scale_range( seq, ac, b.begin(), b.end() );
     }
     if( ! bc.null() )
     {
       if( bc.unit() )
-        scaled.push_range( a.begin(), a.end() );
-      else {
-        util::scoped_ptr< sum > sp ( sum::sca( bc, a ) );
-        scaled.push_range( sp->begin(), sp->end() );
-      }
+        seq.push_range( a.begin(), a.end() );
+      else
+        scale_range( seq, bc, a.begin(), a.end() );
     }
-
-    // create sum, n * lg n time
-    retp.reset(
-      sum::from_mutable_prod_range(
-        ac * bc
-      , scaled.begin()
-      , scaled.end()
-      )
-    );
   }
 
-  { // hard multiplication work
-    pvector_t seq ( a.size() * b.size() );
-    expand_detail::expand_heap( seq, a, b );
+  // hard multiplication work
+  expand_detail::expand_heap< prod::handle >( seq, a, b );
 
-    // commit the work
-    util::scoped_ptr< sum > tmp ( sum::from_mutable_prod_range( number::one(), seq.begin(), seq.end() ) );
-    retp.reset( sum::add( *retp, *tmp ) );
-  }
-
+  ptr< const sum > retp ( sum::from_mutable_prod_range( 0, seq.begin(), seq.end() ) );
   retp->basic::expand();
   return retp;
 }

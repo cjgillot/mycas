@@ -5,13 +5,6 @@ namespace expand_detail {
 
 namespace {
 
-struct power_expander
-: std::unary_function<const power*, ptr<const basic> >
-{
-  inline ptr<const basic> operator()( const power* ep ) const
-  { return power_expand( *ep ); }
-};
-
 struct repower
 : public std::unary_function<const expr&, expr>
 {
@@ -40,7 +33,7 @@ expr power_expand(const power &self)
     const expr &base_coef = e_base.pow( s_expo.coef() ).expand();
 
     // (^ b e1) * (^ b e2) * ...
-    expr rest ( number::zero() );
+    expr rest ( number( 0 ) );
     {
       container::unsafe_vector<expr> seq ( s_expo.size() );
       std::transform(
@@ -85,31 +78,37 @@ expr power_expand(const power &self)
   }
 
   // treat case base^n
-  if( e_expo.is_numeric() && e_base.is_a< sum >() )
+  if( e_expo.is_numerical() && e_base.is_a< sum >() )
   {
-    const numeric &n_expo = e_expo.as_a< numeric >();
+    const numerical &n_expo = *e_expo.as_a< numerical >();
+    const number &exp = n_expo.get();
 
-    if( !n_expo.is_integer() || !n_expo.fits_slong_p() )
+    const sum &s_base = *e_base.as_a< sum >();
+
+    if( !exp.is_integer() || !exp.fits_slong_p() )
       goto fini;
 
-    const long &e = n_expo.get().get_slong();
+    const long &e = exp.get_slong();
 
     if( e == 0 )
-      return number::one();
+      return number( 1 );
+
+    if( e == 1 || e == -1 )
+      return e_base;
 
     if( e < 0 )
     {
       const unsigned long me = 1 + (unsigned long)~e;
-      const ptr<const sum> ex = expand_sum_pow( e_base, me );
-      const expr ret = self.pow(-1);
+      const expr ex = expand_sum_pow( s_base, me );
+      const expr ret = ex.pow( -1 );
       ret.get()->basic::expand();
       return ret.get();
     }
 
     // e > 0 thanks to power::eval()
     {
-      const ptr<const sum> ex = expand_sum_pow( e_base, e );
-      const expr ret = self.pow(-1);
+      const ptr<const sum> ex = expand_sum_pow( s_base, e );
+      const expr ret = self.pow( 1 );
       ret.get()->basic::expand();
       return ret.get();
     }

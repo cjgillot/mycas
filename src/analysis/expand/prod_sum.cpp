@@ -1,5 +1,4 @@
 #include "analysis/expand/fwd.hpp"
-#include "analysis/expand/heapmul.hpp"
 
 namespace analysis {
 namespace expand_detail {
@@ -14,9 +13,9 @@ expand_prod_sum( const expr &scale, const sum  &addition )
 {
   ASSERT( ! scale.is_a< sum >() );
 
-  if( scale.is_numeric() )
+  if( scale.is_numerical() )
   { // easy case -> sum::sca does the work
-    const number &ns = scale.as_a< numeric >();
+    const number &ns = scale.as_a< numerical >()->get();
 
     ptr<const sum> ret
       = ns.unit()
@@ -29,7 +28,7 @@ expand_prod_sum( const expr &scale, const sum  &addition )
 
   // hard case : distribute term by term
 
-  number coef = number::zero();
+  number coef = 0;
 
   ptr< const prod > scale_prod = scale.get()->as_prod();
 
@@ -38,22 +37,22 @@ expand_prod_sum( const expr &scale, const sum  &addition )
   container::ptr_unsafe_vector< const prod > seq ( addition.size() + 1 );
 
   { // coefficient handling
-    ptr< const prod > cprod = prod::from_number( addition.coef() );
+    const prod::handle ph = scale_prod.get();
 
-    // nsp * cprod cannot be numeric since cprod is and nsp isn't
-    seq.push_back( prod::mul( *cprod, *scale_prod ) );
+    // cannot be numerical since [scale_prod] isn't
+    seq.push_back( ph.sca( addition.coef() ).get() );
   }
   foreach( const prod* p, addition )
   {
     ASSERT( p );
 
-    const expr &ex = prod::mul( *p, *scale_prod );
+    const expr ex = prod::mul( *p, *scale_prod );
 
     // seams reasonable here
     ASSERT( ! ex.is_a< sum >() );
 
-    if( ex.is_numeric() )
-      coef += number( ex.as_a< numeric >() );
+    if( ex.is_numerical() )
+      coef += ex.as_a< numerical >()->get();
 
     else
       seq.push_back( ex.get()->as_prod() );

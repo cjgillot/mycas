@@ -5,11 +5,11 @@ namespace expand_detail {
 
 namespace {
 
-struct prod_expander
-: std::unary_function<const prod*, ptr<const basic> >
+struct power_expander
+: std::unary_function<const power*, ptr<const basic> >
 {
-  inline ptr<const basic> operator()( const prod* ep ) const
-  { return prod_expand( *ep ); }
+  inline ptr<const basic> operator()( const power* ep ) const
+  { return power_expand( *ep ); }
 };
 
 }
@@ -19,7 +19,7 @@ expr prod_expand(const prod &self)
 {
   { // trivial case ?
     foreach( const power* p, self )
-      if( ( ! p->expo().is_numeric() )
+      if( ( ! p->expo().is_numerical() )
        || ( ! p->base().is_a< symbol_ >() ) )
         goto nontrivial;
 
@@ -38,7 +38,7 @@ expr prod_expand(const prod &self)
   {
     // avoid the case : expanded * expanded sum
     foreach( const power* p, self )
-      if( ( p->expo().is_numeric() )
+      if( ( p->expo().is_numerical() )
        && ( p->base().is_a< sum >() ) )
         goto has_sum;
 
@@ -71,7 +71,7 @@ expr prod_expand(const prod &self)
   non_sum_seq.push_back( self.coef() );
 
   // store the current expansion state
-  expr last_sum ( number::one() );
+  expr last_sum = 1l;
 
   foreach( const expr &ex, *children )
     if( ! ex.is_a< sum >() )
@@ -89,7 +89,7 @@ expr prod_expand(const prod &self)
     { // got a product of sums (last_sum * ex)
       const sum &last = *last_sum.as_a< sum >();
       const sum &next = *ex.as_a< sum >();
-      expr( expand_sum_sum( last, next ) ).swap( last_sum );
+      last_sum = expand_sum_sum( last, next );
     }
 
   // now, we have to build and return the product last_sum * non_sum
@@ -111,7 +111,7 @@ expr prod_expand(const prod &self)
     return ret;
   }
 
-  const expr &non_sum = prod::from_expr_range( non_sum_seq.begin(), non_sum_seq.end() );
+  const expr non_sum = prod::from_expr_range( non_sum_seq.begin(), non_sum_seq.end() );
   non_sum_seq.clear();
 
   const sum  &last = *last_sum.as_a< sum >();
