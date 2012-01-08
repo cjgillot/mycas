@@ -101,9 +101,9 @@ private:
 
 template< class T, class Alloc = std::allocator<T*> >
 class ptr_unsafe_vector
-: public unsafe_vector< T* const, intrusive_allocator< Alloc > >
+: public unsafe_vector< T*, intrusive_allocator< Alloc > >
 {
-  typedef container::unsafe_vector< T* const, intrusive_allocator< Alloc > > super_type;
+  typedef container::unsafe_vector< T*, intrusive_allocator< Alloc > > super_type;
 
 public:
   template<class A1>
@@ -120,22 +120,22 @@ public:
   : super_type( a1, a2, a3 ) {}
 
 public:
-  typedef typename super_type::const_iterator       iterator;
-  typedef typename super_type::const_iterator const_iterator;
+  typedef typename super_type::iterator       iterator;
+  typedef typename super_type::iterator const_iterator;
 
   typedef typename super_type::const_reverse_iterator       reverse_iterator;
   typedef typename super_type::const_reverse_iterator const_reverse_iterator;
 
-//   iterator       begin()       { return super_type::begin(); }
+  iterator       begin()       { return super_type::begin(); }
   const_iterator begin() const { return super_type::begin(); }
 
-//   iterator       end()         { return super_type::end(); }
+  iterator       end()         { return super_type::end(); }
   const_iterator end()   const { return super_type::end(); }
 
-//   reverse_iterator       rbegin()       { return super_type::rbegin(); }
+  reverse_iterator       rbegin()       { return super_type::rbegin(); }
   const_reverse_iterator rbegin() const { return super_type::rbegin(); }
 
-//   reverse_iterator       rend()         { return super_type::rend(); }
+  reverse_iterator       rend()         { return super_type::rend(); }
   const_reverse_iterator rend()   const { return super_type::rend(); }
 };
 

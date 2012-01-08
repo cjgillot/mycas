@@ -11,7 +11,7 @@ template< class Alloc, unsigned Sz = sizeof( Alloc ) >
 struct alloc_swap {
   inline static void apply( Alloc &a, Alloc &b ) throw()
   {
-    if( a != b )
+    if( &a != &b )
       std::swap( a, b );
   }
 };
@@ -26,13 +26,18 @@ struct alloc_swap< Alloc, 0 > {
 
 template< class Alloc >
 class intrusive_allocator
-: public Alloc
+: private Alloc
 {
   typedef Alloc super_type;
 
 public:
-  typedef typename super_type::value_type value_type;
-  typedef typename super_type::pointer pointer;
+  typedef typename super_type::value_type       value_type;
+
+  typedef typename super_type::const_pointer    const_pointer;
+  typedef typename super_type::pointer          pointer;
+
+  typedef typename super_type::const_reference  const_reference;
+  typedef typename super_type::reference        reference;
 
   typedef boost::true_type has_assign;
   typedef boost::true_type has_swap;
@@ -58,19 +63,34 @@ public:
     return *this;
   }
 
+  void swap( intrusive_allocator &o )
+  { detail::alloc_swap<Alloc>( *this, o ); }
+
+  using super_type::allocate;
+  using super_type::deallocate;
+
   void construct( pointer p, value_type x )
   {
     super_type::construct( p, x );
     intrusive_ptr_add_ref( x );
   }
 
-  void release( pointer p )
+  void destroy( pointer p )
   {
+    intrusive_ptr_release( *p );
     super_type::destroy( p );
-    intrusive_ptr_release( p );
   }
 };
 
 } // namespace container
+
+namespace std {
+
+template<class Alloc>
+void swap( container::intrusive_allocator<Alloc> &a,
+           container::intrusive_allocator<Alloc> &b )
+{ a.swap( b ); }
+
+}
 
 #endif
