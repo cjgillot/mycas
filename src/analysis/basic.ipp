@@ -8,13 +8,6 @@
 
 namespace analysis {
 
-// cdtor
-inline basic::basic()
-: m_flags( ) {}
-inline basic::basic(const basic &o)
-: m_flags( o.m_flags ) {}
-inline basic::~basic() {}
-
 // tests
 inline bool basic::null() const { return false; }
 inline bool basic::unit() const { return false; }
@@ -41,7 +34,7 @@ inline bool basic::is_expanded() const
 inline bool basic::has(const symbol &) const { return false; }
 
 // RTTI
-inline bool basic::is_numeric() const { return false; }
+inline bool basic::is_numerical() const { return false; }
 
 }
 

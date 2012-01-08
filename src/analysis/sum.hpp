@@ -29,7 +29,7 @@ class sum
 //   friend class power;
 
 private:
-  explicit sum( const number & = number::zero() );
+  explicit sum( const number & );
 
 public: // access
   using super::coef;
@@ -98,7 +98,7 @@ struct expr2prod
 template< class Iter >
 inline sum* sum::from_expr_range(const Iter &b, const Iter &e)
 {
-  util::scoped_ptr< sum > tmp ( new sum );
+  util::scoped_ptr< sum > tmp ( new sum( 0 ) );
   tmp->construct_expr_range( b, e, detail::expr2prod(), functor::plus_eq<number>() );
   return tmp.release();
 }

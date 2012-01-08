@@ -7,7 +7,7 @@
 
 #include "analysis/symbol.hpp"
 
-#include "analysis/numeric.hpp"
+#include "analysis/numerical.hpp"
 #include "analysis/power.hpp"
 #include "analysis/prod.hpp"
 #include "analysis/sum.hpp"
@@ -16,16 +16,16 @@
 
 using namespace analysis;
 
-// numeric
-expr numeric::differentiate(const symbol &) const
-{ return number::zero(); }
+// numerical
+expr numerical::differentiate(const symbol &) const
+{ return 0l; }
 
 // symbol
 expr symbol_::differentiate(const symbol &s) const
 {
   return symbol_::has(s) // means [this == s]
-  ? number::one()
-  : number::zero();
+  ? 1l : 0l
+  ;
 }
 
 // power
@@ -46,7 +46,7 @@ expr diff_log(
 , const expr &dexpo
 )
 {
-  expr ret = number::zero();
+  expr ret = 0l;
 
   if( ! dbase.null() )
     ret  = expo * dbase / base;
@@ -69,12 +69,12 @@ expr power::differentiate(const symbol &s) const
 
   // trivial case
   if( !bh & !eh )
-    return number::zero();
+    return 0l;
 
   // d(b^e) = e * d(b) * b^(e-1) when e is constant
   if( !eh )
     return m_expo * db
-         * m_base.pow( m_expo - number::one() );
+         * m_base.pow( m_expo - 1l );
 
   // d(b^e) = b^e * dlog( b^e )
   return expr(this)
@@ -113,7 +113,7 @@ expr prod::differentiate(const symbol &s) const
   // d(* c) -> 0
   // d(* 0 ...) -> 0
   if( empty() || c.null() )
-    return number::zero();
+    return 0l;
 
   // d(* c x) -> (* c d(x))
   if( super::is_monomial() )

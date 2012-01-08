@@ -8,6 +8,8 @@
 
 using namespace analysis;
 
+template class vectorseq<prod, power>;
+
 prod::prod(const number &n)
 : super(n) {}
 
@@ -50,7 +52,7 @@ bool prod::unit() const {
 prod* prod::from_basic(const basic* a)
 {
   ptr<const power> pa = a->as_power();
-  util::scoped_ptr<prod> tmp ( new prod( number::one() ) );
+  util::scoped_ptr<prod> tmp ( new prod( 1 ) );
   tmp->construct_monomial( pa.get() );
   return tmp.release();
 }
@@ -60,7 +62,8 @@ prod* prod::from_number(const number &n)
 }
 
 // eval
-expr prod::eval(unsigned lv) const {
+expr prod::eval(unsigned lv) const
+{
   const number &c = coef();
 
   // (* c) -> c
@@ -69,7 +72,7 @@ expr prod::eval(unsigned lv) const {
 
   // (* 0 ...) -> 0
   if( c.null() )
-    return number::zero();
+    return 0;
 
   if( lv == 0 )
     return basic::eval( 0 );

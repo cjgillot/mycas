@@ -3,8 +3,6 @@
 
 #include "analysis/vectorseq/vseqfwd.hpp"
 
-#include "analysis/number.hpp" // for number
-
 #include "analysis/vectorseq/vectorseq_base.hpp"
 #include "analysis/vectorseq/handle_concept.hpp" // for handle
 #include "analysis/vectorseq/iterator.hpp" // for eps_iterator
@@ -60,6 +58,8 @@ protected: // named constructors, none modifies the coefficient
 
   void construct_sca(const number &, const vectorseq &);
 
+  void rehash();
+
   template<class Iter> void construct_mono_range        (const Iter &, const Iter &);
   template<class Iter> void construct_mutable_mono_range(const Iter &, const Iter &);
 
@@ -102,6 +102,9 @@ public: // range
 
 private: // comparison
   using vectorseq_base::hash;
+  using vectorseq_base::coef_hash;
+  using vectorseq_base::value_hash;
+  using vectorseq_base::sort_hash;
 
   util::cmp_t partial_compare(const vectorseq &) const;
   util::cmp_t compare_same_type(const basic &) const;
@@ -111,9 +114,6 @@ public:
   bool has(const symbol &) const;
 
 private: // member data
-  //! \brief Constant coefficient
-  number m_coef;
-
   //! \brief Shared polynomial vector
   //! \invariant an empty polynomial is represented by \c nullptr
   ptr<const poly_t> m_poly;
@@ -122,6 +122,6 @@ private: // member data
 } // namespace analysis
 
 #include "analysis/vectorseq/handle.ipp"
-#include "analysis/vectorseq.ipp"
+#include "analysis/vectorseq/vectorseq.ipp"
 
 #endif /* EXPAIRSEQ_HPP_ */

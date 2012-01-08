@@ -4,6 +4,7 @@
 #include "analysis/expr.hpp"
 #include "analysis/basic.hpp"
 #include "analysis/symbol.hpp"
+#include "analysis/numerical.hpp"
 
 namespace analysis {
 
@@ -41,7 +42,7 @@ public:
 
 private:
   expr differentiate(const symbol &) const
-  { return number::zero(); }
+  { return numerical::zero(); }
 
   util::cmp_t compare_same_type(const basic &o_) const
   {

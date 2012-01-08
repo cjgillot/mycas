@@ -21,11 +21,14 @@ class basic
   REGISTER_BASE( basic )
 
 protected:
-  basic();
-  basic(const basic &);
+  basic()
+  : m_flags() {}
+
+  basic(const basic &o)
+  : m_flags( o.m_flags ) {}
 
   //! \brief Virtual destructor
-  virtual ~basic();
+  virtual ~basic() {}
 
 public:
   //! \brief Virtual clone
@@ -148,7 +151,7 @@ public:
 
 public:
   //! \brief RTTI
-  virtual bool is_numeric() const;
+  virtual bool is_numerical() const;
 
   /*!\name Coercions
    *

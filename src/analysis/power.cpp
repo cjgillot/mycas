@@ -1,5 +1,4 @@
 #include "analysis/power.hpp"
-#include "analysis/number.hpp"
 
 #include "analysis/expr.ipp"
 #include "analysis/basic.ipp"
@@ -65,23 +64,24 @@ expr power::eval(unsigned lv) const {
     bu = m_base.unit();
 
   if( en | bu )
-    return number::one();
+    return 1l;
 
   if( eu )
     return m_base;
 
   // FIXME (^ 0 x)
   if( bn )
-    return number::zero();
+    return 0l;
 
   // TODO :
   // (^ (^ a b) c) -> (^ a (* b c)) if(x > 0 && c real)
 
-  if(m_expo.is_numeric()) {
-
-    if(m_base.is_numeric()) {
-      const number &basis = m_base.as_a<numeric>();
-      const number &expon = m_expo.as_a<numeric>();
+  if(m_expo.is_numerical())
+  {
+    if(m_base.is_numerical())
+    {
+      const number &basis = m_base.as_a< numerical >()->get();
+      const number &expon = m_expo.as_a< numerical >()->get();
       return basis.pow(expon);
     }
 
@@ -134,4 +134,4 @@ power::from_be(const expr &b, const expr &e)
 
 const power*
 power::from_basic(const basic* b)
-{ return from_be( b, number::one() ); }
+{ return from_be( b, 1l ); }

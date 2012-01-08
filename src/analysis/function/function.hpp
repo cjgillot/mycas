@@ -9,7 +9,7 @@
 #include "container/unsafe_array.hpp"
 
 #include "util/assert.hpp"
-#include <boost/preprocessor/repeat.hpp>
+#include <boost/preprocessor/repeat_from_to.hpp>
 
 namespace analysis {
 namespace detail {

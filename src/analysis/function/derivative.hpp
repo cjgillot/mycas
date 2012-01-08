@@ -135,7 +135,7 @@ expr function<N>::differentiate(const symbol &s) const
 
   iter_t it = be;
 
-  expr ret ( number::zero() );
+  expr ret = 0l;
 
   for(unsigned n = 0; it != en; ++it, ++n)
   {
@@ -161,7 +161,7 @@ expr derivative<N>::differentiate(const symbol &s) const
 
   iter_t it = be;
 
-  expr ret ( number::zero() );
+  expr ret = 0l;
 
   for(unsigned n = 0; it != en; ++it, ++n)
   {

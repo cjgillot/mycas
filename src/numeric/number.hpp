@@ -159,6 +159,9 @@ public:
     return *this;
   }
 
+  number operator-() const
+  { return neg(); }
+
 #define OP_EQ( op, name )       \
   number &                        \
   operator op##=(const number &o) \

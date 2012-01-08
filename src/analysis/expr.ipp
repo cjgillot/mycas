@@ -2,13 +2,20 @@
 #define EXPR_IPP
 
 #include "analysis/expr.hpp"
-#include "analysis/numeric.hpp"
+#include "analysis/numerical.hpp"
 
 #include "analysis/expr_operators.hpp"
+
+#include "analysis/basic.ipp"
 
 namespace analysis {
 
 // cdtor
+inline expr::expr(const expr &o)
+: m_impl( o.m_impl ) {}
+inline expr& expr::operator=(const expr &o)
+{ m_impl = o.m_impl; return *this; }
+
 inline void expr::swap(expr &o)
 { m_impl.swap(o.m_impl); }
 
@@ -21,11 +28,15 @@ template<class T>
 inline expr::expr( const ptr<T> &bp )
 : m_impl( bp ) { ASSERT( bp ); eval(); }
 
+inline expr::expr( const number &n )
+: m_impl( new numerical( n ) ) {}
+
 // eval
 inline void expr::eval(unsigned lv) const
 {
-  if( ! m_impl->is_evaluated() )
-    m_impl->eval(lv).m_impl.swap( m_impl );
+  ++lv;
+  while( lv && ! m_impl->is_evaluated() )
+    m_impl->eval(--lv).m_impl.swap( m_impl );
   ASSERT( m_impl->is_evaluated() );
 }
 
@@ -43,11 +54,9 @@ inline expr expr::diff(const symbol &s, unsigned n) const
 // expand
 inline expr expr::expand() const
 {
-  const expr &ret = m_impl->is_expanded()
-  ? *this
-  : m_impl->expand();
-  ASSERT( ret.m_impl->is_expanded() );
-  return ret;
+  if( m_impl->is_expanded() )
+    return *this;
+  return m_impl->expand();
 }
 
 // subs
@@ -59,16 +68,16 @@ inline void expr::print(std::basic_ostream<char> &os) const
 { m_impl->print(os); }
 
 // RTTI
-inline bool expr::is_numeric() const
-{ return m_impl->is_numeric(); }
+inline bool expr::is_numerical() const
+{ return m_impl->is_numerical(); }
 
 template<class T>
 inline bool expr::is_a() const
 { return rtti::is_a<T>( get() ); }
 
 template<>
-inline bool expr::is_a< numeric >() const
-{ return is_numeric(); }
+inline bool expr::is_a< numerical >() const
+{ return is_numerical(); }
 
 template<class T>
 inline bool expr::is_exactly_a() const

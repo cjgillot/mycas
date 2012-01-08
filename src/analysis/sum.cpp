@@ -7,6 +7,8 @@
 
 using namespace analysis;
 
+template class vectorseq<sum, prod>;
+
 sum::sum(const number &n)
 : super(n) {}
 
@@ -51,7 +53,7 @@ bool sum::null() const
 sum* sum::from_basic(const basic* a)
 {
   ptr<const prod> pa = a->as_prod();
-  util::scoped_ptr<sum> tmp ( new sum( number::zero() ) );
+  util::scoped_ptr<sum> tmp ( new sum( 0 ) );
   tmp->construct_monomial( pa.get() );
   return tmp.release();
 }

@@ -9,8 +9,12 @@
 #include <map>
 #include <set>
 
+#include "numeric/number.hpp"
+
 namespace analysis {
   class expr;
+
+  using ::numeric::number;
 }
 
 namespace std {
@@ -42,11 +46,10 @@ class basic;
 class sum;
 class prod;
 class power;
-class numeric;
+class numerical;
 
 class expr;
 class symbol;
-class number;
 
 }
 

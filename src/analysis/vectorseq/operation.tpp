@@ -64,7 +64,7 @@ do_sca( const poly<epair> &a
   std::transform(
     a.begin(), a.end()
   , std::back_inserter( *ret )
-  , functor::multiplies_left<number, epair>( n )
+  , functor::multiplies_left<number, epair, epair>( n )
   );
 
   ret->shrink();
@@ -181,8 +181,8 @@ do_sub( const poly<epair> &a
     ++i2; --d2;
   }
 
-  std::copy(i1, e1, std::back_inserter(ret));
-  std::transform(i2, e2, std::back_inserter(ret), detail::neg_hash<epair>(hash));
+  std::copy( i1, e1, std::back_inserter(ret) );
+  std::copy( i2, e2, std::back_inserter(ret) );
 
   ret.shrink();
 

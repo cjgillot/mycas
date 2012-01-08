@@ -20,12 +20,20 @@
  */
 
 #include <cstdlib>
+#include <boost/functional/hash.hpp>
+
+#include "analysis/vectorseq/vectorseq_base.hpp"
 
 namespace analysis {
 namespace vectorseq_detail {
 
 // vectorseq_base implementation
 //@{
+inline void vectorseq_base::construct_mon(const std::size_t ch, const std::size_t vh)
+{
+  m_seqhash  = ch * vh;
+  m_coefhash = ch;
+}
 inline void vectorseq_base::construct_add(const vectorseq_base &a, const vectorseq_base &b)
 {
   m_seqhash  = a.m_seqhash  + b.m_seqhash;
@@ -48,18 +56,35 @@ inline void vectorseq_base::construct_sca(const number &n, const vectorseq_base 
   m_coefhash = nh * a.m_coefhash;
 }
 
+inline void vectorseq_base::cons_hash(const std::size_t ch, const std::size_t vh)
+{
+  m_seqhash  += ch * vh;
+  m_coefhash += ch;
+}
+
 inline std::size_t vectorseq_base::hash() const
 {
   std::size_t seed = 0;
-  boost::hash_combine(seed, m_coef.hash());
-  boost::hash_combine(seed, m_hash);
+  boost::hash_combine(seed, coef_hash());
+  boost::hash_combine(seed, value_hash());
+  return seed;
+}
+
+inline std::size_t vectorseq_base::coef_hash() const
+{ return m_coef.hash(); }
+
+inline std::size_t vectorseq_base::value_hash() const
+{
+  std::size_t seed = 0;
+  boost::hash_combine(seed, m_coefhash);
+  boost::hash_combine(seed, m_seqhash);
   return seed;
 }
 
 inline std::size_t vectorseq_base::sort_hash() const
 {
   std::size_t seed = 0;
-  if( sizeof(std::size_t) == 64 )
+  if( sizeof(std::size_t) == 8 )
   {
     seed |= ( m_coefhash & 0xffff ) << 48;
     seed |= m_seqhash & 0xffffffffffff;

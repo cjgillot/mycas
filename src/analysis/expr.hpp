@@ -22,8 +22,11 @@ class expr
 , operators::ordered<expr
 > > {
 
+  struct enabler {};
+
 public:
-  // compiler-generated copy and assignment
+  expr(const expr &);
+  expr &operator=(const expr &);
 
   //! \brief Non-throwing swap
   void swap(expr &o);
@@ -36,6 +39,13 @@ public:
 
   template<class T>
   expr(const ptr<T> &);
+
+//   explicit
+  expr(const number &);
+
+  template<class T>
+  expr(T n, typename boost::enable_if<boost::is_arithmetic<T>, enabler>::type = enabler() )
+  : m_impl( new numerical( n ) ) {}
 
 public: // ptr<> behaviour
   operator const ptr<const basic> &() const { return m_impl; }
@@ -64,7 +74,7 @@ public:
   expr subs(const exmap &) const;
 
 public: // RTTI
-  bool is_numeric() const;
+  bool is_numerical() const;
   template<class T> bool     is_a() const;
   template<class T> const T* as_a() const;
   template<class T> bool     is_exactly_a() const;

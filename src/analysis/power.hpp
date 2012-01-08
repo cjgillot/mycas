@@ -3,7 +3,7 @@
 
 #include "analysis/expr.hpp"
 #include "analysis/basic.hpp"
-#include "analysis/numeric.hpp"
+#include "analysis/numerical.hpp"
 
 #include "analysis/vectorseq/vectorseq.hpp"
 
@@ -108,6 +108,12 @@ public: // tests
 public: // misc
   std::size_t hash() const
   { return m_ptr->power::hash(); }
+
+  std::size_t coef_hash() const
+  { return m_ptr->m_expo.get()->hash(); }
+
+  std::size_t value_hash() const
+  { return m_ptr->m_base.get()->hash(); }
 
   template<class S>
   void print(S &os) const

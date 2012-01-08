@@ -1,5 +1,5 @@
 #include "analysis/expr.hpp"
-#include "analysis/numeric.hpp"
+#include "analysis/numerical.hpp"
 
 #include "analysis/sum.hpp"
 #include "analysis/prod.hpp"
@@ -15,7 +15,8 @@ const unsigned expr::default_eval_depth = 10;
 // tests
 bool expr::null() const
 {
-  if( m_impl->null() ) {
+  if( m_impl->null() )
+  {
 //     expr( number::zero() ).swap( *this );
     return true;
   }
@@ -23,7 +24,8 @@ bool expr::null() const
 }
 bool expr::unit() const
 {
-  if( m_impl->unit() ) {
+  if( m_impl->unit() )
+  {
 //     expr( number::one() ).swap( *this );
     return true;
   }

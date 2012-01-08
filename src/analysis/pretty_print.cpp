@@ -4,7 +4,7 @@
 #include "analysis/prod.hpp"
 #include "analysis/power.hpp"
 #include "analysis/symbol.hpp"
-#include "analysis/numeric.hpp"
+#include "analysis/numerical.hpp"
 
 #include "rtti/visitor.hpp"
 
@@ -24,13 +24,18 @@ struct pretty_printer
     ( prod    )
     ( power   )
     ( symbol_ )
-    ( numeric )
+    ( numerical )
   )
 
 public:
   void visit( const expr &ex ) const
   {
     ex.get()->accept( *this );
+  }
+
+  void visit( const number &n ) const
+  {
+    n.print( *stream );
   }
 
   void visit( const basic &bp ) const
@@ -51,7 +56,7 @@ public:
     , en = add.end();
 
     if( ! add.coef().null() )
-      visit( *add.coef().get() );
+      visit( add.coef() );
 
     else
     {
@@ -83,7 +88,7 @@ public:
     , en = mul.end();
 
     if( ! mul.coef().unit() )
-      visit( *mul.coef().get() );
+      visit( mul.coef() );
 
     else
     {

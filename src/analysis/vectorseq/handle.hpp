@@ -45,6 +45,8 @@ public: // operations
   handle operator-() const;
   handle sca(const number &n) const;
 
+  handle operator*(const handle &o) const;
+
 public: // tests & comparison
   bool null() const;
 
@@ -54,6 +56,7 @@ public: // tests & comparison
   std::size_t       hash() const;
   std::size_t  coef_hash() const;
   std::size_t value_hash() const;
+  std::size_t  sort_hash() const;
 
 public: // printing
   template<class S>

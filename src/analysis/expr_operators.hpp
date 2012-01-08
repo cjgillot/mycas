@@ -2,7 +2,6 @@
 #define ANALYSIS_OPERATORS_HPP
 
 #include "analysis/expr.hpp"
-#include "analysis/number.hpp"
 
 namespace analysis {
 

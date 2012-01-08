@@ -1,6 +1,9 @@
 #ifndef ANALYSIS_EPSEQFWD_HPP
 #define ANALYSIS_EPSEQFWD_HPP
 
+#include <memory>
+#include "analysis/forward.hpp"
+
 namespace analysis {
 
 template<class Impl, class Mono>

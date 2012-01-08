@@ -1,7 +1,7 @@
 #ifndef EXPAIRSEQ_TPP_
 #define EXPAIRSEQ_TPP_
 
-#include "analysis/numeric.hpp"
+#include "analysis/numerical.hpp"
 #include "analysis/vectorseq/vectorseq.hpp"
 
 #include "analysis/vectorseq/vectorseq.ipp"
@@ -71,8 +71,8 @@ template<class I, class M>
 void vectorseq<I,M>::
 construct_neg( const vectorseq &a )
 {
-  vectorseq_base::construct_neg( a, b );
-  
+  vectorseq_base::construct_neg( a );
+
   if(a.m_poly)
     m_poly.reset( epseq::do_neg( *a.m_poly ) );
 }
@@ -81,8 +81,8 @@ template<class I, class M>
 void vectorseq<I,M>::
 construct_sca( const number &n, const vectorseq &a )
 {
-  vectorseq_base::construct_sca( a, b );
-  
+  vectorseq_base::construct_sca( n, a );
+
   if(a.m_poly)
     m_poly.reset( epseq::do_sca( *a.m_poly, n ) );
 }
@@ -96,8 +96,6 @@ template<class I, class M>
 util::cmp_t vectorseq<I,M>::
 partial_compare(const vectorseq &o) const
 {
-  // hash compare already done
-
   // trivial case
   if( m_poly.get() == o.m_poly.get() )
     return 0;
@@ -106,6 +104,9 @@ partial_compare(const vectorseq &o) const
     return -1; // since m_poly != o.m_poly
   else if( ! o.m_poly )
     return +1;
+
+  util::cmp_t c = vectorseq_base::partial_compare( o );
+  if( c ) return c;
 
   const poly_t
     &a = *  m_poly
@@ -118,7 +119,7 @@ partial_compare(const vectorseq &o) const
     d1 = a.size()
   , d2 = b.size();
 
-  util::cmp_t c = util::compare( d1, d2 );
+  c = util::compare( d1, d2 );
   if(c) return c;
 
   // lexicographical comparison now
@@ -175,7 +176,7 @@ print(std::basic_ostream<char> &os) const
 {
   os << '(';
   static_cast<const I*>( this )->print_base(os);
-  m_coef.print(os << ' ');
+  coef().print(os << ' ');
   if(m_poly) boost::for_each(*m_poly, detail::printer(os));
   os << ')';
 }

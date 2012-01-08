@@ -1,44 +1,44 @@
-/*
- * main.cpp
- *
- *  Created on: 21 mai 2011
- *      Author: k1000
- */
-
 #include <iostream>
 
 #include "algebra/print.hpp"
 
 #include "analysis/expr.hpp"
-#include "analysis/numeric.hpp"
+#include "analysis/numerical.hpp"
 #include "analysis/symbol.hpp"
 
-#include "analysis/function/function.ipp"
+#include "analysis/expr.ipp"
+
+#include <cstdlib>
 
 using namespace analysis;
 
-int main() {
-  expr e (number(5));
-  expr x (new ident("x"));
-  expr y (new ident("y"));
+inline long random(long max)
+{ return std::rand() % max; }
 
-  //e.print(std::cout);
-  //std::cout << std::endl;
+int main()
+{
+  symbol x ("x");
+  symbol y ("y");
 
-  for(int i = 1; i <= 500; ++i) {
-    //std::cerr << i << std::endl;
+  expr e = 1, f = 1;
 
-    expr f = number(i);
+//   std::cout << e << std::endl;
+//   std::cout << f << std::endl;
 
-    for(int j = 0; j < 200; ++j) {
-      expr s ( new symbol );
-      f *= s;
-    }
+  std::srand( std::time( nullptr ) );
 
-    e += f;
-  }
+  for( std::size_t n = random(100); n != 0; --n )
+    e += random(10) * x.pow(n * random(3));
 
-  //std::cout << e << std::endl;
+  for( std::size_t n = random(100); n != 0; --n )
+    f += random(10) * y.pow(n * random(3));
+
+  std::cout << e << std::endl;
+  std::cout << f << std::endl;
+
+  expr ef = (e*f).expand();
+
+  std::cout << ef << std::endl;
 
   return 0;
 }

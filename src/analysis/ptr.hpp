@@ -50,7 +50,7 @@ public:
   void swap(ptr &o)
   { super::swap( o ); }
 
-  // default destructor
+  ~ptr() throw() {}
 };
 
 }

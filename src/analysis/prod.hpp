@@ -25,7 +25,7 @@ public:
   using super::handle;
 
 private:
-  explicit prod( const number & = number::one() );
+  explicit prod( const number & );
 
 public: // access
   using super::coef;
@@ -94,7 +94,7 @@ struct expr2power
 template< class Iter >
 inline prod* prod::from_expr_range(const Iter &b, const Iter &e)
 {
-  util::scoped_ptr< prod > tmp ( new prod );
+  util::scoped_ptr< prod > tmp ( new prod( 1 ) );
   tmp->construct_expr_range( b, e, detail::expr2power(), functor::multiplies_eq<number>() );
   return tmp.release();
 }

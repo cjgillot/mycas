@@ -1,7 +1,7 @@
 #ifndef VECTORSEQ_IPP_
 #define VECTORSEQ_IPP_
 
-#include "analysis/numeric.hpp"
+#include "analysis/numerical.hpp"
 #include "analysis/vectorseq/vectorseq.hpp"
 #include "analysis/vectorseq/operation.ipp"
 
@@ -17,9 +17,8 @@ namespace analysis {
 template<class I, class M>
 inline vectorseq<I,M>::
 vectorseq(const number &n)
-: m_coef( n )
+: vectorseq_base( n )
 , m_poly( /* null */ )
-, m_hash( 0ul )
 {}
 
 template<class I, class M>
@@ -33,14 +32,23 @@ template<class I, class M>
 inline void vectorseq<I,M>::
 construct_monomial( const M* p )
 {
-  const epair &ep = p;
+  const epair ep ( p );
+  vectorseq_base::construct_mon( ep.coef_hash(), ep.value_hash() );
   m_poly.reset( new poly_t(1, ep) );
-  m_hash = ep.hash();
 }
 
 // operation constructors
 
 // add/sub/neg/sca -> .tpp
+
+template<class I, class M>
+inline void vectorseq<I,M>::rehash()
+{
+  if( ! m_poly )
+    return;
+  foreach( const epair &ep, *m_poly )
+    vectorseq_base::cons_hash( ep.coef_hash(), ep.value_hash() );
+}
 
 /*!\name Monomial-range construction
   *
@@ -59,7 +67,8 @@ construct_mono_range( const Iter &beg, const Iter &en )
 {
   CONCEPT_ASSERT(( boost::InputIterator<Iter> ));
   if( beg != en )
-    m_poly.reset( epseq::do_range_const<epair>( beg, en, m_hash ) );
+    m_poly.reset( epseq::do_range_const<epair>( beg, en ) );
+  rehash();
 }
 
 template<class I, class M>
@@ -69,7 +78,8 @@ construct_mutable_mono_range( const Iter &beg, const Iter &en )
 {
   CONCEPT_ASSERT(( boost::Mutable_RandomAccessIterator<Iter> ));
   if( beg != en )
-    m_poly.reset( epseq::do_range_mutable<epair>( beg, en, m_hash ) );
+    m_poly.reset( epseq::do_range_mutable<epair>( beg, en ) );
+  rehash();
 }
 //@}
 /*!\}*/
@@ -102,14 +112,14 @@ construct_expr_range( Iter beg, const Iter &en, EM emono, NA nadd )
   {
     const expr &ex = *beg;
 
-    if( ex.is_numeric() )
-      nadd( m_coef, ex.as_a<numeric>() );
+    if( ex.is_numerical() )
+      nadd( coef(), ex.as_a< numerical >()->get() );
 
     else if( ex.is_a<I>() )
     { // needs flattening
       const vectorseq &eps = *ex.as_a<I>();
 
-      nadd( m_coef, eps.coef() );
+      nadd( coef(), eps.coef() );
 
       // ex has been evaluated
       ASSERT( ! eps.empty() );
@@ -156,7 +166,7 @@ map_children( F f ) const
   for( ; it != en; ++it )
   {
     // not expr to avoid automatic evaluation
-    const ptr<const basic> &r = f( it->get() );
+    ptr<const basic> r = f( it->get() );
 
     if( r.get() != it->get() )
     {
