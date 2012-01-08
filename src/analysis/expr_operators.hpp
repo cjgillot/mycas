@@ -13,10 +13,6 @@ namespace analysis {
 
 #define BIN_OP( op, name )                          \
   BIN_OP_DECL( op, const expr  &a, const expr  &b ) \
-  BIN_OP_IMPL( name, a, b )                         \
-  BIN_OP_DECL( op, const number&a, const expr  &b ) \
-  BIN_OP_IMPL( name, a, b )                         \
-  BIN_OP_DECL( op, const expr  &a, const number&b ) \
   BIN_OP_IMPL( name, a, b )
 
 BIN_OP( +, add )
