@@ -38,19 +38,19 @@ namespace detail {
 
 template<class T>
 struct call
-{ typedef T type; }
+{ typedef T type; };
 
 template<class T>
 struct call<T&>
-{ typedef T type; }
+{ typedef T type; };
 
 template<class T>
 struct call<const T&>
-{ typedef const T &type; }
+{ typedef const T &type; };
 
 }
 
-#define C( T ) typename call<T>::type
+#define C( T ) typename detail::call<T>::type
 
 #define OP(name, op)                        \
   template<class T, class U=T, class R=T>   \
@@ -76,7 +76,7 @@ struct call<const T&>
   : std::unary_function<U, R> {                 \
     T a;                                        \
     inline                                      \
-    name( C(T) a_ ) const                       \
+    name( C(T) a_ )                             \
     : a(a_) {}                                  \
     inline R                                    \
     operator()( C(U) b ) const                  \
