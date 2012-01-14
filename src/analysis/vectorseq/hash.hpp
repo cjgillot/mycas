@@ -86,13 +86,13 @@ inline std::size_t vectorseq_base::sort_hash() const
   std::size_t seed = 0;
   if( sizeof(std::size_t) == 8 )
   {
-    seed |= ( m_coefhash & 0xffff ) << 48;
-    seed |= m_seqhash & 0xffffffffffff;
+    seed  = m_coefhash;
+    seed |= m_seqhash & 0xffff;
   }
   else // if( sizeof(std::size_t) == 32 )
   {
-    seed |= ( m_coefhash & 0xff ) << 24;
-    seed |= m_seqhash & 0xffffff;
+    seed  = m_coefhash;
+    seed |= m_seqhash & 0xff;
   }
   return seed;
 }

@@ -34,8 +34,6 @@ private:
 public: // access
   using super::coef;
 
-  using super::iterator;
-  using super::reverse_iterator;
   using super::const_iterator;
   using super::const_reverse_iterator;
 
@@ -75,13 +73,15 @@ public:
 
   static sum* from_basic (const basic*);
   static sum* from_number(const number&);
+  
+  typedef epseq::detail::sort_pred<prod::handle> sort_predicate;
 
   template< class Iter >
   static sum* from_expr_range(const Iter &b, const Iter &e);
   template< class Iter >
   static sum* from_prod_range(const number &n, const Iter &b, const Iter &e);
   template< class Iter >
-  static sum* from_mutable_prod_range(const number &n, const Iter &b, const Iter &e);
+  static sum* from_sorted_prod_range(const number &n, const Iter &b, const Iter &e);
 };
 
 namespace detail {
@@ -110,10 +110,10 @@ inline sum* sum::from_prod_range(const number &n, const Iter &b, const Iter &e)
   return tmp.release();
 }
 template< class Iter >
-inline sum* sum::from_mutable_prod_range(const number &n, const Iter &b, const Iter &e)
+inline sum* sum::from_sorted_prod_range(const number &n, const Iter &b, const Iter &e)
 {
   util::scoped_ptr< sum > tmp ( new sum( n ) );
-  tmp->construct_mutable_mono_range( b, e );
+  tmp->construct_sorted_mono_range( b, e );
   return tmp.release();
 }
 

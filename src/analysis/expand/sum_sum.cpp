@@ -1,18 +1,27 @@
 #include "analysis/expand/fwd.hpp"
 #include "analysis/expand/heapmul.hpp"
 
+#include "util/timsort.hpp"
+
 namespace analysis {
 namespace expand_detail {
 
+#if 0
+
 template<class RRange, class Iter>
-void scale_range( RRange &ret, const number &n, Iter beg, const Iter &end )
-{
+void scale_range(
+    RRange &ret,
+    const number &n,
+    Iter beg, const Iter &end
+) {
   for(; beg != end; ++beg )
   {
     const prod::handle h = *beg;
     ret.push_back( h.sca( n ).get() );
   }
 }
+
+#endif
 
 /*!\brief Expand the product of two sums
  *
@@ -33,6 +42,7 @@ expand_sum_sum( const sum &a, const sum &b )
 
   pvector_t seq ( ( a.size() + 1 ) * ( b.size() + 1 ) );
 
+#if 0
   { // sum by coefficient scaling
     const number &ac = a.coef();
     const number &bc = b.coef();
@@ -52,11 +62,20 @@ expand_sum_sum( const sum &a, const sum &b )
         scale_range( seq, bc, a.begin(), a.end() );
     }
   }
+#endif
 
-  // hard multiplication work
-  expand_detail::expand_heap< prod::handle >( seq, a, b );
+  { // hard multiplication work
+    const prod::handle
+      ach = prod::from_number( ac ),
+      bch = prod::from_number( bc );
+    expand_detail::expand_heap( seq, ach, a, bch, b );
+  }
 
-  ptr< const sum > retp ( sum::from_mutable_prod_range( 0, seq.begin(), seq.end() ) );
+  // timsort seems best here since
+  // the heap expansion will create lots of runs
+  util::timsort( seq.begin(), seq.end(), sum::sort_predicate() );
+
+  ptr< const sum > retp ( sum::from_sorted_prod_range( 0, seq.begin(), seq.end() ) );
   retp->basic::expand();
   return retp;
 }

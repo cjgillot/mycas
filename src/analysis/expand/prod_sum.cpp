@@ -11,13 +11,13 @@ namespace expand_detail {
 ptr<const sum>
 expand_prod_sum( const expr &scale, const sum  &addition )
 {
-  ASSERT( ! scale.is_a< sum >() );
+  ASSERT( addition.is_expanded() && ! scale.is_a< sum >() );
 
   if( scale.is_numerical() )
   { // easy case -> sum::sca does the work
     const number &ns = scale.as_a< numerical >()->get();
 
-    ptr<const sum> ret
+    ptr< const sum > ret
       = ns.unit()
       ? &addition
       : sum::sca( ns, addition );
@@ -58,7 +58,11 @@ expand_prod_sum( const expr &scale, const sum  &addition )
       seq.push_back( ex.get()->as_prod() );
   }
 
-  ptr< sum > ret = sum::from_mutable_prod_range( coef, seq.begin(), seq.end() );
+  // timsort seems good here since
+  // the scaling will create lots of runs
+  util::timsort( seq.begin(), seq.end(), sum::sort_predicate() );
+
+  ptr< const sum > ret = sum::from_sorted_prod_range( coef, seq.begin(), seq.end() );
   ret->basic::expand(); // mark expanded
   return ret;
 }

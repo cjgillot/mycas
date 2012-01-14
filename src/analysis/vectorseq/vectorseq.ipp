@@ -74,11 +74,11 @@ construct_mono_range( const Iter &beg, const Iter &en )
 template<class I, class M>
 template<class Iter>
 inline void vectorseq<I,M>::
-construct_mutable_mono_range( const Iter &beg, const Iter &en )
+construct_sorted_mono_range( const Iter &beg, const Iter &en )
 {
-  CONCEPT_ASSERT(( boost::Mutable_RandomAccessIterator<Iter> ));
+  CONCEPT_ASSERT(( boost::InputIterator<Iter> ));
   if( beg != en )
-    m_poly.reset( epseq::do_range_mutable<epair>( beg, en ) );
+    m_poly.reset( epseq::do_range_sorted<epair>( beg, en ) );
   rehash();
 }
 //@}

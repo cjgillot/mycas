@@ -69,15 +69,15 @@ public:
 
   static prod* from_basic (const basic*);
   static prod* from_number(const number&);
+  
+  typedef epseq::detail::sort_pred<power::handle> sort_predicate;
 
   template< class Iter >
   static prod* from_expr_range(const Iter &b, const Iter &e);
-
   template< class Iter >
   static prod* from_power_range(const number &n, const Iter &b, const Iter &e);
-
   template< class Iter >
-  static prod* from_mutable_power_range(const number &n, const Iter &b, const Iter &e);
+  static prod* from_sorted_power_range(const number &n, const Iter &b, const Iter &e);
 };
 
 namespace detail {
@@ -108,11 +108,11 @@ inline prod* prod::from_power_range(const number &n, const Iter &b, const Iter &
 }
 
 template< class Iter >
-inline prod* prod::from_mutable_power_range(const number &n, const Iter &b, const Iter &e)
+inline prod* prod::from_sorted_power_range(const number &n, const Iter &b, const Iter &e)
 {
   ASSERT( ! n.null() );
   util::scoped_ptr< prod > tmp ( new prod( n ) );
-  tmp->construct_mutable_mono_range( b, e );
+  tmp->construct_sorted_mono_range( b, e );
   return tmp.release();
 }
 

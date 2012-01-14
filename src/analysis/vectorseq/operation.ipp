@@ -38,17 +38,20 @@ template<class Iter>
 std::size_t distance_ra( const Iter &a, const Iter &b )
 { return detail::distance_ra_imp( a, b, typename boost::iterator_traversal<Iter>::type() ); }
 
-//! \brief Construct a vector from an unsorted range of \c epair
+//! \brief Construct a vector from a sorted range of \c epair
 template<class epair, class Iter>
 poly<epair>*
-do_range_mutable( Iter beg, const Iter &end ) {
-  CONCEPT_ASSERT(( boost::Mutable_RandomAccessIterator<Iter> ));
+do_range_sorted( Iter beg, const Iter &end )
+{
+  CONCEPT_ASSERT(( boost::InputIterator<Iter> ));
 
   typedef poly<epair> vec_t;
 
-  { // get canonical ordering
-    detail::sort_pred< epair > p;
-    std::sort( beg, end, p );
+  { // test range is sorted
+    typedef detail::sort_pred< epair > p_t;
+    ASSERT(
+      std::adjacent_find( beg, end, p_t() ) == end
+    );
   }
 
   typename std::iterator_traits< Iter >::difference_type
@@ -100,8 +103,11 @@ do_range_const( const Iter &beg
 
   typedef std::vector<epair> vec_t;
   vec_t tmp ( beg, end );
+  
+  typedef detail::sort_pred< epair > p_t;
+  std::sort( tmp.begin(), tmp.end(), p_t() );
 
-  return do_range_mutable<epair>( tmp.begin(), tmp.end() );
+  return do_range_sorted<epair>( tmp.begin(), tmp.end() );
 }
 
 }} // namespace analysis::epseq
