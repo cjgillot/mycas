@@ -1,7 +1,9 @@
 #ifndef EXPAND_HEAPMUL_HPP
 #define EXPAND_HEAPMUL_HPP
 
-#include <util/foreach.hpp>
+#include "util/foreach.hpp"
+#include "container/unsafe_vector.hpp"
+
 #include <algorithm>
 
 namespace analysis {
@@ -26,8 +28,7 @@ public:
   , cur( f_ * *git_ )
   {
     ++git;
-    chash = cur.coef_hash();
-    shash = cur.value_hash();
+    cur.sort_hash( chash, shash );
   }
 
   heap_obj( const heap_obj &o )
@@ -62,16 +63,8 @@ public:
   {
     ASSERT( git != gen );
     cur = f * *git;
-    hash = cur.sort_hash();
+    cur.sort_hash( chash, shash );
     ++git;
-  }
-  
-  // reverse predicate to have a min-heap
-  friend inline bool
-  operator<( const heap_obj &a, const heap_obj &b )
-  {
-    return ( a.chash  > b.chash )
-        || ( a.chash == b.chash && a.shash > b.shash );
   }
 
 private:
@@ -80,6 +73,17 @@ private:
   Iter git, gen;
 
   epair cur;
+};
+
+struct predicate
+: std::binary_function<const heap_obj_base*, const heap_obj_base*, bool>
+{
+  // reverse predicate to have a min-heap
+  inline bool operator()( const heap_obj_base *a, const heap_obj_base *b )
+  {
+    return ( a->chash  > b->chash )
+        || ( a->chash == b->chash && a->shash > b->shash );
+  }
 };
 
 /*!\brief Heap multiplication
@@ -105,8 +109,8 @@ void expand_heap(
   typedef heap_obj_base hob_t;
   typedef heap_obj<handle, iter_t> ho_t;
 
-  std::vector<ho_t  > objs;  objs.reserve( F.size() + 2 );
-  std::vector<hob_t*> heap;  heap.reserve( F.size() + 2 );
+  container::unsafe_vector<ho_t  > objs ( F.size() + 2 );
+  container::unsafe_vector<hob_t*> heap ( F.size() + 2 );
 
   {
     objs.push_back( ho_t( f0, G.begin(), G.end() ) );
@@ -121,7 +125,7 @@ void expand_heap(
     heap.push_back( &objs.back() );
   }
 
-  std::make_heap( heap.begin(), heap.end() );
+  std::make_heap( heap.begin(), heap.end(), predicate() );
 
   ASSERT( ! heap.empty() );
 
@@ -131,15 +135,15 @@ void expand_heap(
     const ho_t* ho = static_cast< const ho_t* >( heap.front() );
     ret.push_back( ho->get().get() );
 
-    if( ho.valid() )
+    if( ho->valid() )
     {
-      std:: pop_heap( heap.begin(), heap.end() );
+      std:: pop_heap( heap.begin(), heap.end(), predicate() );
       static_cast<ho_t*>( heap.back() )->next() ;
-      std::push_heap( heap.begin(), heap.end() );
+      std::push_heap( heap.begin(), heap.end(), predicate() );
     }
     else
     {
-      std:: pop_heap( heap.begin(), heap.end() );
+      std:: pop_heap( heap.begin(), heap.end(), predicate() );
       heap. pop_back();
     }
   }

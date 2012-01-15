@@ -1,5 +1,7 @@
 #include "analysis/expand/fwd.hpp"
 
+#include "util/timsort.hpp"
+
 namespace analysis {
 namespace expand_detail {
 

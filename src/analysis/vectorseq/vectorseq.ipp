@@ -132,7 +132,8 @@ construct_expr_range( Iter beg, const Iter &en, EM emono, NA nadd )
       seq.push_back( emono( ex ) );
   }
 
-  construct_mutable_mono_range( seq.begin(), seq.end() );
+  std::sort( seq.begin(), seq.end(), sort_predicate() );
+  construct_sorted_mono_range( seq.begin(), seq.end() );
 }
 
 // ***** comparison ***** //

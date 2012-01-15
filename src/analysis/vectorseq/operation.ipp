@@ -16,14 +16,6 @@ namespace epseq {
 
 namespace detail {
 
-template<class epair>
-struct sort_pred
-: std::binary_function<bool, const epair&, const epair&>
-{
-  inline bool operator()( const epair &a, const epair &b ) const
-  { return epair::compare( a, b ) < 0; }
-};
-
 template<class Iter>
 std::size_t distance_ra_imp( const Iter &a, const Iter &b, boost::random_access_traversal_tag )
 { return b - a; }
@@ -31,6 +23,19 @@ std::size_t distance_ra_imp( const Iter &a, const Iter &b, boost::random_access_
 template<class Iter>
 std::size_t distance_ra_imp( const Iter &a, const Iter &b, boost::incrementable_traversal_tag )
 { return 0; }
+
+template<class epair, class Iter>
+bool is_sorted_epair( Iter first, const Iter &last )
+{
+  if( first == last )
+    return true;
+
+  for( Iter next = first; ++next != last; first = next )
+    if( epair::compare( *first, *next ) > 0 )
+      return false;
+
+  return true;
+}
 
 } // namespace detail
 
@@ -47,12 +52,8 @@ do_range_sorted( Iter beg, const Iter &end )
 
   typedef poly<epair> vec_t;
 
-  { // test range is sorted
-    typedef detail::sort_pred< epair > p_t;
-    ASSERT(
-      std::adjacent_find( beg, end, p_t() ) == end
-    );
-  }
+  // test range is sorted
+  ASSERT( detail::is_sorted_epair<epair>( beg, end ) );
 
   typename std::iterator_traits< Iter >::difference_type
     dist = std::distance( beg, end );
@@ -103,8 +104,8 @@ do_range_const( const Iter &beg
 
   typedef std::vector<epair> vec_t;
   vec_t tmp ( beg, end );
-  
-  typedef detail::sort_pred< epair > p_t;
+
+  typedef sort_pred< epair > p_t;
   std::sort( tmp.begin(), tmp.end(), p_t() );
 
   return do_range_sorted<epair>( tmp.begin(), tmp.end() );

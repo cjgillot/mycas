@@ -11,6 +11,10 @@
 
 namespace analysis {
 
+namespace epseq {
+template<class> struct sort_pred;
+}
+
 /*!\brief Implementation class for \c sum and \c mul
  *
  * This CRTP abstract class is used as a common implementation for
@@ -60,8 +64,10 @@ protected: // named constructors, none modifies the coefficient
 
   void rehash();
 
-  template<class Iter> void construct_mono_range        (const Iter &, const Iter &);
-  template<class Iter> void construct_mutable_mono_range(const Iter &, const Iter &);
+  typedef epseq::sort_pred< epair > sort_predicate;
+
+  template<class Iter> void construct_mono_range       (const Iter &, const Iter &);
+  template<class Iter> void construct_sorted_mono_range(const Iter &, const Iter &);
 
   // this one though does modify m_coef
   template<class Iter, class EMono, class NAdd>
@@ -106,6 +112,8 @@ private: // comparison
   using vectorseq_base::value_hash;
   using vectorseq_base::sort_hash;
 
+  friend class epseq::sort_pred<handle>;
+
   util::cmp_t partial_compare(const vectorseq &) const;
   util::cmp_t compare_same_type(const basic &) const;
 
@@ -118,6 +126,30 @@ private: // member data
   //! \invariant an empty polynomial is represented by \c nullptr
   ptr<const poly_t> m_poly;
 };
+
+namespace epseq {
+
+template<class epair>
+struct sort_pred
+: std::binary_function<const epair, const epair, bool>
+{
+  inline bool operator()( const epair &a, const epair &b ) const
+  { return epair::compare( a, b ) < 0; }
+};
+
+template<class I, class M>
+struct sort_pred<handle<I,M> >
+: std::binary_function<const handle<I,M>, const handle<I,M>, bool>
+{
+  typedef vectorseq<I,M> vec_t;
+  typedef handle<I,M> epair;
+  inline bool operator()( const epair &a, const epair &b ) const
+  { return epair::compare( a, b ) < 0; }
+  inline bool operator()( const vec_t *a, const vec_t *b ) const
+  { return a->partial_compare( *b ) < 0; }
+};
+
+} // namespace detail
 
 } // namespace analysis
 
