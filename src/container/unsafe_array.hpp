@@ -138,7 +138,7 @@ public: // constructors from range
   unsafe_array(Iterator b, const Iterator &e)
   : _Tp_alloc_type(), storage_type()
   {
-    ASSERT( std::distance( b, e ) == N );
+    ASSERT( std::distance( b, e ) == N ); (void)e;
 
     pointer cur = address();
 

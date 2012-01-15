@@ -43,7 +43,7 @@ protected: // comparison
   std::size_t       hash() const;
   std::size_t  coef_hash() const;
   std::size_t value_hash() const;
-  std::size_t  sort_hash() const;
+  void         sort_hash(std::size_t &, std::size_t &) const;
 
   util::cmp_t partial_compare(const vectorseq_base &o) const
   {

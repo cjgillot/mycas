@@ -1,7 +1,7 @@
 #include "analysis/expand/fwd.hpp"
 #include "analysis/expand/heapmul.hpp"
 
-#include "util/timsort.hpp"
+#include "util/insertionsort.hpp"
 
 namespace analysis {
 namespace expand_detail {
@@ -42,6 +42,9 @@ expand_sum_sum( const sum &a, const sum &b )
 
   pvector_t seq ( ( a.size() + 1 ) * ( b.size() + 1 ) );
 
+  const number &ac = a.coef();
+  const number &bc = b.coef();
+
 #if 0
   { // sum by coefficient scaling
     const number &ac = a.coef();
@@ -71,9 +74,11 @@ expand_sum_sum( const sum &a, const sum &b )
     expand_detail::expand_heap( seq, ach, a, bch, b );
   }
 
-  // timsort seems best here since
-  // the heap expansion will create lots of runs
-  util::timsort( seq.begin(), seq.end(), sum::sort_predicate() );
+  // Insertion sort seems best here since
+  // the heap expansion almost sorts the sequence
+  // The non-sorted part calls for deep monomial comparison,
+  // which seems long for any algorithm
+  util::insertion_sort( seq.begin(), seq.end(), sum::sort_predicate() );
 
   ptr< const sum > retp ( sum::from_sorted_prod_range( 0, seq.begin(), seq.end() ) );
   retp->basic::expand();

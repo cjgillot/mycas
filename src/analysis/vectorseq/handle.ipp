@@ -115,9 +115,9 @@ handle<I,M>::value_hash() const
 { return m_ptr->value_hash(); }
 
 template<class I, class M>
-inline std::size_t
-handle<I,M>::sort_hash() const
-{ return m_ptr->sort_hash(); }
+inline void
+handle<I,M>::sort_hash(std::size_t &high, std::size_t &low) const
+{ return m_ptr->sort_hash( high, low ); }
 
 // printing
 template<class I, class M>

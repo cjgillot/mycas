@@ -19,7 +19,6 @@
 namespace analysis {
 namespace epseq {
 
-// TODO implement portable iterators
 template<class _Tp, class _Alloc>
 class poly
 {
@@ -63,7 +62,7 @@ public: // cdtor
   : m_impl( nb, x, a )        { ASSERT( nb ); }
 
   template<class Iterator>
-  poly(std::size_t nb, Iterator first, const Iterator &last)
+  poly(size_type nb, const Iterator &first, const Iterator &last)
   : m_impl( nb, first, last ) { ASSERT( nb ); }
 
   ~poly() throw() {}
@@ -126,7 +125,7 @@ struct poly_pool_tag {};
 template<class _Tp, class _Alloc>
 void* poly<_Tp, _Alloc>::operator new( std::size_t n, std::nothrow_t ) throw()
 {
-  ASSERT( n == sizeof( poly ) );
+  ASSERT( n == sizeof( poly ) ); (void)n;
 
   typedef boost::singleton_pool<poly_pool_tag, sizeof( poly )> pool_type;
 

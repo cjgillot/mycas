@@ -69,8 +69,8 @@ public:
 
   static prod* from_basic (const basic*);
   static prod* from_number(const number&);
-  
-  typedef epseq::detail::sort_pred<power::handle> sort_predicate;
+
+  using super::sort_predicate;
 
   template< class Iter >
   static prod* from_expr_range(const Iter &b, const Iter &e);

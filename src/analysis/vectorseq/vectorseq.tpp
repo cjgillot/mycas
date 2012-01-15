@@ -96,6 +96,9 @@ template<class I, class M>
 util::cmp_t vectorseq<I,M>::
 partial_compare(const vectorseq &o) const
 {
+  util::cmp_t c = vectorseq_base::partial_compare( o );
+  if( c ) return c;
+
   // trivial case
   if( m_poly.get() == o.m_poly.get() )
     return 0;
@@ -104,9 +107,6 @@ partial_compare(const vectorseq &o) const
     return -1; // since m_poly != o.m_poly
   else if( ! o.m_poly )
     return +1;
-
-  util::cmp_t c = vectorseq_base::partial_compare( o );
-  if( c ) return c;
 
   const poly_t
     &a = *  m_poly

@@ -6,6 +6,8 @@
 #include "analysis/forward.hpp"
 #include "analysis/register.hpp"
 
+#include "analysis/memory.hpp"
+
 namespace analysis {
 
 /*!\brief Base expression class
@@ -19,6 +21,14 @@ class basic
 : private util::nonassignable {
 
   REGISTER_BASE( basic )
+  REGISTER_MEMORY()
+
+private: // flags, mutable to allow update by basecase eval() and expand()
+  struct flags_t {
+    bool evaluated : 1;
+    bool expanded  : 1;
+  };
+  mutable flags_t m_flags;
 
 protected:
   basic()
@@ -204,12 +214,6 @@ public:
    * \see compare_same_type()
    */
   static util::cmp_t compare(const basic&, const basic&);
-
-private: // flags, mutable to allow update by basecase eval() and expand()
-  struct {
-    bool evaluated : 1;
-    bool expanded  : 1;
-  } mutable m_flags;
 };
 
 }
