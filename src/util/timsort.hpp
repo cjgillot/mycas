@@ -96,7 +96,7 @@ class TimSort {
         runLen_.reserve(40);
     }
 
-    static void sort(const iter_t &lo, const iter_t &hi, compare_t c) {
+    static void sort(iter_t lo, const iter_t &hi, compare_t c) {
         assert( lo <= hi );
 
         diff_t nRemaining = (hi - lo);
