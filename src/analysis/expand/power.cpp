@@ -35,14 +35,14 @@ expr power_expand(const power &self)
     // (^ b e1) * (^ b e2) * ...
     expr rest ( number( 0 ) );
     {
-      container::unsafe_vector<expr> seq ( s_expo.size() );
+      container::unsafe_vector< expr > seq ( s_expo.size() );
       std::transform(
         s_expo.begin(), s_expo.end()
       , std::back_inserter( seq )
       , repower( e_base )
       );
 
-      ptr< prod > restp =
+      ptr< const prod > restp =
         prod::from_expr_range( seq.begin(), seq.end() );
 
       // This expand is normally very cheap,
@@ -74,7 +74,8 @@ expr power_expand(const power &self)
       return expand_prod_sum( rest, *base_coef.as_a< sum >() );
 
     const expr &ret = base_coef * rest;
-    return ret.get()->basic::expand();
+    ret.get()->basic::expand();
+    return ret;
   }
 
   // treat case base^n
@@ -90,33 +91,32 @@ expr power_expand(const power &self)
 
     const long &e = exp.get_slong();
 
-    if( e == 0 )
-      return number( 1 );
-
-    if( e == 1 || e == -1 )
-      return e_base;
+    // power::eval() ensures the following
+    ASSERT( e != 0 && e != 1 );
+    if( e == -1 )
+      return e_base.pow( e_expo );
 
     if( e < 0 )
     {
-      const unsigned long me = 1 + (unsigned long)~e;
+      const unsigned long me = -e;
       const expr ex = expand_sum_pow( s_base, me );
       const expr ret = ex.pow( -1 );
       ret.get()->basic::expand();
-      return ret.get();
+      return ret;
     }
 
     // e > 0 thanks to power::eval()
     {
-      const ptr<const sum> ex = expand_sum_pow( s_base, e );
-      const expr ret = self.pow( 1 );
+      const expr ret = expand_sum_pow( s_base, e );
       ret.get()->basic::expand();
-      return ret.get();
+      return ret;
     }
   }
 
 fini:
-  self.basic::expand();
-  return &self;
+  expr ret = e_base.pow( e_expo );
+  ret.get()->basic::expand();
+  return ret;
 }
 
 }} // namespace analysis::expand_detail
