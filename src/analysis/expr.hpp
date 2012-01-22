@@ -9,6 +9,7 @@
 #include "analysis/ptr.hpp"
 #include "analysis/basic.hpp"
 #include "analysis/forward.hpp"
+#include "analysis/numerical.hpp"
 
 namespace analysis {
 
@@ -56,6 +57,7 @@ public: // ptr<> behaviour
 
 private:
   static const unsigned default_eval_depth;
+public:
   void eval(unsigned = default_eval_depth) const;
 
 public:

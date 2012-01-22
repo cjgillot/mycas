@@ -10,7 +10,7 @@ namespace analysis {
 class pseries
 : public basic
 {
-  typedef std::deque<expr> seq_t;
+  typedef std::list<expr> seq_t;
 
   REGISTER_FINAL( pseries, basic )
 
@@ -19,12 +19,29 @@ public:
   pseries(const pseries &);
   ~pseries();
 
+  explicit pseries(const symbol &);
+
   pseries* clone() const
   { return new pseries(*this); }
 
 public:
-  typedef seq_t::const_iterator          const_iterator;
-  typedef seq_t::const_reveerse_iterator const_reverse_iterator;
+  expr eval(unsigned) const;
+
+  std::size_t hash() const;
+
+  void print(std::ostream &) const;
+
+  bool has(const symbol &) const;
+
+  expr subs(const exmap &) const;
+
+private:
+  util::cmp_t compare_same_type(const basic &) const;
+  expr differentiate(const symbol &) const;
+
+public:
+  typedef seq_t::const_iterator         const_iterator;
+  typedef seq_t::const_reverse_iterator const_reverse_iterator;
 
   const_iterator begin() const { return m_seq.begin(); }
   const_iterator   end() const { return m_seq.end(); }
@@ -36,8 +53,8 @@ public:
   std::size_t empty() const { return m_seq.empty(); }
 
 private:
-  seq_t  m_seq;
   symbol m_var;
+  seq_t  m_seq;
 };
 
 } // namespace analysis

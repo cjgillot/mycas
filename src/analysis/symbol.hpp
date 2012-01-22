@@ -88,6 +88,9 @@ struct symbol
   symbol(const std::string &s)
   : expr( new ident(s) ) {}
 
+  explicit symbol( const symbol_* s )
+  : expr( s ) {}
+
   void swap(symbol &o)
   { expr::swap( o ); }
 
