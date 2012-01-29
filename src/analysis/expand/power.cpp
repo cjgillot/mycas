@@ -91,8 +91,13 @@ expr power_expand(const power &self)
 
     const long &e = exp.get_slong();
 
-    // power::eval() ensures the following
-    ASSERT( e != 0 && e != 1 );
+    // cannot happen
+    ASSERT( e != 0 );
+
+    // can be triggered by mul::map_children
+    if( e == 1 )
+      return e_base;
+
     if( e == -1 )
       return e_base.pow( e_expo );
 

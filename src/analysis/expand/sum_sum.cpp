@@ -80,7 +80,7 @@ expand_sum_sum( const sum &a, const sum &b )
   // which seems long for any algorithm
   util::insertion_sort( seq.begin(), seq.end(), sum::sort_predicate() );
 
-  ptr< const sum > retp ( sum::from_sorted_prod_range( 0, seq.begin(), seq.end() ) );
+  ptr< const sum > retp ( sum::from_sorted_prod_range( ac * bc, seq.begin(), seq.end() ) );
   retp->basic::expand();
   return retp;
 }
