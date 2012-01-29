@@ -7,11 +7,11 @@
 
 namespace analysis {
 
+namespace pseries_detail { class repr; }
+
 class pseries
 : public basic
 {
-  typedef std::list<expr> seq_t;
-
   REGISTER_FINAL( pseries, basic )
 
 public:
@@ -25,36 +25,36 @@ public:
   { return new pseries(*this); }
 
 public:
-  expr eval(unsigned) const;
+  bool null() const;
+  bool unit() const;
 
-  std::size_t hash() const;
-
-  void print(std::ostream &) const;
+  expr pow(const expr &) const;
 
   bool has(const symbol &) const;
-
   expr subs(const exmap &) const;
 
+  expr eval(unsigned) const;
+
+  void print(std::ostream &) const;
+  std::size_t hash() const;
+
 private:
+  bool match_same_type(const basic &, match_state &) const;
   util::cmp_t compare_same_type(const basic &) const;
   expr differentiate(const symbol &) const;
 
 public:
-  typedef seq_t::const_iterator         const_iterator;
-  typedef seq_t::const_reverse_iterator const_reverse_iterator;
+  static pseries neg_series(const pseries &);
+  static pseries inv_series(const pseries &);
 
-  const_iterator begin() const { return m_seq.begin(); }
-  const_iterator   end() const { return m_seq.end(); }
-
-  const_reverse_iterator rbegin() const { return m_seq.rbegin(); }
-  const_reverse_iterator   rend() const { return m_seq.rend(); }
-
-  std::size_t  size() const { return m_seq.size(); }
-  std::size_t empty() const { return m_seq.empty(); }
+  static pseries add_series(const pseries &, const pseries &);
+  static pseries sub_series(const pseries &, const pseries &);
+  static pseries mul_series(const pseries &, const pseries &);
+  static pseries div_series(const pseries &, const pseries &);
 
 private:
   symbol m_var;
-  seq_t  m_seq;
+  boost::intrusive_ptr<pseries_detail::repr> m_rep;
 };
 
 } // namespace analysis

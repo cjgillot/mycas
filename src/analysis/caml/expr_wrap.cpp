@@ -5,9 +5,6 @@
 
 #define EXPORT extern "C"
 
-#include <stdexcept>
-
-
 #include "analysis/expr.ipp"
 #include "analysis/symbol.hpp"
 
@@ -135,7 +132,7 @@ EXPORT value __caml_expr_neg( value e1 )
 
   CAMLlocal1( res );
   res = expr_allocate();
-  expr_construct( res ) expr( a->neg() );
+  expr_construct( res ) expr( std::move( a->neg() ) );
 
   CAMLreturn( res );
 }
@@ -146,7 +143,7 @@ EXPORT value __caml_expr_inv( value e1 )
 
   CAMLlocal1( res );
   res = expr_allocate();
-  expr_construct( res ) expr( a->inv() );
+  expr_construct( res ) expr( std::move( a->inv() ) );
 
   CAMLreturn( res );
 }

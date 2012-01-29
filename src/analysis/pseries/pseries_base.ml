@@ -39,6 +39,16 @@ let rec of_list = function
 | [] -> lazv E
 | a::r -> lazv( N( a, of_list r ) )
 
+module A1 = Bigarray.Array1
+
+let of_bigarray a =
+  let n = A1.dim a in
+  let ret = ref E in
+  for i = n-1 downto 0 do
+    ret := N( A1.unsafe_get a i, lazv !ret )
+  done;
+  ret
+
 let alone a = lazv (N(a, lazv E))
 
 let of_int n = alone( Expr.of_int n )

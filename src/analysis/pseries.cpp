@@ -3,46 +3,125 @@
 #include "analysis/expr.hpp"
 #include "analysis/expr.ipp"
 
-#include "util/foreach.hpp"
-
-#include <boost/functional/hash.hpp>
+#include "pseries/pseries_import.hpp"
 
 using namespace analysis;
+using pseries_detail::repr;
 
 pseries::pseries(const symbol& var)
-: basic(), m_var( var ), m_seq()
+: basic(), m_var( var ), m_rep( new repr )
 {}
 
 pseries::pseries(const pseries &o)
-: basic(o), m_var( o.m_var ), m_seq( o.m_seq )
+: basic(o), m_var( o.m_var ), m_rep( o.m_rep )
 {}
 
 pseries::~pseries()
 {}
+
+// ----- eval ----- //
+void eval_closure( const expr &ex, void* data )
+{
+  ex.eval( (unsigned long)data );
+}
 
 expr pseries::eval(unsigned lv) const
 {
   if( lv == 0 )
     return this;
 
-  --lv;
-  foreach( const expr &e, m_seq )
-    e.eval(lv);
+  pseries_detail::closure_t closure =
+    { &eval_closure, 0 };
+
+  closure.data = (void*)(unsigned long)lv;
+
+  m_rep->map_closure( &closure );
 
   basic::eval(lv);
   return this;
+}
+
+// ----- hash ----- //
+void hash_closure( const expr &ex, void* data )
+{
+  boost::hash_combine( *(std::size_t*)data, ex.hash() );
 }
 
 std::size_t pseries::hash() const
 {
   std::size_t seed = m_var.hash();
 
-  foreach( const expr &e, m_seq )
-    boost::hash_combine( seed, e.hash() );
+  pseries_detail::closure_t closure =
+    { &hash_closure, &seed };
+
+  m_rep->map_closure( &closure );
 
   return seed;
 }
 
+// ----- has ----- //
+void has_closure( const expr &ex, void* data )
+{
+  if( *(void**)data )
+    if( ex.has( **(const symbol**)data ) )
+      *(void**)data = nullptr;
+}
+
+bool pseries::has(const symbol &s) const
+{
+  if( m_var.has( s ) )
+    return true;
+
+  const symbol* sym = &s;
+
+  pseries_detail::closure_t closure =
+    { &has_closure, &sym };
+
+  m_rep->map_closure( &closure );
+
+  return sym;
+}
+
+// ----- print ----- //
+struct print_data {
+  std::ostream* os;
+  std::size_t index;
+  const symbol* var;
+};
+
+void print_closure( const expr &ex, void* data )
+{
+  print_data* d = (print_data*)data;
+
+  std::size_t n = d->index;
+
+  if( n != 0 )
+    *d->os << ' ';
+
+  *d->os << ex;
+
+  if( n > 0 )
+  {
+    *d->os << '@' << *d->var;
+
+    if( n > 1 )
+      *d->os << '^' << n;
+  }
+
+  ++d->index;
+}
+
+void pseries::print(std::ostream &os) const
+{
+  print_data dat =
+    { &os, 0, &m_var };
+  pseries_detail::closure_t closure =
+    { &print_closure, &dat };
+
+  m_rep->map_closure( &closure );
+}
+
+/*
 util::cmp_t pseries::compare_same_type(const basic &o_) const
 {
   const pseries &o = static_cast<const pseries&>( o_ );
@@ -61,39 +140,6 @@ util::cmp_t pseries::compare_same_type(const basic &o_) const
   }
 
   return 0;
-}
-
-void pseries::print(std::basic_ostream< char > &os) const
-{
-  std::size_t n = 0;
-  foreach( const expr &e, m_seq )
-  {
-    if( n != 0 )
-      os << ' ';
-
-    os << e;
-
-    if( n > 0 )
-    {
-      os << " @ " << m_var;
-      if( n > 1 )
-        os << '^' << n;
-    }
-
-    ++n;
-  }
-}
-
-bool pseries::has(const symbol &s) const
-{
-  if( m_var.has( s ) )
-    return true;
-
-  foreach( const expr &e, m_seq )
-    if( e.has( s ) )
-      return true;
-
-  return false;
 }
 
 expr pseries::differentiate(const symbol &s) const
@@ -116,3 +162,4 @@ expr pseries::differentiate(const symbol &s) const
 
   return ret;
 }
+*/
