@@ -17,18 +17,7 @@
 #include <algorithm>
 #include <utility>
 
-#ifdef ENABLE_TIMSORT_LOG
-#include <iostream>
-#define LOG(expr) (std::clog << "# " << __func__ << ": " << expr << std::endl)
-#else
-#define LOG(expr) ((void)0)
-#endif
-
-#if HAS_MOVE || __cplusplus > 199711L // C++11
-#define MOVE(x) std::move(x)
-#else
-#define MOVE(x) (x)
-#endif
+#include "util/move.hpp"
 
 namespace util { namespace detail {
 
@@ -106,7 +95,7 @@ class TimSort {
 
         if(nRemaining < MIN_MERGE) {
             const diff_t initRunLen = countRunAndMakeAscending(lo, hi, c);
-            LOG("initRunLen: " << initRunLen);
+//             LOG("initRunLen: " << initRunLen);
             binarySort(lo, hi, lo + initRunLen, c);
             return;
         }
@@ -143,7 +132,7 @@ class TimSort {
             ++start;
         }
         for( ; start < hi; ++start ) {
-            /*const*/ value_t pivot = MOVE(*start);
+            /*const*/ value_t pivot = std::move(*start);
 
             iter_t left = lo;
             iter_t right = start;
@@ -160,9 +149,9 @@ class TimSort {
             }
             assert( left == right );
             for(iter_t p = start; p > left; --p) {
-                *p = MOVE(*(p - 1));
+                *p = std::move(*(p - 1));
             }
-            *left = MOVE(pivot);
+            *left = std::move(pivot);
         }
     }
 
@@ -176,14 +165,14 @@ class TimSort {
         }
 
         if(compare.lt(*(runHi++), *lo)) { // descending
-            LOG("descending");
+//             LOG("descending");
             while(runHi < hi && compare.lt(*runHi, *(runHi - 1))) {
                 ++runHi;
             }
             std::reverse(lo, runHi);
         }
         else { // ascending
-            LOG("ascending");
+//             LOG("ascending");
             while(runHi < hi && compare.ge(*runHi, *(runHi - 1))) {
                 ++runHi;
             }
@@ -683,6 +672,4 @@ using detail::timsort;
 
 } // namespace util
 
-#undef LOG
-#undef MOVE
 #endif // GFX_TIMSORT_HPP

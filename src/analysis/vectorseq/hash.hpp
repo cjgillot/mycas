@@ -81,29 +81,11 @@ inline std::size_t vectorseq_base::value_hash() const
   return seed;
 }
 
-#if 0
-inline std::size_t vectorseq_base::sort_hash() const
-{
-  std::size_t seed = 0;
-  if( sizeof(std::size_t) == 8 )
-  {
-    seed  = m_coefhash;
-    seed |= m_seqhash & 0xffff;
-  }
-  else // if( sizeof(std::size_t) == 32 )
-  {
-    seed  = m_coefhash;
-    seed |= m_seqhash & 0xff;
-  }
-  return seed;
-}
-#else
 inline void vectorseq_base::sort_hash(std::size_t &high, std::size_t &low) const
 {
   high = m_coefhash;
   low  = m_seqhash;
 }
-#endif
 //@}
 
 }} // namespace analysis::vectorseq_detail

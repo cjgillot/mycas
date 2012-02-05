@@ -1,6 +1,6 @@
 #include "analysis/expand/fwd.hpp"
 
-#include "util/timsort.hpp"
+#include "analysis/expand/sort.hpp"
 
 namespace analysis {
 namespace expand_detail {
@@ -60,9 +60,7 @@ expand_prod_sum( const expr &scale, const sum  &addition )
       seq.push_back( ex.get()->as_prod() );
   }
 
-  // timsort seems good here since
-  // the scaling will create lots of runs
-  util::timsort( seq.begin(), seq.end(), sum::sort_predicate() );
+  sort( seq.begin(), seq.end(), sum::sort_predicate() );
 
   ptr< const sum > ret = sum::from_sorted_prod_range( coef, seq.begin(), seq.end() );
   ret->basic::expand(); // mark expanded

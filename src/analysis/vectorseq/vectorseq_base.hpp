@@ -39,12 +39,13 @@ public: // access
 protected: // access from derived
   number &coef() { return m_coef; }
 
-protected: // comparison
+public: // comparison
   std::size_t       hash() const;
   std::size_t  coef_hash() const;
   std::size_t value_hash() const;
   void         sort_hash(std::size_t &, std::size_t &) const;
 
+protected:
   util::cmp_t partial_compare(const vectorseq_base &o) const
   {
     util::cmp_t c = util::compare( m_coefhash, o.m_coefhash );
