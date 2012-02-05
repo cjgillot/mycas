@@ -28,7 +28,7 @@ public:
   bool null() const;
   bool unit() const;
 
-  expr pow(const expr &) const;
+//   expr pow(const expr &) const;
 
   bool has(const symbol &) const;
   expr subs(const exmap &) const;
@@ -47,14 +47,18 @@ public:
   static pseries neg_series(const pseries &);
   static pseries inv_series(const pseries &);
 
+  static pseries sca_series(const pseries &, const expr &);
+
   static pseries add_series(const pseries &, const pseries &);
   static pseries sub_series(const pseries &, const pseries &);
   static pseries mul_series(const pseries &, const pseries &);
   static pseries div_series(const pseries &, const pseries &);
 
 private:
+  class repr;
+
   symbol m_var;
-  boost::intrusive_ptr<pseries_detail::repr> m_rep;
+  boost::intrusive_ptr<repr> m_rep;
 };
 
 } // namespace analysis

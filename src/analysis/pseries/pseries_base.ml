@@ -89,3 +89,23 @@ and _map f = function
 | E -> E
 | N( h, t ) ->
     N( f h, map f t )
+
+let rec iter f s =
+  if !? s then match !!s with
+  | E -> ()
+  | N( h, t ) ->
+      f h; iter f t
+
+let rec compare a b =
+  if !? a && !? b
+  then begin match !!a,!!b with
+    | E,E -> 0
+    | E,_ -> -1
+    | _,E -> 1
+    | N( h1, t1 ), N( h2, t2 ) ->
+        let c = Expr.compare h1 h2 in
+        if c != 0 then c else
+        compare t1 t2
+  end
+  else (* signal unsuccessful comparison *)
+    2

@@ -37,3 +37,5 @@ val translate : int -> series -> series
 
 val map  : ('a -> 'b) -> 'a llist -> 'b llist
 val _map : ('a -> 'b) -> 'a node -> 'b node
+
+val iter : ('a -> unit) -> 'a llist -> unit

@@ -1,0 +1,22 @@
+pseries_export
+0 empty
+
+1 null
+1 unit
+
+2 iter
+2 map
+
+2 add
+2 sub
+1 neg
+
+2 mul
+2 div
+1 inv
+
+2 compare
+
+# for iterator
+1 iterator_force
+1 iterator_forced

@@ -3,15 +3,17 @@
 
 #include "analysis/expr.hpp"
 
+#include <caml/mlvalues.h>
+
 namespace analysis {
 namespace pseries_detail {
 
 class iterator
 {
-  void* m_rep;
+  value m_rep;
 
 public:
-  explicit iterator(void*);
+  explicit iterator(value);
   iterator(const iterator &);
   ~iterator();
 

@@ -8,9 +8,7 @@
 #include "analysis/expr.ipp"
 #include "analysis/symbol.hpp"
 
-#include "util/move.hpp"
-
-#define Expr_val( x ) ( reinterpret_cast< const expr* >( Data_custom_val( (x) ) ) )
+#include "analysis/caml/expr_wrap.hpp"
 
 using namespace analysis;
 
@@ -23,7 +21,7 @@ static void expr_finalize( value ex )
 }
 
 struct custom_operations expr_ops = {
-  "analysis.expr",
+  (char*)"analysis.expr",
   &expr_finalize,
   custom_compare_default,
   custom_hash_default,
@@ -34,15 +32,40 @@ struct custom_operations expr_ops = {
 
 value expr_allocate()
 {
+  // TODO maybe adapt the used/max values to the stored expr ?
   return caml_alloc_custom( &expr_ops, sizeof( expr ), 0, 1000 );
 }
 
 #define expr_construct( e ) \
   new( Data_custom_val( e ) )
 
-}
+} // namespace _caml_expr
 
 using _caml_expr::expr_allocate;
+
+namespace analysis {
+
+value expr_copy(const expr &e)
+{
+  value res = expr_allocate();
+  expr_construct( res ) expr( e );
+  return res;
+}
+
+#ifdef BOOST_HAS_RVALUE_REFS // c++0x
+value expr_move(const expr&&e)
+#else
+value expr_move(const expr &e)
+#endif
+{
+  value res = expr_allocate();
+  expr_construct( res ) expr( std::move(e) );
+  return res;
+}
+
+} // namespace analysis
+
+using namespace analysis;
 
 EXPORT value __caml_expr_new_of_int( value arg )
 {
@@ -91,8 +114,7 @@ EXPORT value __caml_expr_diff_n( value ex, value sym, value order )
   long n = Int_val( order );
 
   CAMLlocal1( res );
-  res = expr_allocate();
-  expr_construct( res ) expr( std::move( e->diff( symbol(s), n ) ) );
+  res = expr_move( std::move( e->diff( symbol(s), n ) ) );
 
   CAMLreturn( res );
 }
@@ -104,8 +126,7 @@ EXPORT value __caml_expr_diff( value ex, value sym )
   const expr   * e = Expr_val( ex );
 
   CAMLlocal1( res );
-  res = expr_allocate();
-  expr_construct( res ) expr( std::move( e->diff( symbol(s) ) ) );
+  res = expr_move( std::move( e->diff( symbol(s) ) ) );
 
   CAMLreturn( res );
 }
@@ -117,8 +138,7 @@ EXPORT value __caml_expr_expand( value ex )
   const expr* e = Expr_val( ex );
 
   CAMLlocal1( res );
-  res = expr_allocate();
-  expr_construct( res ) expr( std::move( e->expand() ) );
+  res = expr_move( std::move( e->expand() ) );
 
   CAMLreturn( res );
 }
@@ -131,8 +151,7 @@ EXPORT value __caml_expr_neg( value e1 )
   const expr* a = Expr_val( e1 );
 
   CAMLlocal1( res );
-  res = expr_allocate();
-  expr_construct( res ) expr( std::move( a->neg() ) );
+  res = expr_move( std::move( a->neg() ) );
 
   CAMLreturn( res );
 }
@@ -142,8 +161,7 @@ EXPORT value __caml_expr_inv( value e1 )
   const expr* a = Expr_val( e1 );
 
   CAMLlocal1( res );
-  res = expr_allocate();
-  expr_construct( res ) expr( std::move( a->inv() ) );
+  res = expr_move( std::move( a->inv() ) );
 
   CAMLreturn( res );
 }
@@ -156,8 +174,7 @@ EXPORT value __caml_expr_add( value e1, value e2 )
   const expr* b = Expr_val( e2 );
 
   CAMLlocal1( res );
-  res = expr_allocate();
-  expr_construct( res ) expr( std::move( expr::add( *a, *b ) ) );
+  res = expr_move( std::move( expr::add( *a, *b ) ) );
 
   CAMLreturn( res );
 }
@@ -168,8 +185,7 @@ EXPORT value __caml_expr_sub( value e1, value e2 )
   const expr* b = Expr_val( e2 );
 
   CAMLlocal1( res );
-  res = expr_allocate();
-  expr_construct( res ) expr( std::move( expr::sub( *a, *b ) ) );
+  res = expr_move( std::move( expr::sub( *a, *b ) ) );
 
   CAMLreturn( res );
 }
@@ -180,8 +196,7 @@ EXPORT value __caml_expr_mul( value e1, value e2 )
   const expr* b = Expr_val( e2 );
 
   CAMLlocal1( res );
-  res = expr_allocate();
-  expr_construct( res ) expr( std::move( expr::mul( *a, *b ) ) );
+  res = expr_move( std::move( expr::mul( *a, *b ) ) );
 
   CAMLreturn( res );
 }
@@ -192,8 +207,7 @@ EXPORT value __caml_expr_div( value e1, value e2 )
   const expr* b = Expr_val( e2 );
 
   CAMLlocal1( res );
-  res = expr_allocate();
-  expr_construct( res ) expr( std::move( expr::div( *a, *b ) ) );
+  res = expr_move( std::move( expr::div( *a, *b ) ) );
 
   CAMLreturn( res );
 }
@@ -206,8 +220,7 @@ EXPORT value __caml_expr_pow( value e1, value e2 )
   const expr* b = Expr_val( e2 );
 
   CAMLlocal1( res );
-  res = expr_allocate();
-  expr_construct( res ) expr( std::move( a->pow( *b ) ) );
+  res = expr_move( std::move( a->pow( *b ) ) );
 
   CAMLreturn( res );
 }

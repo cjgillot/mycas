@@ -1,15 +1,5 @@
 open Pseries_base
 
-(****** utils ******)
-let rec map f s =
-  if !? s
-  then lazv( _map f !!s )
-  else lazy( _map f !!s )
-and _map f = function
-| E -> E
-| N( h, t ) ->
-    N( f h, map f t )
-
 (****** display ******)
 (*let print p =
   let rec loop = function
