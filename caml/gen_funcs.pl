@@ -14,12 +14,13 @@ sub parse_nm;
 
 my $native = 0;
 
-my $fun = $ARGV[0];
+my $cout = $ARGV[0];
+my $fun = $ARGV[1];
 my $obj;
 
-if( $#ARGV >= 1 )
+if( $#ARGV >= 2 )
 {
-  $obj = $ARGV[1];
+  $obj = $ARGV[2];
   $native = 1;
 }
 
@@ -32,9 +33,11 @@ chomp( $module );
 
 my $count = 0;
 while( my $line = <F> ) {
-  my( $arity, $name ) = ( $line =~ /^([0-9]+)\s(\w+)/ );
-  my @sym = ( $name, $arity, "" );
-  $symbols[ $count++ ] = \@sym;
+  if( $line =~ /^([0-9]+)\s(\w+)/ )
+  {
+    my @sym = ( $2, $1, "" );
+    $symbols[ $count++ ] = \@sym;
+  }
 }
 
 close F;
@@ -43,7 +46,7 @@ if( $native != 0 )
 {
   &parse_nm( $module, $obj, \@symbols );
 
-  open( CC, ">$fun.c" );
+  open( CC, ">$cout.c" );
 
   &prepare_native();
 
@@ -55,8 +58,8 @@ if( $native != 0 )
 
 else # byte
 {
-  open( CC, ">$fun.c" );
-  open( ML, ">$fun.ml" );
+  open( CC, ">$cout.c" );
+  open( ML, ">$cout.ml" );
 
   &prepare_byte( $module, length( @symbols ) );
 
@@ -83,7 +86,7 @@ EOF
 sub proto_c {
   my( $func, $arity ) = @_;
 
-  print CC "value $func(";
+  print CC "value $module\_$func(";
 
   if( $arity > 0 )
   {
@@ -201,7 +204,7 @@ sub parse_nm {
       }
     }
 
-    die( "Not found symbol : $name" );
+    die( "Unfound symbol : $name" );
 
     cont:
       ;

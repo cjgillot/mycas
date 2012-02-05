@@ -895,9 +895,9 @@ macro( ocaml_add_output_obj target )
     add_custom_command( OUTPUT ${objoutput}
         COMMAND ${CMAKE_OCAML_COMPILER}
             -output-obj
-            -linkpkg
             -o ${objoutput}
             ${OCAML_${target}_OCAMLCOPTS}
+            -linkpkg
             ${package_flags}
             ${include_flags}
             ${cclinkflags}
@@ -921,9 +921,9 @@ macro( ocaml_add_output_obj target )
     add_custom_command( OUTPUT ${optoutput}
         COMMAND ${CMAKE_OCAML_COMPILER_OPT}
             -output-obj
-            -linkpkg
             -o ${optoutput}
             ${OCAML_${target}_OCAMLCOPTS}
+            -linkpkg
             ${package_flags}
             ${include_flags}
             ${cclinkflags}

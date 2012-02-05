@@ -10,10 +10,14 @@
 
 #include <cstdlib>
 
+#include "analysis/pseries.hpp"
+
 using namespace analysis;
 
 inline long random(long max)
 { return std::rand() % max; }
+
+#include <caml/mlvalues.h>
 
 int main()
 {
@@ -25,20 +29,9 @@ int main()
 //   std::cout << e << std::endl;
 //   std::cout << f << std::endl;
 
-  std::srand( std::time( nullptr ) );
+  expr s = new pseries( x );
 
-  for( std::size_t n = random(100); n != 0; --n )
-    e += random(10) * x.pow(n * random(3));
-
-  for( std::size_t n = random(100); n != 0; --n )
-    f += random(10) * y.pow(n * random(3));
-
-  std::cout << e << std::endl;
-  std::cout << f << std::endl;
-
-  expr ef = (e*f).expand();
-
-  std::cout << ef << std::endl;
+//   caml_startup(0);
 
   return 0;
 }

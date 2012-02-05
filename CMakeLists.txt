@@ -17,7 +17,7 @@ add_definitions(-Wall -Wextra -Winline -Winit-self -pedantic -ansi -Wunreachable
 # add_definitions(-O3 -Os -fexpensive-optimizations -DNDEBUG -fomit-frame-pointer) # -pg)
 # add_definitions(-fno-rtti)
 
-set_property(GLOBAL PROPERTY CAML_SUPPORT_LIBS "")
+set_property(GLOBAL PROPERTY CAML_STARTUP_LIBS "")
 
 include_directories(caml)
 include_directories(src)
@@ -37,4 +37,4 @@ add_subdirectory(caml)
 add_executable(mycas src/main.cpp)
 target_link_libraries(mycas analysis)
 target_link_libraries(mycas numeric)
-target_link_libraries(mycas caml_support)
+# target_link_libraries(mycas caml_support)

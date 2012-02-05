@@ -45,28 +45,31 @@ macro( export_add_ocaml_native_symbol target definition object )
 #   get_filename_component( ext ${definition} EXT )
 
   set( out_path "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${target}.dir/" )
-  set( out_name "${out_path}/${name}.c" )
+  set( out_base "${out_path}/${name}" )
+  set( out_name "${out_base}.c" )
 
   add_custom_command(
     OUTPUT ${out_name}
     COMMAND ${PERL_EXECUTABLE}
       ${scripts}/gen_funcs.pl
+      ${out_base}
       ${definition} ${object}
 
     MAIN_DEPENDENCY ${definition}
     DEPENDS ${object} ${definition}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Building OCaml glue file ${name}.c"
   )
-  add_custom_target( ${target}.${name}.glue
+  add_custom_target( ${target}.glue
     DEPENDS ${out_name}
   )
-  set_target_properties( ${target}.${name}.glue PROPERTIES
+  set_target_properties( ${target}.glue PROPERTIES
     OUTPUT "${out_name}"
     OBJECT "${object}"
     SOURCE "${definition}"
+    KIND   "NATGLUE"
   )
-  list( APPEND OCAML_EXPORT_${target}_GLUE "${target}.${name}.glue" )
+  list( APPEND OCAML_EXPORT_${target}_GLUE "${target}.glue" )
 endmacro()
 
 macro( export_add_ocaml_byte_symbol target definition )
@@ -76,45 +79,54 @@ macro( export_add_ocaml_byte_symbol target definition )
 #   get_filename_component( ext ${definition} EXT )
 
   set( out_path "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${target}.dir/" )
-  set( out_name "${out_path}/${name}.c" )
-  set( out_ml   "${out_path}/${name}.ml")
+  set( out_base "${out_path}/${name}" )
+  set( out_name "${out_base}.c" )
+  set( out_ml   "${out_base}.ml")
 
   add_custom_command(
     OUTPUT ${out_name}
     COMMAND ${PERL_EXECUTABLE}
       ${scripts}/gen_funcs.pl
+      ${out_base}
       ${definition}
 
     MAIN_DEPENDENCY ${definition}
     DEPENDS ${definition}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Building OCaml glue files ${name}.c and ${name}.ml"
   )
-  add_custom_target( ${target}.${name}.glue
-    DEPENDS ${out_name} ${out_ml}
+  add_custom_target( ${target}.glue
+    DEPENDS ${out_name}
   )
-  set_target_properties( ${target}.${name}.glue PROPERTIES
-    OUTPUT "${out_name}" "${out_ml}"
+  set_target_properties( ${target}.glue PROPERTIES
+    OUTPUT "${out_name}"
+    MLOUT  "${out_ml}"
     SOURCE "${definition}"
+    KIND   "BYTEGLUE"
   )
-  list( APPEND OCAML_EXPORT_${target}_GLUE "${target}.${name}.glue" )
+  list( APPEND OCAML_EXPORT_${target}_GLUE "${target}.glue" )
 endmacro()
 
 # {{{1 add_ocaml_library
 macro( add_ocaml_glue target )
   ocaml_export_parse_arguments( OCAML_EXPORT_${target}
-    "SOURCES;LIBRARIES;PACKAGES;OCAMLOPTS;OCAMLCOPTS"
+    "DEFINITION;OCAMLOPTS;OBJECT"
     ""
     ${ARGN}
   )
 
   # XXX where is the object file ?
-
-  export_add_ocaml_native_symbol( ${target} )
+  if( ${OCAML_EXPORT_${target}_OBJECT} )
+    export_add_ocaml_native_symbol( ${target} ${OCAML_EXPORT_${target}_DEFINITION} ${OCAML_EXPORT_${target}_OBJECT} )
+    get_target_property( out_cdef "${target}.glue" OUTPUT )
+    add_library( ${target} ${out_cdef} )
+  else( ${OCAML_EXPORT_${target}_OBJECT} )
+    export_add_ocaml_byte_symbol( ${target}   ${OCAML_EXPORT_${target}_DEFINITION} )
+    add_custom_target( ${target} ALL )
+  endif( ${OCAML_EXPORT_${target}_OBJECT} )
 
   # create the top-level target for this library and add dependencies on each
   # object target
-  add_custom_target( ${target} ALL )
   set_target_properties( ${target} PROPERTIES
       SOURCE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       OBJECT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${target}.dir"
@@ -132,5 +144,5 @@ macro( add_ocaml_glue target )
       OBJ_TARGET "${OCAML_${target}_OBJ_TARGETS}"
       ARCHIVES "${OCAML_${target}_ARCHIVES}"
   )
-  add_dependencies( ${target} ${OCAML_${target}_ARCHIVES} )
+  add_dependencies( ${target} ${OCAML_EXPORT_${target}_GLUE} )
 endmacro()
