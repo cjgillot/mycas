@@ -19,7 +19,7 @@ add_definitions(-Wall -Wextra -Winline -Winit-self -pedantic -ansi -Wunreachable
 
 set_property(GLOBAL PROPERTY CAML_STARTUP_LIBS "")
 
-include_directories(caml)
+include_directories(src/caml)
 include_directories(src)
 add_subdirectory(src)
 
@@ -31,8 +31,6 @@ add_custom_command(
   MAIN_DEPENDENCY mycas.doxyfile
   DEPENDS ${doc_file}
 )
-
-add_subdirectory(caml)
 
 add_executable(mycas src/main.cpp)
 target_link_libraries(mycas analysis)

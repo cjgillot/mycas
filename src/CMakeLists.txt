@@ -9,3 +9,5 @@ add_subdirectory(series)
 add_subdirectory(stream)
 add_subdirectory(structures)
 add_subdirectory(util)
+
+add_subdirectory(caml)

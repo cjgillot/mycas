@@ -2,7 +2,7 @@ include( UseOCaml )
 
 find_package( Perl )
 
-set( scripts "${CMAKE_SOURCE_DIR}/caml" )
+set( scripts "${CMAKE_SOURCE_DIR}/src/caml" )
 
 # {{{1 ocaml_parse_arguments
 # parse macro arguments
