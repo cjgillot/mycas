@@ -1,7 +1,7 @@
 #ifndef VECTORSEQ_IPP_
 #define VECTORSEQ_IPP_
 
-#include "analysis/numerical.hpp"
+#include "analysis/expr.hpp"
 #include "analysis/vectorseq/vectorseq.hpp"
 #include "analysis/vectorseq/operation.ipp"
 

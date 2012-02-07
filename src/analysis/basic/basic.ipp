@@ -3,8 +3,8 @@
 
 #include "analysis/forward.hpp"
 
-#include "analysis/expr.hpp"
-#include "analysis/basic.hpp"
+#include "analysis/basic/expr.hpp"
+#include "analysis/basic/basic.hpp"
 
 namespace analysis {
 

@@ -3,7 +3,7 @@
 
 #include "analysis/vectorseq/handle_concept.hpp"
 
-#include "analysis/ptr.hpp"
+#include "analysis/expr.hpp"
 
 #include "util/concept.hpp"
 #include "util/compare.hpp"

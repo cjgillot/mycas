@@ -1,8 +1,7 @@
-#include "analysis/sum.hpp"
-#include "analysis/prod.hpp"
+#include "analysis/vectorseq/sum.hpp"
+#include "analysis/vectorseq/prod.hpp"
 
-#include "analysis/expr.ipp"
-#include "analysis/basic.ipp"
+#include "analysis/expr.hpp"
 
 #include "analysis/vectorseq/vectorseq.tpp"
 

@@ -1,7 +1,7 @@
-#include "analysis/expand/fwd.hpp"
-#include "analysis/expand/heapmul.hpp"
+#include "analysis/vectorseq/expand/fwd.hpp"
+#include "analysis/vectorseq/expand/heapmul.hpp"
 
-#include "analysis/expand/sort.hpp"
+#include "analysis/vectorseq/expand/sort.hpp"
 
 namespace analysis {
 namespace expand_detail {

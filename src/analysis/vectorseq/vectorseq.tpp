@@ -1,14 +1,14 @@
 #ifndef EXPAIRSEQ_TPP_
 #define EXPAIRSEQ_TPP_
 
-#include "analysis/numerical.hpp"
+#include "analysis/expr.hpp"
 #include "analysis/vectorseq/vectorseq.hpp"
 
 #include "analysis/vectorseq/vectorseq.ipp"
 
 #include "analysis/vectorseq/operation.tpp"
 
-#include <boost/range.hpp>
+#include <boost/range/algorithm/for_each.hpp>
 
 #include "util/null.hpp"
 #include "util/foreach.hpp"

@@ -1,18 +1,12 @@
 // common includes
 #include "analysis/expr.hpp"
-#include "analysis/basic.hpp"
-
-#include "analysis/expr.ipp"
-#include "analysis/basic.ipp"
-
 #include "analysis/symbol.hpp"
-
-#include "analysis/numerical.hpp"
-#include "analysis/power.hpp"
-#include "analysis/prod.hpp"
-#include "analysis/sum.hpp"
+#include "analysis/vectorseq.hpp"
 
 #include "analysis/stdfunc/log.hpp"
+
+#include <boost/bind.hpp>
+#include <boost/iterator/transform_iterator.hpp>
 
 using namespace analysis;
 

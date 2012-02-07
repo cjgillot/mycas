@@ -2,8 +2,6 @@
 #define POWER_HPP_
 
 #include "analysis/expr.hpp"
-#include "analysis/basic.hpp"
-#include "analysis/numerical.hpp"
 
 #include "analysis/vectorseq/vectorseq.hpp"
 

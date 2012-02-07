@@ -2,7 +2,7 @@
 #define EXPAIRSEQ_HANDLE_IPP
 
 #include "analysis/vectorseq/handle.hpp"
-#include "analysis/basic.hpp"
+
 #include "analysis/expr.hpp"
 
 #include "util/assert.hpp"

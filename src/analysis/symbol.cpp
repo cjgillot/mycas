@@ -1,27 +1,10 @@
-/*
- * symbol.cpp
- *
- *  Created on: 3 juil. 2011
- *      Author: k1000
- */
+#include "analysis/symbol.hpp"
 
-#include "symbol.hpp"
+#include "analysis/expr.hpp"
 
-#include "analysis/expr.ipp"
-#include "analysis/basic.ipp"
+#include <boost/functional/hash.hpp>
 
 using namespace analysis;
-
-namespace {
-
-inline const char*
-get_name(const std::string &orig) {
-  char* ret = new char[orig.length()+1];
-  std::strcpy(ret, orig.c_str());
-  return ret;
-}
-
-}
 
 symbol_::symbol_() {}
 symbol_::~symbol_() {}

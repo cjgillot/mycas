@@ -1,4 +1,4 @@
-#include "analysis/expand/fwd.hpp"
+#include "analysis/vectorseq/expand/fwd.hpp"
 
 namespace analysis {
 namespace expand_detail {

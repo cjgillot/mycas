@@ -1,12 +1,6 @@
 #include "analysis/expr.hpp"
-#include "analysis/numerical.hpp"
 
-#include "analysis/sum.hpp"
-#include "analysis/prod.hpp"
-#include "analysis/power.hpp"
-
-#include "analysis/expr.ipp"
-#include "analysis/basic.ipp"
+#include "analysis/vectorseq.hpp"
 
 using namespace analysis;
 

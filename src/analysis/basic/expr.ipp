@@ -1,12 +1,7 @@
 #ifndef EXPR_IPP
 #define EXPR_IPP
 
-#include "analysis/expr.hpp"
-#include "analysis/numerical.hpp"
-
-#include "analysis/expr_operators.hpp"
-
-#include "analysis/basic.ipp"
+#include "analysis/basic/expr.hpp"
 
 namespace analysis {
 

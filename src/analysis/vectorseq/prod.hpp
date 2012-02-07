@@ -1,10 +1,10 @@
-#ifndef MUL_HPP_
-#define MUL_HPP_
+#ifndef PROD_HPP_
+#define PROD_HPP_
 
-#include "analysis/basic.hpp"
+#include "analysis/expr.hpp"
 
 #include "analysis/vectorseq/vectorseq.hpp"
-#include "analysis/power.hpp"
+#include "analysis/vectorseq/power.hpp"
 
 #include "util/functor.hpp"
 
@@ -124,8 +124,8 @@ inline prod::handle::const_pointer
 prod::handle::from_expr( const expr &e )
 { return e.get()->as_prod(); }
 
-}
+} // namespace epseq
 
-}
+} // namespace analysis
 
-#endif /* MUL_HPP_ */
+#endif

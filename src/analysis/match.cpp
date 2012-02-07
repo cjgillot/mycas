@@ -1,7 +1,6 @@
 #include "analysis/match.hpp"
 
-#include "analysis/basic.ipp"
-#include "analysis/expr.ipp"
+#include "analysis/expr.hpp"
 
 using namespace analysis;
 using match_detail::wildcard_;
@@ -46,9 +45,7 @@ bool basic::match_same_type(const basic &o, match_state &) const
 }
 
 // sum
-#include "analysis/sum.hpp"
-#include "analysis/prod.hpp"
-#include "analysis/power.hpp"
+#include "analysis/vectorseq.hpp"
 
 #include "container/unsafe_vector.hpp"
 

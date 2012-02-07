@@ -1,9 +1,8 @@
-#include "analysis/pseries.hpp"
+#include "analysis/pseries/pseries.hpp"
 
 #include "analysis/expr.hpp"
-#include "analysis/expr.ipp"
 
-#include "pseries/repr.hpp"
+#include "analysis/pseries/repr.hpp"
 
 #include "util/ptr.hpp"
 

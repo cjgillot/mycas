@@ -11,6 +11,8 @@
 
 #include "analysis/match_state.hpp"
 
+#include <boost/functional/hash.hpp>
+
 namespace analysis {
 
 template<class C>

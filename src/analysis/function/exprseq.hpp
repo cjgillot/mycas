@@ -1,7 +1,7 @@
 #ifndef ANALYSIS_FUNCTION_EXPRSEQ_HPP
 #define ANALYSIS_FUNCTION_EXPRSEQ_HPP
 
-#include "analysis/basic.hpp"
+#include "analysis/expr.hpp"
 
 namespace analysis {
 

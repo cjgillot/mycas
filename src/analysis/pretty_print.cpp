@@ -1,10 +1,8 @@
-#include "analysis/basic.hpp"
+#include "analysis/expr.hpp"
 
-#include "analysis/sum.hpp"
-#include "analysis/prod.hpp"
-#include "analysis/power.hpp"
+#include "analysis/vectorseq.hpp"
+
 #include "analysis/symbol.hpp"
-#include "analysis/numerical.hpp"
 
 #include "rtti/visitor.hpp"
 

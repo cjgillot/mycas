@@ -1,7 +1,6 @@
-#include "basic.hpp"
-#include "sum.hpp"
-#include "prod.hpp"
-#include "power.hpp"
+#include "analysis/basic/basic.hpp"
+
+#include "analysis/vectorseq.hpp"
 
 using namespace analysis;
 

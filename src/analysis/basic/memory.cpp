@@ -3,9 +3,11 @@
 #include <boost/pool/pool.hpp>
 #include <boost/aligned_storage.hpp>
 
-#include "analysis/sum.hpp"
-#include "analysis/prod.hpp"
-#include "analysis/power.hpp"
+#if 0
+#include "analysis/vectorseq.hpp"
+
+STATIC_ASSERT( sizeof( analysis::sum ) == sizeof( analysis::prod ) );
+#endif
 
 #include "util/null.hpp"
 
@@ -30,8 +32,6 @@
  */
 
 namespace {
-
-STATIC_ASSERT( sizeof( analysis::sum ) == sizeof( analysis::prod ) );
 
 boost::pool<> pool1 ( 4  * sizeof( void* ) );
 boost::pool<> pool2 ( 8  * sizeof( void* ) );

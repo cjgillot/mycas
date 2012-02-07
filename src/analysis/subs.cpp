@@ -1,7 +1,4 @@
-#include "analysis/basic.hpp"
 #include "analysis/expr.hpp"
-
-#include "analysis/expr.ipp"
 
 #include "analysis/match_state.hpp"
 
@@ -10,8 +7,7 @@
 
 #include "analysis/vectorseq/vectorseq.ipp"
 
-#include "analysis/sum.hpp"
-#include "analysis/prod.hpp"
+#include "analysis/vectorseq.hpp"
 
 #include "util/functor.hpp"
 

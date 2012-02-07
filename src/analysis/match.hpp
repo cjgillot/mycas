@@ -2,9 +2,7 @@
 #define ANALYSIS_MATCH_HPP
 
 #include "analysis/expr.hpp"
-#include "analysis/basic.hpp"
 #include "analysis/symbol.hpp"
-#include "analysis/numerical.hpp"
 
 namespace analysis {
 

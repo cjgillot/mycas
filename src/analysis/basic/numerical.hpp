@@ -1,12 +1,9 @@
 #ifndef NUMERIC_HPP_
 #define NUMERIC_HPP_
 
-#include "analysis/basic.hpp"
-
-#include "algebra/real.hpp"
-
-#include "analysis/ptr.hpp"
-#include "analysis/expr.hpp"
+#include "analysis/basic/basic.hpp"
+#include "analysis/basic/expr.hpp"
+#include "analysis/basic/ptr.hpp"
 
 namespace analysis {
 

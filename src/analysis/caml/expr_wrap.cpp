@@ -5,7 +5,7 @@
 
 #define EXPORT extern "C"
 
-#include "analysis/expr.ipp"
+#include "analysis/expr.hpp"
 #include "analysis/symbol.hpp"
 
 #include "analysis/caml/expr_wrap.hpp"

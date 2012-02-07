@@ -6,7 +6,7 @@
 #include "analysis/forward.hpp"
 #include "analysis/register.hpp"
 
-#include "analysis/memory.hpp"
+#include "analysis/basic/memory.hpp"
 
 namespace analysis {
 

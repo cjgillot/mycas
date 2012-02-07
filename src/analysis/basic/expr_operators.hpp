@@ -1,7 +1,7 @@
 #ifndef ANALYSIS_OPERATORS_HPP
 #define ANALYSIS_OPERATORS_HPP
 
-#include "analysis/expr.hpp"
+#include "analysis/basic/expr.hpp"
 
 namespace analysis {
 

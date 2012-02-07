@@ -1,10 +1,10 @@
 #ifndef ADD_HPP_
 #define ADD_HPP_
 
-#include "analysis/basic.hpp"
+#include "analysis/expr.hpp"
 
 #include "analysis/vectorseq/vectorseq.hpp"
-#include "analysis/prod.hpp"
+#include "analysis/vectorseq/prod.hpp"
 
 #include "util/functor.hpp"
 

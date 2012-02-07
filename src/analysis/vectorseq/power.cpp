@@ -1,7 +1,6 @@
-#include "analysis/power.hpp"
+#include "analysis/vectorseq/power.hpp"
 
-#include "analysis/expr.ipp"
-#include "analysis/basic.ipp"
+#include "analysis/expr.hpp"
 
 using namespace analysis;
 

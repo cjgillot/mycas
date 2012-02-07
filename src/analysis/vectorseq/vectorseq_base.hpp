@@ -6,8 +6,7 @@
 #include "analysis/vectorseq/handle_concept.hpp" // for handle
 #include "analysis/vectorseq/iterator.hpp" // for eps_iterator
 
-#include "analysis/ptr.hpp"
-#include "analysis/basic.hpp"
+#include "analysis/expr.hpp"
 
 namespace analysis {
 namespace vectorseq_detail {

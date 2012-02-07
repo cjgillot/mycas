@@ -2,7 +2,6 @@
 #define ANALYSIS_PSERIES_HPP
 
 #include "analysis/expr.hpp"
-#include "analysis/basic.hpp"
 #include "analysis/symbol.hpp"
 
 namespace analysis {

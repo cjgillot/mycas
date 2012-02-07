@@ -1,8 +1,7 @@
 #ifndef ANALYSIS_EXPAND_SORT_HPP
 #define ANALYSIS_EXPAND_SORT_HPP
 
-#include "analysis/prod.hpp"
-#include "analysis/sum.hpp"
+#include "analysis/vectorseq.hpp"
 
 #include "util/insertionsort.hpp"
 #include "util/timsort.hpp"

@@ -1,6 +1,7 @@
 #include "analysis/pseries/repr.hpp"
-
 #include "analysis/pseries/iterator.hpp"
+
+#include <boost/functional/hash.hpp>
 
 using namespace analysis;
 using namespace pseries_detail;

@@ -1,4 +1,4 @@
-#include "analysis/pseries.hpp"
+#include "analysis/pseries/pseries.hpp"
 #include "analysis/pseries/repr.hpp"
 
 using namespace analysis;

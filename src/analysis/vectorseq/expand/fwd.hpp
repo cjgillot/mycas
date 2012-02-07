@@ -2,22 +2,14 @@
 #define EXPAND_FWD_HPP
 
 #include "analysis/expr.hpp"
-#include "analysis/basic.hpp"
-
-#include "analysis/expr.ipp"
-#include "analysis/basic.ipp"
 
 #include "util/move.hpp"
 #include "util/assert.hpp"
 #include "util/foreach.hpp"
 
-#include "analysis/power.hpp"
-#include "analysis/prod.hpp"
-#include "analysis/sum.hpp"
+#include "analysis/vectorseq.hpp"
 
 #include "analysis/symbol.hpp"
-
-#include "analysis/ptr.hpp"
 
 #include "container/unsafe_vector.hpp"
 #include "container/ptr_container.hpp"

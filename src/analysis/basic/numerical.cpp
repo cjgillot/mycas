@@ -1,9 +1,10 @@
-#include "numerical.hpp"
+#include "analysis/expr.hpp"
 
-#include "sum.hpp"
-#include "prod.hpp"
+#include "analysis/vectorseq.hpp"
 
-#include "analysis/expr.ipp"
+#include "numeric/number.hpp"
+
+#include "algebra/real.hpp"
 
 using namespace analysis;
 

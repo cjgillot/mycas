@@ -3,12 +3,13 @@
 
 #include "analysis/function/function.hpp"
 
-#include "analysis/expr.ipp"
-#include "analysis/basic.ipp"
+#include "analysis/expr.hpp"
 #include "analysis/function/exprseq.ipp"
 
 #include <algorithm>
 #include <boost/array.hpp>
+#include <boost/range/algorithm/copy.hpp>
+#include <boost/iterator/zip_iterator.hpp>
 
 #include "container/unsafe_vector.hpp"
 

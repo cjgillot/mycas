@@ -3,7 +3,7 @@
 
 #include <caml/mlvalues.h>
 
-#include "analysis/pseries.hpp"
+#include "analysis/pseries/pseries.hpp"
 
 #include "util/refcounted.hpp"
 

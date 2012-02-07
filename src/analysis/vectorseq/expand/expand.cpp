@@ -1,11 +1,7 @@
 #include "analysis/expr.hpp"
-#include "analysis/basic.hpp"
 
-#include "analysis/power.hpp"
-#include "analysis/prod.hpp"
-#include "analysis/sum.hpp"
-
-#include "analysis/expand/fwd.hpp"
+#include "analysis/vectorseq.hpp"
+#include "analysis/vectorseq/expand/fwd.hpp"
 
 using namespace analysis;
 using namespace expand_detail;
