@@ -39,3 +39,9 @@ val map  : ('a -> 'b) -> 'a llist -> 'b llist
 val _map : ('a -> 'b) -> 'a node -> 'b node
 
 val iter : ('a -> unit) -> 'a llist -> unit
+
+val compare : series -> series -> int
+
+val mmul_l : expr -> series -> series
+val mmul_r : series -> expr -> series
+val mdiv_r : series -> expr -> series

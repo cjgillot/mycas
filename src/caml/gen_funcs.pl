@@ -42,11 +42,14 @@ while( my $line = <F> ) {
 
 close F;
 
+@symbols = sort {$$a[0] cmp $$b[0]} @symbols;
+
 if( $native != 0 )
 {
   &parse_nm( $module, $obj, \@symbols );
 
   open( CC, ">$cout.c" );
+  open( HH, ">$cout.h" );
 
   &prepare_native();
 
@@ -59,6 +62,7 @@ if( $native != 0 )
 else # byte
 {
   open( CC, ">$cout.c" );
+  open( HH, ">$cout.h" );
   open( ML, ">$cout.ml" );
 
   &prepare_byte( $module, length( @symbols ) );
@@ -73,6 +77,12 @@ else # byte
 # -- common case -- #
 
 sub prepare_c {
+  print HH <<EOF
+#include <caml/mlvalues.h>
+
+EOF
+;
+
   print CC <<EOF
 #include <caml/mlvalues.h>
 #include <caml/callback.h>
@@ -80,22 +90,37 @@ sub prepare_c {
 
 #define caml_callback0( f ) ( caml_callback( (f), Val_unit ) )
 #define caml_callback1 caml_callback
+
 EOF
+;
 }
 
 sub proto_c {
   my( $func, $arity ) = @_;
 
+  print HH "value $module\_$func(";
   print CC "value $module\_$func(";
 
   if( $arity > 0 )
   {
     my( $i ) = 1;
-    print CC "  value arg1";
-    print CC ", value arg$i" while( $i++ < $arity );
   }
 
-  print CC "  )\n";
+  if( $arity > 0 )
+  {
+    my( $i ) = 1;
+    print HH "value";
+    print CC "value arg1";
+
+    while( $i++ < $arity )
+    {
+      print HH ", value";
+      print CC ", value arg$i";
+    }
+  }
+
+  print HH ");\n";
+  print CC ")\n";
 }
 
 sub call_c {
