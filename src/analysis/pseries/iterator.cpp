@@ -4,9 +4,7 @@
 
 #include "analysis/caml/expr_wrap.hpp"
 
-#include <caml/callback.h>
 #include <caml/mlvalues.h>
-#include <caml/memory.h>
 
 using namespace analysis;
 using namespace analysis::pseries_detail;
