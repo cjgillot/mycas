@@ -32,6 +32,6 @@ public:
 
 } // namespace analysis
 
-#include "analysis/pseries/pseries_export.h"
+#include "analysis/pseries/export.h"
 
 #endif

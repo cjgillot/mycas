@@ -109,3 +109,8 @@ let rec compare a b =
   end
   else (* signal unsuccessful comparison *)
     2
+
+(* C = n *)
+let rec mmul_l m l = map (fun x -> m */ x) l
+let rec mmul_r l m = map (fun x -> x */ m) l
+let rec mdiv_r l m = map (fun x -> x // m) l

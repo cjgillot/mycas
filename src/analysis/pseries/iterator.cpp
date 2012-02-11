@@ -1,6 +1,6 @@
 #include "analysis/pseries/iterator.hpp"
 
-#include "analysis/pseries/pseries_export.h"
+#include "analysis/pseries/repr.hpp"
 
 #include "analysis/caml/expr_wrap.hpp"
 

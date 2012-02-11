@@ -1,12 +1,3 @@
-val map :
-  ('a -> 'b) -> 'a Pseries_base.node Lazy.t -> 'b Pseries_base.node Lazy.t
-val _map : ('a -> 'b) -> 'a Pseries_base.node -> 'b Pseries_base.node
-val mmul_l :
-  Expr.expr ->
-  Expr.expr Pseries_base.node Lazy.t -> Expr.expr Pseries_base.node Lazy.t
-val mmul_r :
-  Expr.expr Pseries_base.node Lazy.t ->
-  Expr.expr -> Expr.expr Pseries_base.node Lazy.t
 val _intpow_h :
   Pseries_base.expr Pseries_base.node ->
   Pseries_base.expr Pseries_base.node ->
