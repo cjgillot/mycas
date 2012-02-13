@@ -22,7 +22,7 @@ STATIC_ASSERT( sizeof( analysis::sum ) == sizeof( analysis::prod ) );
  * with following layout :
  * ---------------------- ... ---
  * | pool*      | object  ...   |
- * ------------------------------
+ * -----------------------...----
  * ^            ^
  * allocated    returned
  * pointer      pointer
@@ -37,18 +37,36 @@ boost::pool<> pool1 ( 4  * sizeof( void* ) );
 boost::pool<> pool2 ( 8  * sizeof( void* ) );
 boost::pool<> pool3 ( 12 * sizeof( void* ) );
 
-boost::pool<>* pools [] = {
-  &pool1, &pool2, &pool3
+boost::pool<>* pools [3] = { nullptr, nullptr, nullptr };
+
+struct initializer_t
+{
+  inline initializer_t()
+  {
+    pools[0] = &pool1;
+    pools[1] = &pool2;
+    pools[2] = &pool3;
+  }
+
+  inline ~initializer_t()
+  {
+    pools[0] = pools[1] = pools[2] = nullptr;
+  }
+
+  inline void touch() const {}
 };
+const initializer_t initializer;
 
 boost::pool<>* get_pool( std::size_t sz )
 {
+  initializer.touch();
+
   ASSERT( sz > sizeof( void* ) );
+
   sz = ( sz + sizeof( void* ) - 1 ) / sizeof( void* );
+  sz = ( sz + 3 ) / 4;
 
-  sz = ( sz - 1 ) / 4;
-
-  return ( sz < 4 ) ? pools[ sz ] : nullptr;
+  return ( sz < 4 ) ? pools[ sz - 1 ] : nullptr;
 }
 
 }

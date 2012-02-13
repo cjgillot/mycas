@@ -14,6 +14,7 @@ namespace memory {
 } // namespace analysis
 
 #define REGISTER_MEMORY()                                             \
+public:                                                               \
   static void operator delete( void* p, std::nothrow_t ) throw()      \
   { analysis::memory::release( p ); }                                 \
   static void operator delete( void* p ) throw()                      \
