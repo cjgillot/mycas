@@ -3,6 +3,8 @@
 
 #include <boost/functional/hash.hpp>
 
+#include "util/foreach.hpp"
+
 using namespace analysis;
 using namespace pseries_detail;
 
@@ -10,10 +12,8 @@ std::size_t pseries::hash() const
 {
   std::size_t seed = m_var.hash();
 
-  iterator it ( m_rep->m_value );
-
-  for( ; it.forced() && !it.empty(); ++it )
-    boost::hash_combine( seed, it->hash() );
+  foreach( const expr &ex, *this )
+    boost::hash_combine( seed, ex.hash() );
 
   return seed;
 }

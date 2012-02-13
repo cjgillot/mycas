@@ -135,9 +135,16 @@ public:
    *
    * \param s : the symbol with respect to which differentiate
    * \param nth : the number of differentiations
-   * \return the evaluated nth derivative of \c this
+   * \return the evaluated \c nth derivative of \c this
    */
   expr diff(const symbol &s, unsigned nth = 1) const;
+
+  /*!\brief Series expansion function
+   *
+   * \param s : the symbol with respect to which differentiate
+   * \return the evaluated power series of \c this
+   */
+  expr series(const symbol &s) const;
 
 private:
   /*!\brief Virtual differentiation function

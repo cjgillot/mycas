@@ -56,6 +56,9 @@ let of_int n = alone( Expr.of_int n )
 let zero = lazv E
 let one = of_int 1
 
+let empty s = match !!s with
+| E -> true | _ -> false
+
 let rec null_p s =
   if not( !? s ) then false else
   match !!s with

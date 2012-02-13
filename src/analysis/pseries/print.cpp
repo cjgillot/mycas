@@ -7,9 +7,9 @@ using namespace pseries_detail;
 
 void pseries::print(std::ostream &os) const
 {
-  iterator it ( m_rep->m_value );
+  iterator it ( m_rep.get() ), en;
 
-  if( !it.forced() || it.empty() )
+  if( it == en )
   {
     os << "O(1)";
     return;
@@ -18,7 +18,7 @@ void pseries::print(std::ostream &os) const
   os << *it;
   ++it;
 
-  if( !it.forced() || it.empty() )
+  if( it == en )
   {
     os << " O(" << m_var << ')';
     return;
@@ -27,8 +27,8 @@ void pseries::print(std::ostream &os) const
   os << ' ' << *it << '@' << m_var;
   ++it;
 
-  std::size_t n = 1;
-  for( ; it.forced() && !it.empty(); ++it, ++n )
+  std::size_t n = 2;
+  for( ; it != en; ++it, ++n )
     os << ' ' << *it << '@' << m_var << '^' << n;
 
   os << " O(" << m_var << '^' << n << ')';

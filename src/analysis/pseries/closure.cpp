@@ -2,7 +2,7 @@
 
 #include "analysis/caml/expr_wrap.hpp"
 
-#include <caml/memory.h>
+#include <caml.hpp>
 
 using namespace analysis;
 
