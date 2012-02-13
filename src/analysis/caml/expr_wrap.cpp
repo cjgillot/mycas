@@ -1,7 +1,4 @@
-#include <caml/alloc.h>
-#include <caml/memory.h>
-#include <caml/custom.h>
-#include <caml/mlvalues.h>
+#include <caml.hpp>
 
 #define EXPORT extern "C"
 
@@ -91,10 +88,10 @@ EXPORT value __caml_expr_unit( value ex )
   return Val_bool( Expr_val( ex )->unit() );
 }
 
-
-EXPORT value __caml_expr_print( value ex, value stream )
+// for debugging
+EXPORT value __caml_expr_print( value ex )
 {
-  Expr_val( ex )->print( *reinterpret_cast< std::ostream* >( stream ) );
+  Expr_val( ex )->print( std::cout );
   return Val_unit;
 }
 
@@ -127,6 +124,28 @@ EXPORT value __caml_expr_diff( value ex, value sym )
 
   CAMLlocal1( res );
   res = expr_move( std::move( e->diff( symbol(s) ) ) );
+
+  CAMLreturn( res );
+}
+
+EXPORT value __caml_expr_subs( value ex, value rules_array )
+{
+  CAMLparam2( ex, rules_array );
+  const expr* e = Expr_val( ex );
+
+  exmap rules;
+  std::size_t n = Wosize_val( rules_array );
+  for( std::size_t i = 0; i < n; ++i )
+  {
+    value rule = Field( rules_array, i );
+    const expr* s = Expr_val( Field( rule, 0 ) );
+    const expr* x = Expr_val( Field( rule, 1 ) );
+
+    rules.insert( std::make_pair( *s, *x ) );
+  }
+
+  CAMLlocal1( res );
+  res = expr_move( std::move( e->subs( rules ) ) );
 
   CAMLreturn( res );
 }
@@ -240,3 +259,56 @@ EXPORT value __caml_expr_hash( value ex )
 
   return Val_int( e->hash() );
 }
+
+#if 0
+// for debugging purpose only
+EXPORT value print_ws (value v) {
+//   CAMLparam1(v);
+  int taille,i ;
+  if (Is_long(v)) printf("%d", Long_val(v));
+  else {
+    taille=Wosize_val(v);
+    switch (Tag_val(v))
+    {
+    case String_tag :
+      printf("\"%s\"", String_val(v));
+      break;
+    case Double_tag:
+      printf("%g", Double_val(v));
+      break;
+    case Double_array_tag :
+      printf ("[|");
+              if (taille>0) printf("%g", Double_field(v,0));
+      for (i=1;i<(taille/2);i++)  printf("; %g", Double_field(v,i));
+      printf("|]");
+      break;
+    case Abstract_tag :
+    case Custom_tag :
+      printf("<abstract>");
+      break;
+    case Closure_tag :
+      printf("<%d, ",Code_val(v)) ;
+      if (taille>1) print_ws(Field(v,1)) ;
+      for (i=2;i<taille;i++) {
+        printf("; ") ;
+        print_ws(Field(v,i));
+      }
+      printf(">");
+      break;
+    default:
+      if (Tag_val(v)>=No_scan_tag) printf("?");
+      else {
+        printf("(");
+        if (taille>0) print_ws(Field(v,0));
+        for (i=1;i<taille;i++) {
+          printf(", ");
+          print_ws(Field(v,i));
+        }
+        printf(")");
+      }
+    }
+  }
+  fflush(stdout);
+  return Val_unit;
+}
+#endif

@@ -1,7 +1,7 @@
 #ifndef ANALYISIS_EXPR_WRAP_HPP
 #define ANALYISIS_EXPR_WRAP_HPP
 
-#include <caml/mlvalues.h>
+#include <caml.hpp>
 
 #include "analysis/expr.hpp"
 #include "util/move.hpp"
