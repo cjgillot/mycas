@@ -12,6 +12,6 @@ add_library(analysis ${src} ${hdr})
 target_link_libraries(analysis analysis_basic)
 target_link_libraries(analysis analysis_stdfunc)
 target_link_libraries(analysis analysis_vectorseq)
+target_link_libraries(analysis analysis_pseries)
 
 target_link_libraries(analysis rtti)
-# target_link_libraries(analysis pseries)

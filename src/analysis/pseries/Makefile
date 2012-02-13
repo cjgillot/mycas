@@ -1,72 +1,87 @@
-CSRC = $(wildcard *.cpp)
-CHDR = $(wildcard *.hpp)
+MLSRC =	\
+	expr.ml		\
+	dllist.ml	\
+	pseries_base.ml	\
+	aors.ml		\
+	mul.ml		\
+	newton.ml	\
+	div.ml		\
+	compose.ml	\
+	taylor.ml	\
+	pseries_end.ml	\
+	pseries_export.ml
 
-COBJ = $(CSRC:.cpp=.o)
+MLHDR = $(wildcard *.mli)
 
-MLSRC= $(wildcard *.ml)
-MLHDR= $(wildcard *.mli)
-
-MLOBJ= $(MLSRC:.ml=.cmx)
+MLOBJ = $(MLSRC:.ml=.cmx)
 
 AR=ar
+CC=gcc
 CXX=g++
 RANLIB=ranlib
 OCAMLOPT=ocamlopt.opt
 OCAMLDEP=ocamldep.opt
-OCAMLGEN=perl ../../caml/gen_funcs.pl
+OCAMLGENH=perl ../../caml/gen_decls.pl
+OCAMLGENC=perl ../../caml/gen_funcs.pl
 
-INCLUDE= -I../../ -I/usr/local/lib/ocaml
-CPPFLAGS= -g
+INCLUDE=-I../../ -I/usr/local/lib/ocaml
+CFLAGS =-g -fPIC
+MLFLAGS=-g -fPIC
+
+LDFLAGS=-L/usr/local/lib/ocaml -lasmrun -ldl -lm -lunix
 
 .SUFFIXES :
-.SUFFIXES : .cpp .hpp .o
+.SUFFIXES : .cpp .cc .o .def
 .SUFFIXES : .ml .mli .cmx .cmi
 
-all: libpseries.a
+all: export.h libpseries.a
 
-libpseries.a: $(COBJ) ml_arch.cmxa
-	cp ml_arch.a $@
-	$(AR) r $@ $(COBJ)
+libpseries.a: export.o pseries.cmx closure.o
+	$(OCAMLOPT) bigarray.cmxa pseries.cmx -output-obj -o ml_arch.o
+# 	cp ml_arch.a $@
+	$(AR) cr $@ export.o ml_arch.o closure.o
 	$(RANLIB) libpseries.a
 
 ml_arch.cmxa: $(MLOBJ)
-	$(OCAMLOPT) -a -o $@ $(MLOBJ)
+	$(OCAMLOPT) $(MLOBJ) -a -o $@
 
 mldepend.mk: $(MLSRC) $(MLHDR)
 	$(OCAMLDEP) -native $(MLSRC) $(MLHDR) > mldepend.mk
 
-cdepend.mk: $(CSRC) $(CHDR) export.h
-	$(CXX) -E -MM $(CSRC) $(INCLUDE) > cdepend.mk
-
 -include mldepend.mk
--include cdepend.mk
-
-.c.o:
-	$(CC)  $(INCLUDE) $(CPPFLAGS) -c $< -o $@
 
 .cpp.o:
-	$(CXX) $(INCLUDE) $(CPPFLAGS) -c $< -o $@
+	$(CXX) $(INCLUDE) $(CFLAGS) -c $< -o $@
+
+.cc.o:
+	$(CXX) $(INCLUDE) $(CFLAGS) -c $< -o $@
 
 .ml.cmx:
-	$(OCAMLOPT) $(MLFLAGS) -c $<
+	$(OCAMLOPT) $(MLFLAGS) -for-pack Pseries -c $<
 
 .mli.cmi:
-	$(OCAMLOPT) $(MLFLAGS) -c $<
+	$(OCAMLOPT) $(MLFLAGS) -for-pack Pseries -c $<
 
-export.h: export.c
-export.o: export.c
-%.c: %.def pseries_export.cmx
-	$(OCAMLGEN) $* $< pseries_export.o
+pseries.cmx: $(MLOBJ)
+	$(OCAMLOPT) $(MLFLAGS) -pack -o pseries.cmx $(MLOBJ)
 
-clean:
-	rm -f *.o *.cm* *.a
-	rm -f *.def.*
+export.o: export.cc export.h
+%.h: %.def
+	$(OCAMLGENH) $* $<
+%.cc: %.def pseries.cmx
+	$(OCAMLGENC) $* $< pseries.o
+
+partialclean:
+	rm -f *.o *.cm*
+	rm -f export.cc export.ml
+
+clean: partialclean
+	rm -f *.a
 	rm -f cdepend.mk mldepend.mk
-	rm -f export.c export.ml
 
 distclean: clean
 	rm -f export.h
 
-.PHONY: clean distclean
+.PHONY: partialclean clean distclean
 
 .PRECIOUS: Makefile
