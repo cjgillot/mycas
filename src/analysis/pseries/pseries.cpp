@@ -7,10 +7,9 @@
 #include "util/ptr.hpp"
 
 using namespace analysis;
-using pseries_detail::repr;
 
 pseries::pseries(const symbol& var)
-: basic(), m_var( var ), m_rep( nullptr )
+: basic(), m_var( var ), m_rep( new repr() )
 {}
 
 pseries::pseries(const pseries &o)
@@ -18,6 +17,10 @@ pseries::pseries(const pseries &o)
 {}
 
 pseries::~pseries()
+{}
+
+pseries::pseries(const symbol& var, repr* rep)
+: basic(), m_var(var), m_rep( rep )
 {}
 
 bool pseries::match_same_type(const basic &, match_detail::match_state &) const

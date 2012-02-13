@@ -1,11 +1,11 @@
 #ifndef ANALYSIS_PSERIES_REPR_HPP
 #define ANALYSIS_PSERIES_REPR_HPP
 
-#include <caml/mlvalues.h>
-
 #include "analysis/pseries/pseries.hpp"
 
 #include "util/refcounted.hpp"
+
+#include <caml.hpp>
 
 namespace analysis {
 
@@ -14,13 +14,12 @@ class pseries::repr
 
   value m_value;
 
+  REGISTER_MEMORY()
   MAKE_REFCOUNTED( repr );
-
-private:
-  explicit repr(value);
 
 public:
   repr();
+  explicit repr(value);
   explicit repr(const expr &);
   ~repr();
 
@@ -28,6 +27,7 @@ public:
   { return new repr( m_value ); }
 
   friend class pseries;
+  friend class pseries_detail::iterator;
 };
 
 } // namespace analysis

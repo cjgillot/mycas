@@ -6,7 +6,7 @@
 
 namespace analysis {
 
-namespace pseries_detail { class repr; }
+namespace pseries_detail { class iterator; }
 
 class pseries
 : public basic
@@ -14,11 +14,14 @@ class pseries
   REGISTER_FINAL( pseries, basic )
 
 public:
-  pseries();
+  class repr;
+
+public:
   pseries(const pseries &);
   ~pseries();
 
   explicit pseries(const symbol &);
+  pseries(const symbol &, repr*);
 
   pseries* clone() const
   { return new pseries(*this); }
@@ -37,6 +40,12 @@ public:
   void print(std::ostream &) const;
   std::size_t hash() const;
 
+public:
+  typedef pseries_detail::iterator const_iterator;
+
+  const_iterator begin() const;
+  const_iterator end()   const;
+
 private:
   bool match_same_type(const basic &, match_state &) const;
   util::cmp_t compare_same_type(const basic &) const;
@@ -54,12 +63,12 @@ public:
   static pseries div_series(const pseries &, const pseries &);
 
 private:
-  class repr;
-
   symbol m_var;
   boost::intrusive_ptr<repr> m_rep;
 };
 
 } // namespace analysis
+
+#include "analysis/pseries/iterator.hpp"
 
 #endif

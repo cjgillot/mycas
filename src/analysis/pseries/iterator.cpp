@@ -4,7 +4,7 @@
 
 #include "analysis/caml/expr_wrap.hpp"
 
-#include <caml/mlvalues.h>
+#include <caml.hpp>
 
 using namespace analysis;
 using namespace analysis::pseries_detail;
@@ -27,49 +27,41 @@ static inline value incr(value it)
   return Field( it, 1 );
 }
 
+#define rep (*(value*)&m_rep)
 
-iterator::iterator( value p )
-: m_rep( p )
+iterator::iterator(const pseries::repr* r)
+: m_rep( (void*)r->m_value )
 {
-  caml_register_global_root( &m_rep );
+  caml_register_global_root( &rep );
 }
 
 iterator::iterator( const iterator &o )
 : m_rep( o.m_rep )
 {
-  caml_register_global_root( &m_rep );
+  caml_register_global_root( &rep );
 }
 
 iterator::~iterator()
 {
-  caml_remove_global_root( &m_rep );
+  caml_remove_global_root( &rep );
 }
 
-iterator& iterator::operator++()
-{
-  m_rep = incr( m_rep );
-  return *this;
-}
+void iterator::increment()
+{ rep = incr( rep ); }
 
-const expr &iterator::operator*() const
+const expr &iterator::dereference() const
 {
-  value ret = deref( m_rep );
+  value ret = deref( rep );
   return *Expr_val( ret );
-}
-
-const expr *iterator::operator->() const
-{
-  value ret = deref( m_rep );
-  return  Expr_val( ret );
 }
 
 bool iterator::empty() const
 {
-  return ::empty( m_rep );
+  return ::empty( rep );
 }
 
 bool iterator::forced() const
 {
-  value ret = pseries_export_iterator_forced( m_rep );
+  value ret = pseries_export_iterator_forced( rep );
   return Bool_val( ret );
 }
