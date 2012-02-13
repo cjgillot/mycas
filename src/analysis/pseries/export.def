@@ -1,24 +1,27 @@
 pseries_export
-0 empty
 
-1 make
+1 pseries_base:alone
 
-1 null
-1 unit
-1 diff
+1 pseries_base:empty
+1 pseries_base:null
+1 pseries_base:unit
 
-2 map
+2 pseries_base:compare
 
-2 add
-2 sub
-1 neg
+1 pseries_end:diff
 
-2 mul
-2 div
-1 inv
+2 aors:add
+2 aors:sub
+1 aors:neg
 
-2 compare
+2 mul:mul
+2 div:div
+1 div:inv
 
-# for iterator
-1 iterator_force
-1 iterator_forced
+2 taylor:taylor
+
+# special symbols
+2 pseries_export:map
+
+1 pseries_export:force as iterator_force
+1 pseries_export:is_forced as iterator_forced

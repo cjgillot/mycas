@@ -8,6 +8,8 @@ sub declare_byte;
 sub prepare_native;
 sub declare_native;
 
+sub finish_c;
+
 sub parse_nm;
 
 # -- main code -- #
@@ -24,32 +26,46 @@ if( $#ARGV >= 2 )
   $native = 1;
 }
 
+# array of exported symbols
+# each symbol has the form ( exported-name, arity, module-name, symbol-name )
 my @symbols = ( );
 
 open( F, $fun ) || die( "Cannot open file $fun" );
+
+# file syntax :
+# first line is exportation prefix
+# each other line has the form : arity module:symbol( as aliased-name)?
 
 my $module = <F>;
 chomp( $module );
 
 my $count = 0;
 while( my $line = <F> ) {
-  if( $line =~ /^([0-9]+)\s(\w+)/ )
+  if( $line =~ /^([0-9]+)\s+(\w+):(\w+)(\s+as\s+(\w+))?/ )
   {
-    my @sym = ( $2, $1, "" );
+    my @sym;
+    if( defined $4 ) # some alias
+    {
+      @sym = ( $5, $1, $2, $3 );
+    }
+    else
+    {
+      @sym = ( $3, $1, $2, $3 );
+    }
     $symbols[ $count++ ] = \@sym;
   }
 }
 
 close F;
 
-@symbols = sort {$$a[0] cmp $$b[0]} @symbols;
+# sort by seeked symbol, since nm does it
+@symbols = sort {"$$a[2]__$$a[3]" cmp "$$b[2]__$$b[3]"} @symbols;
 
 if( $native != 0 )
 {
-  &parse_nm( $module, $obj, \@symbols );
+  &parse_nm( $obj, \@symbols );
 
-  open( CC, ">$cout.c" );
-  open( HH, ">$cout.h" );
+  open( CC, ">$cout.cc" );
 
   &prepare_native();
 
@@ -57,12 +73,13 @@ if( $native != 0 )
   {
     &declare_native( $$sym[0], $$sym[2], $$sym[1] );
   }
+
+  &finish_c();
 }
 
 else # byte
 {
-  open( CC, ">$cout.c" );
-  open( HH, ">$cout.h" );
+  open( CC, ">$cout.cc" );
   open( ML, ">$cout.ml" );
 
   &prepare_byte( $module, length( @symbols ) );
@@ -70,20 +87,20 @@ else # byte
   my $index = 0;
   for my $sym (@symbols)
   {
-    &declare_byte( $$sym[0], $index++, $$sym[1] );
+    &declare_byte( $$sym[0], $index++, $$sym[1], $$sym[2], $$sym[3] );
   }
+
+  &finish_c();
 }
 
 # -- common case -- #
 
 sub prepare_c {
-  print HH <<EOF
-#include <caml/mlvalues.h>
-
-EOF
-;
-
   print CC <<EOF
+#include "caml/caml_support.hpp"
+
+extern "C" {
+
 #include <caml/mlvalues.h>
 #include <caml/callback.h>
 #include <caml/memory.h>
@@ -95,31 +112,26 @@ EOF
 ;
 }
 
+sub finish_c {
+  print CC <<EOF
+}
+
+EOF
+;
+}
+
 sub proto_c {
   my( $func, $arity ) = @_;
 
-  print HH "value $module\_$func(";
   print CC "value $module\_$func(";
 
   if( $arity > 0 )
   {
     my( $i ) = 1;
-  }
-
-  if( $arity > 0 )
-  {
-    my( $i ) = 1;
-    print HH "value";
     print CC "value arg1";
-
-    while( $i++ < $arity )
-    {
-      print HH ", value";
-      print CC ", value arg$i";
-    }
+    print CC ", value arg$i" while( $i++ < $arity );
   }
 
-  print HH ");\n";
   print CC ")\n";
 }
 
@@ -148,6 +160,11 @@ sub call_c {
 
 # -- bytecode case -- #
 
+# bytecode export mechanism :
+# - export function using a callback regitration in <ML>
+# - the registration is provided by <CC> in "__export_functions_$module"
+# - call is made using registered values
+
 sub prepare_byte {
   my( $module, $size ) = @_;
 
@@ -166,25 +183,31 @@ CAMLprim value __export_functions_$module( value fun, value index )
 EOF
   ;
 
-  print ML "external export : 'a -> int -> unit = \"__export_functions_$module\"";
-  $module =~ s/\b(\w)/\U$1/g;
-  print ML "open $module";
+  print ML "external export : 'a -> int -> unit = \"__export_functions_$module\"\n";
 }
 
 sub declare_byte {
-  my( $func, $index, $arity ) = @_;
+  my( $func, $index, $arity, $mod, $sym ) = @_;
 
   # C side
   &proto_c( $func, $arity );
   print CC "{\n";
+  print CC "  caml::initializer.touch();\n";
   &call_c ( $arity, "(fun_table[$index])" );
   print CC "}\n";
 
   # Caml side
-  print ML "let () = export $func $index\n";
+  $mod =~ s/\b(\w)/\U$1/g;
+  print ML "let () = export $mod.$sym $index\n";
 }
 
 # -- native case -- #
+
+# native export mechanism :
+# - there is no help <ML> file used for registration
+# - calling is made by creating a caml closure
+# - if $arity > 1 then closure = { caml_curry$arity, $arity, $symbol }
+# - else closure = { $symbol, 1 }
 
 sub prepare_native {
   &prepare_c();
@@ -195,27 +218,47 @@ sub declare_native {
 
   &proto_c( $func, $arity );
 
-  print CC <<EOF
-{
-  extern void $symbol();
-  static void* fnc = &$symbol;
-EOF
-  ;
+  print CC "{\n";
+  print CC "  caml::initializer.touch();\n";
 
-  &call_c( $arity, "(&fun)" );
-  print CC "}\n";
+  if( $arity < 2 )
+  {
+    print CC <<EOF
+  extern void $symbol();
+  static value fun[] =
+    { (value)&$symbol, Val_int(1) };
+EOF
+    ;
+  }
+  else
+  {
+    print CC <<EOF
+  extern void caml_curry$arity();
+  extern void $symbol();
+  static value fun[] =
+    { (value)&caml_curry$arity, Val_int($arity), (value)&$symbol };
+EOF
+    ;
+  }
+
+  &call_c( $arity, "((value*)fun)" );
+  print CC "}\n\n";
 
 }
 
 sub parse_nm {
-  my( $module, $obj, $syms ) = @_;
-  $module =~ s/\b(\w)/\U$1/g;
+  my( $obj, $syms ) = @_;
 
   open( NM, "nm --defined-only $obj |" ) || die( "Unsuccesful command : nm" );
 
   for my $sym ( @$syms )
   {
-    my $name = $$sym[0];
+    # @sym = ( exported-name, arity, module-name, symbol-name )
+    my $module = $$sym[2];
+    my $name = $$sym[3];
+
+    $module =~ s/\b(\w)/\U$1/g;
+
     while( my $line = <NM> )
     {
       if( $line =~ /^\s*[0-9a-f]+ T (caml[A-Za-z0-9_]+)\s*/ )

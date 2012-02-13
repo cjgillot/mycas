@@ -9,9 +9,9 @@ struct initializer_t
   ~initializer_t();
 
   inline void touch() const {}
-
-  static initializer_t instance;
 };
+
+static initializer_t initializer;
 
 }
 

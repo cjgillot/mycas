@@ -1,18 +1,27 @@
 #include "caml_support.hpp"
 #include "util/null.hpp"
 
-#include <caml/mlvalues.h>
+#include <caml.hpp>
 
-extern "C" value caml_startup(const char**);
+#include <iostream>
 
 using namespace caml;
 
+static std::size_t counter = 0;
+
 initializer_t::initializer_t()
 {
-  const char* argv[] = { "", nullptr };
-  caml_startup(argv);
+  if( counter++ == 0 )
+  {
+    char* argv[] = { nullptr };
+    caml_startup(argv);
+  }
 }
 
-initializer_t::~initializer_t() {}
-
-initializer_t initializer_t::instance;
+initializer_t::~initializer_t()
+{
+  if( --counter == 0 )
+  {
+    // TODO finalize caml
+  }
+}
