@@ -1,99 +1,39 @@
 open Pseries_base
 
-module DL = Dllist
-
 module Naive = struct
-  type mul_rep = {
-    (* points to first *)
-    mutable f: expr DL.t;
-    mutable fs: series option;
+  open Aors
 
-    (* points to last *)
-    mutable g: expr DL.t;
-    mutable gs: series option
+  let rec _mul (fs,gs) = match fs,gs with
+  | E,_ | _,E -> E
+  | N( f0,ft ),N( g0, gt ) ->
+      let f00 = Expr.null_p f0
+      and g00 = Expr.null_p g0 in
 
-    (* invariant : |f| = |g| *)
-  }
+           if f00 && g00 then N( _ex0, shift( mul ft gt ) )
+      else if f00        then N( _ex0, lazy( _mul (!!ft,gs) ) )
+      else if g00        then N( _ex0, lazy( _mul (fs,!!gt) ) )
+      else
+      N( f0 */ g0,
+          (mmul_l f0 gt)
+      +:  (mmul_r ft g0)
+      +:  (shift (mul ft gt))
+      )
 
-  let empty r =
-    r.fs == None && r.gs == None
+  and mul f g =
+    lazy( _mul (!!f, !!g) )
 
-  let make_rep fs gs =
-    let N( fh, ft ) = fs
-    and N( gh, gt ) = gs in
-    let ret = {
-      f=DL.create fh;
-      fs=Some ft;
+  let rec _square = function
+  | E -> E
+  | N( f0, ft ) ->
+      if Expr.null_p f0
+      then N( _ex0, lazv(N( _ex0, square ft )) )
+      else N( f0 */ f0,
+        let sca = mmul_l f0 ft in
+          sca +: sca +: (shift (square ft))
+      )
 
-      g=DL.create gh;
-      gs=Some gt
-    }
-    in ret
+  and square f = lazy( _square !!f )
 
-  let incr_rep r =
-    let () = match r.fs with
-    | None ->
-        (* add at end of list *)
-        ignore( DL.prepend r.f _ex0 )
-
-    | Some( lazy E ) ->
-        ignore( DL.prepend r.f _ex0 );
-        r.fs <- None
-
-    | Some( lazy ( N( h,t ) ) ) ->
-        ignore( DL.prepend r.f h );
-        r.fs <- Some t
-
-    and () = match r.gs with
-    | None ->
-        (* add at end of list *)
-        r.g <- DL.append r.g _ex0;
-        ()
-
-    | Some( lazy E ) ->
-        r.g <- DL.append r.g _ex0;
-        r.gs <- None
-
-    | Some( lazy ( N( h,t ) ) ) ->
-        r.g <- DL.append r.g h;
-        r.gs <- Some t
-    in
-    ()
-
-  let get_ex r =
-    let ret = ref( DL.get r.f */ DL.get r.g ) in
-    let rec loop f g =
-      if f == r.f then () else
-      let () =
-        ret := !ret +/ ( DL.get f */ DL.get g )
-      in
-      loop (DL.next f) (DL.prev g)
-    in
-    loop (DL.next r.f) (DL.prev r.g);
-    !ret
-
-  (* use simple convolution rule *)
-  let rec mul_with_rep r =
-    if empty r then E else
-    let ex = get_ex r in
-    N( ex, lazy(
-      incr_rep r;
-      mul_with_rep r
-    ))
-
-  (* C = n^2 = M(n) *)
-  let _mul ( fs, gs ) =
-    let r = make_rep fs gs in
-    mul_with_rep r
-
-  let mul fs gs =
-    if ( !? fs && !!fs == E ) || ( !? gs && !!gs == E )
-    then lazv E
-    else lazy( _mul ( !!fs, !!gs ) )
-
-  (* C = n^2 = M(n) *)
-  let _square a = _mul (a, a)
-  let square a = mul a a
 end
 
 include Naive

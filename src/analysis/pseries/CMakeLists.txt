@@ -34,11 +34,15 @@ add_custom_command(
   OUTPUT export.h
   COMMAND $(MAKE) -C ${CMAKE_CURRENT_SOURCE_DIR} "export.h"
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  MAIN_DEPENDENCY "export.def"
 )
+
+file( GLOB mlsrc *.ml *.mli )
 
 add_custom_command(
   TARGET analysis_pseries
   PRE_LINK
-  COMMAND $(MAKE) -C ${CMAKE_CURRENT_SOURCE_DIR}
+  COMMAND $(MAKE) -C ${CMAKE_CURRENT_SOURCE_DIR} DEBUG=on
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DEPENDS ${mlsrc}
 )

@@ -13,6 +13,7 @@ pseries_export
 2 aors:add
 2 aors:sub
 1 aors:neg
+2 pseries_base:mmul_l as sca
 
 2 mul:mul
 2 div:div

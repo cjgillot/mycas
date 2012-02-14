@@ -13,15 +13,17 @@ class pseries
 {
   REGISTER_FINAL( pseries, basic )
 
-public:
+private:
+  friend class pseries_detail::iterator;
   class repr;
+  pseries(const symbol &, repr*);
 
 public:
   pseries(const pseries &);
   ~pseries();
 
   explicit pseries(const symbol &);
-  pseries(const symbol &, repr*);
+  pseries(const symbol&, const expr&);
 
   pseries* clone() const
   { return new pseries(*this); }
@@ -52,15 +54,19 @@ private:
   expr differentiate(const symbol &) const;
 
 public:
-  static pseries neg_series(const pseries &);
-  static pseries inv_series(const pseries &);
+  static pseries* taylor(const expr &, const symbol &);
+  static pseries* neg_series(const pseries*);
+  static pseries* inv_series(const pseries*);
 
-  static pseries sca_series(const pseries &, const expr &);
+  static pseries* sca_series(const expr &, const pseries*);
 
-  static pseries add_series(const pseries &, const pseries &);
-  static pseries sub_series(const pseries &, const pseries &);
-  static pseries mul_series(const pseries &, const pseries &);
-  static pseries div_series(const pseries &, const pseries &);
+  static pseries* add_series(const pseries*, const pseries*);
+  static pseries* sub_series(const pseries*, const pseries*);
+  static pseries* mul_series(const pseries*, const pseries*);
+  static pseries* div_series(const pseries*, const pseries*);
+
+  static pseries* intpow(const pseries*, unsigned long);
+  static pseries* pow_series(const pseries*, const pseries*);
 
 private:
   symbol m_var;

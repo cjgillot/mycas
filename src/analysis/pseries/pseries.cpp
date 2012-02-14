@@ -23,6 +23,10 @@ pseries::pseries(const symbol& var, repr* rep)
 : basic(), m_var(var), m_rep( rep )
 {}
 
+pseries::pseries(const analysis::symbol& var, const analysis::expr& ex)
+: basic(), m_var(var), m_rep( new repr(ex) )
+{}
+
 bool pseries::match_same_type(const basic &, match_detail::match_state &) const
 {
   // TODO

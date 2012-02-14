@@ -92,6 +92,7 @@ EXPORT value __caml_expr_unit( value ex )
 EXPORT value __caml_expr_print( value ex )
 {
   Expr_val( ex )->print( std::cout );
+  std::cout << std::flush;
   return Val_unit;
 }
 

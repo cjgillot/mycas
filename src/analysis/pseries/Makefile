@@ -25,8 +25,13 @@ OCAMLGENH=perl ../../caml/gen_decls.pl
 OCAMLGENC=perl ../../caml/gen_funcs.pl
 
 INCLUDE=-I../../ -I/usr/local/lib/ocaml
-CFLAGS =-g -fPIC
-MLFLAGS=-g -fPIC
+CFLAGS =-fPIC
+MLFLAGS=-fPIC
+
+ifdef DEBUG
+CFLAGS  += -g
+MLFLAGS += -g -inline 0
+endif
 
 LDFLAGS=-L/usr/local/lib/ocaml -lasmrun -ldl -lm -lunix
 
@@ -78,9 +83,9 @@ partialclean:
 clean: partialclean
 	rm -f *.a
 	rm -f cdepend.mk mldepend.mk
+	rm -f export.h
 
 distclean: clean
-	rm -f export.h
 
 .PHONY: partialclean clean distclean
 
