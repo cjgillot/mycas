@@ -129,6 +129,7 @@ protected:
    */
   bool sign_sort();
 
+public:
   //! \brief Argument access
   const expr &arg(unsigned i) const
   { return super::at(i); }

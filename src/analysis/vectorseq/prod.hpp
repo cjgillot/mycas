@@ -56,6 +56,7 @@ public:
   expr eval(unsigned) const;
   expr expand() const;
   expr subs(const std::map<expr,expr> &) const;
+  expr series(const symbol &) const;
 
 private:
   expr differentiate(const symbol&) const;

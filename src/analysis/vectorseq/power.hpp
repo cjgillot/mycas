@@ -46,6 +46,7 @@ public: // tests
   bool has(const symbol&) const;
   expr expand() const;
   expr subs(const std::map<expr,expr> &) const;
+  expr series(const symbol &) const;
 
 public:
   void print(std::basic_ostream<char> &) const;

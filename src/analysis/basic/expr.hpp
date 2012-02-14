@@ -75,6 +75,7 @@ public:
   expr expand() const;
   bool match(const expr &, match_state &) const;
   expr subs(const exmap &) const;
+  expr series(const symbol &) const;
 
 public: // RTTI
   bool is_numerical() const;

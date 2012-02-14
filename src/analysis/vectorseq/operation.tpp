@@ -182,7 +182,7 @@ do_sub( const poly<epair> &a
   }
 
   std::copy( i1, e1, std::back_inserter(ret) );
-  std::copy( i2, e2, std::back_inserter(ret) );
+  std::transform( i2, e2, std::back_inserter(ret), functor::negate<epair>() );
 
   ret.shrink();
 

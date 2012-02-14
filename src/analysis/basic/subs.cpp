@@ -21,5 +21,5 @@ expr basic::subs_once(const exmap &map) const
     if( match( it->first, s ) )
       return it->second.subs( s.as_exmap() );
 
-  return this;
+  return this->eval(2);
 }

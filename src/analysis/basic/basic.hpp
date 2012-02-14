@@ -144,7 +144,7 @@ public:
    * \param s : the symbol with respect to which differentiate
    * \return the evaluated power series of \c this
    */
-  expr series(const symbol &s) const;
+  virtual expr series(const symbol &s) const;
 
 private:
   /*!\brief Virtual differentiation function

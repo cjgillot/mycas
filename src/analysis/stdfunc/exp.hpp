@@ -15,6 +15,9 @@ public:
   typedef function<1> super;
   REGISTER_CLASS( exp_, super )
 
+public:
+  expr eval(unsigned) const;
+
 private:
   explicit exp_(const expr &);
   ~exp_();

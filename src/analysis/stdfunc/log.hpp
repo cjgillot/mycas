@@ -15,6 +15,9 @@ public:
   typedef function<1> super;
   REGISTER_CLASS( log_, super )
 
+public:
+  expr eval(unsigned) const;
+
 private:
   explicit log_(const expr &);
   ~log_();

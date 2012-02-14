@@ -4,6 +4,8 @@
 #include "analysis/expr.hpp"
 #include "analysis/function/function.ipp"
 
+#include "analysis/stdfunc/log.hpp"
+
 using namespace analysis;
 
 template<>
@@ -26,4 +28,20 @@ expr exp_::differentiate(const symbol &s) const
 expr analysis::exp(const expr &a)
 {
   return new exp_(a);
+}
+
+expr exp_::eval(unsigned lv) const
+{
+  super::arg<0>().eval( --lv );
+
+  if( super::arg<0>().null() )
+    return 1;
+
+  if( super::arg<0>().is_a<log_>() )
+  {
+    const log_* la = super::arg<0>().as_a<log_>();
+    return la->arg<0>();
+  }
+
+  return basic::eval( ++lv );
 }

@@ -58,6 +58,10 @@ inline expr expr::expand() const
 inline expr expr::subs(const std::map<expr,expr> &map) const
 { return m_impl->subs( map ); }
 
+// series
+inline expr expr::series(const symbol &s) const
+{ return m_impl->series(s); }
+
 // printing
 inline void expr::print(std::basic_ostream<char> &os) const
 { m_impl->print(os); }
