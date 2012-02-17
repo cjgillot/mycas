@@ -225,8 +225,11 @@ sub declare_native {
   {
     print CC <<EOF
   extern void $symbol();
-  static value fun[] =
-    { (value)&$symbol, Val_int(1) };
+  static value fun[] = {
+    (2 << 10) | Closure_tag,  // size and tag
+    (value)&$symbol,          // Code_val
+    Val_int(1)                // arity
+  };
 EOF
     ;
   }
@@ -235,13 +238,17 @@ EOF
     print CC <<EOF
   extern void caml_curry$arity();
   extern void $symbol();
-  static value fun[] =
-    { (value)&caml_curry$arity, Val_int($arity), (value)&$symbol };
+  static value fun[] = {
+    (3 << 10) | Closure_tag,  // size and tag
+    (value)&caml_curry$arity, // Code_val
+    Val_int($arity),          // arity
+    (value)&$symbol           // argument
+  };
 EOF
     ;
   }
 
-  &call_c( $arity, "((value*)fun)" );
+  &call_c( $arity, "(&fun[1])" );
   print CC "}\n\n";
 
 }

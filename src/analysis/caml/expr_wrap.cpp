@@ -11,7 +11,16 @@ using namespace analysis;
 
 namespace _caml_expr {
 
-static void expr_finalize( value ex )
+static int
+expr_compare( value a, value b )
+{ return expr::compare( *Expr_val(a), *Expr_val(b) ); }
+
+static intnat
+expr_hash( value a )
+{ return Expr_val(a)->hash(); }
+
+static void
+expr_finalize( value ex )
 {
   const expr *e = Expr_val( ex );
   e->~expr();
@@ -20,8 +29,8 @@ static void expr_finalize( value ex )
 struct custom_operations expr_ops = {
   (char*)"analysis.expr",
   &expr_finalize,
-  custom_compare_default,
-  custom_hash_default,
+  &expr_compare,
+  &expr_hash,
   custom_serialize_default,
   custom_deserialize_default,
   custom_compare_ext_default
