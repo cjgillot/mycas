@@ -1,14 +1,9 @@
-#include "analysis/register.hpp"
+#include "analysis/basic/memory.hpp"
 
 #include <boost/pool/pool.hpp>
 #include <boost/aligned_storage.hpp>
 
-#if 0
-#include "analysis/vectorseq.hpp"
-
-STATIC_ASSERT( sizeof( analysis::sum ) == sizeof( analysis::prod ) );
-#endif
-
+#include "util/assert.hpp"
 #include "util/null.hpp"
 
 // Usage of these pools improves memory allocation
@@ -33,31 +28,45 @@ STATIC_ASSERT( sizeof( analysis::sum ) == sizeof( analysis::prod ) );
 
 namespace {
 
-boost::pool<> pool1 ( 4  * sizeof( void* ) );
-boost::pool<> pool2 ( 8  * sizeof( void* ) );
-boost::pool<> pool3 ( 12 * sizeof( void* ) );
+union max_align {
+  char c;
+  short s;
+  int i;
+  long l;
+  long long ll;
 
-boost::pool<>* pools [3] = { nullptr, nullptr, nullptr };
+  void* p;
+  long max_align::*mp;
+
+  void (*fp)();
+  void (max_align::*mfp)();
+};
 
 struct initializer_t
 {
-  inline initializer_t()
-  {
-    pools[0] = &pool1;
-    pools[1] = &pool2;
-    pools[2] = &pool3;
-  }
+private:
+  boost::pool<> pool1;
+  boost::pool<> pool2;
+  boost::pool<> pool3;
 
-  inline ~initializer_t()
-  {
-    pools[0] = pools[1] = pools[2] = nullptr;
-  }
-
-  inline void touch() const {}
+public:
+  inline  initializer_t() throw();
+  inline ~initializer_t() throw();
+  inline void touch() const throw() {}
 };
-const initializer_t initializer;
 
-boost::pool<>* get_pool( std::size_t sz )
+}
+
+#define tag_size (sizeof(max_align))
+#define vp_size (sizeof(void*))
+
+// aggregate initializer
+static boost::pool<>* pools [3] = { 0, 0, 0 };
+static const initializer_t initializer;
+
+static inline boost::pool<>*
+get_pool( std::size_t sz )
+  throw()
 {
   initializer.touch();
 
@@ -69,14 +78,10 @@ boost::pool<>* get_pool( std::size_t sz )
   return ( sz < 4 ) ? pools[ sz - 1 ] : nullptr;
 }
 
-}
-
 #define DATA( p ) ( static_cast<void**>( p ) )
-
-namespace analysis {
-namespace memory {
-
-void* allocate( std::size_t n ) throw()
+void*
+analysis::memory::allocate( std::size_t n )
+  throw()
 {
   std::size_t sz = n + sizeof( void* );
 
@@ -92,7 +97,9 @@ void* allocate( std::size_t n ) throw()
   return DATA( p ) + 1;
 }
 
-void release( void* p ) throw()
+void
+analysis::memory::release( void* p )
+  throw()
 {
   p = DATA( p ) - 1;
 
@@ -105,5 +112,27 @@ void release( void* p ) throw()
   else
     ::operator delete( p );
 }
+#undef DATA
 
-}} // namespace analysis::memory
+inline
+initializer_t::initializer_t()
+  throw()
+: pool1( 4  * sizeof( void* ) )
+, pool2( 8  * sizeof( void* ) )
+, pool3( 12 * sizeof( void* ) )
+{
+  pools[0] = &pool1;
+  pools[1] = &pool2;
+  pools[2] = &pool3;
+}
+inline
+initializer_t::~initializer_t()
+  throw()
+{
+  pools[0] =
+  pools[1] =
+  pools[2] =
+    nullptr;
+}
+
+template class boost::pool<>;

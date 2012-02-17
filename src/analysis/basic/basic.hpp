@@ -4,8 +4,8 @@
 #include "util/refcounted.hpp"
 
 #include "analysis/forward.hpp"
-#include "analysis/register.hpp"
 
+#include "analysis/basic/register.hpp"
 #include "analysis/basic/memory.hpp"
 
 namespace analysis {
