@@ -1,4 +1,4 @@
-open Pseries_base
+open Base
 
 (****** display ******)
 (*let print p =

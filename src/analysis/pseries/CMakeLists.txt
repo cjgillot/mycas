@@ -37,7 +37,7 @@ add_custom_command(
   MAIN_DEPENDENCY "export.def"
 )
 
-file( GLOB mlsrc *.ml *.mli )
+file( GLOB_RECURSE mlsrc *.ml *.mli )
 
 add_custom_command(
   TARGET analysis_pseries

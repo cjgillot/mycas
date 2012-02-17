@@ -1,4 +1,4 @@
-open Pseries_base
+open Base
 
 let rec _taylor ex sym denom order =
   let dex = Expr.diff ex sym

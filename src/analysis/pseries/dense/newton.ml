@@ -1,8 +1,8 @@
-open Pseries_base
+open Base
 
 (*
   Newton iteration :
-  
+
   Given F a function over power series,
   compute the series defined by
     S_{n+1} = F( S_n )

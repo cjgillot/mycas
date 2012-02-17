@@ -1,19 +1,19 @@
 pseries_export
 
-1 pseries_base:alone
+1 base:alone
 
-1 pseries_base:empty
-1 pseries_base:null
-1 pseries_base:unit
+1 base:empty
+1 base:null
+1 base:unit
 
-2 pseries_base:compare
+2 base:compare
 
-1 pseries_end:diff
+1 end:diff
 
 2 aors:add
 2 aors:sub
 1 aors:neg
-2 pseries_base:mmul_l as sca
+2 base:mmul_l as sca
 
 2 mul:mul
 2 div:div

@@ -1,4 +1,4 @@
-open Pseries_base
+open Base
 
 exception Bad_composition
 

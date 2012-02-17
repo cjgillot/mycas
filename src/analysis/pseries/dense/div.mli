@@ -1,4 +1,4 @@
-open Pseries_base
+open Base
 
 val  div :  series -> series ->  series
 val _div : _series * _series -> _series
