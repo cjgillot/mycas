@@ -121,8 +121,8 @@ power::compare_same_type(const basic &o_) const {
 
 std::size_t power::hash() const {
   std::size_t seed = 0;
-  boost::hash_combine(seed, m_base.get()->hash());
-  boost::hash_combine(seed, m_expo.get()->hash());
+  boost::hash_combine(seed, m_base.hash());
+  boost::hash_combine(seed, m_expo.hash());
   return seed;
 }
 

@@ -6,6 +6,9 @@
 namespace analysis {
 
 // cdtor
+inline expr::expr()
+: m_impl( numerical::zero() ) {}
+
 inline expr::expr(const expr &o)
 : m_impl( o.m_impl ) {}
 inline expr& expr::operator=(const expr &o)
@@ -34,6 +37,11 @@ inline void expr::eval(unsigned lv) const
     m_impl->eval(--lv).m_impl.swap( m_impl );
   ASSERT( m_impl->is_evaluated() );
 }
+
+// accept
+template<class V>
+inline void expr::accept(const V &visitor) const
+{ m_impl->accept( visitor ); }
 
 // has
 inline bool expr::has(const symbol &s) const

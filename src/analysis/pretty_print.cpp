@@ -28,7 +28,7 @@ struct pretty_printer
 public:
   void visit( const expr &ex ) const
   {
-    ex.get()->accept( *this );
+    ex.accept( *this );
   }
 
   void visit( const number &n ) const

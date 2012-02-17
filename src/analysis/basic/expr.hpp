@@ -27,6 +27,8 @@ class expr
   struct enabler {};
 
 public:
+  expr();
+
   expr(const expr &);
   expr &operator=(const expr &);
 
@@ -60,6 +62,11 @@ private:
   static const unsigned default_eval_depth;
 public:
   void eval(unsigned = default_eval_depth) const;
+
+public:
+  //! \brief Visitor accept
+  template<class V>
+  void accept(const V &) const;
 
 public:
   //! \brief Nullity test

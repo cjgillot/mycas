@@ -108,7 +108,7 @@ EXPORT value __caml_expr_print( value ex )
 
 EXPORT value __caml_expr_has( value ex, value sym )
 {
-  const symbol_* s = static_cast< const symbol_* >( Expr_val( sym )->get() );
+  const symbol_* s = Expr_val( sym )->as_a<symbol_>();
   Expr_val( ex )->has( symbol(s) );
   return Val_unit;
 }
@@ -116,7 +116,7 @@ EXPORT value __caml_expr_has( value ex, value sym )
 EXPORT value __caml_expr_diff_n( value ex, value sym, value order )
 {
   CAMLparam3( ex, sym, order );
-  const symbol_* s = static_cast< const symbol_* >( Expr_val( sym )->get() );
+  const symbol_* s = Expr_val( sym )->as_a<symbol_>();
   const expr   * e = Expr_val( ex );
   long n = Int_val( order );
 
@@ -129,7 +129,7 @@ EXPORT value __caml_expr_diff_n( value ex, value sym, value order )
 EXPORT value __caml_expr_diff( value ex, value sym )
 {
   CAMLparam2( ex, sym );
-  const symbol_* s = static_cast< const symbol_* >( Expr_val( sym )->get() );
+  const symbol_* s = Expr_val( sym )->as_a<symbol_>();
   const expr   * e = Expr_val( ex );
 
   CAMLlocal1( res );

@@ -156,7 +156,7 @@ bool match_same_type_eps( const number &c, bool nullc, const I &self, const I &p
   if( ! has_global_wild )
     return items.empty() && nullc;
 
-  const expr &ret = F::create( c, items.begin(), items.end() );
+  expr ret = F::create( c, items.begin(), items.end() );
   match_wild( *ret.get(), *global_wild, mm );
 
   return true;
