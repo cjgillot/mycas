@@ -1,13 +1,12 @@
 #ifndef NUMERIC_NUMBER_HPP
 #define NUMERIC_NUMBER_HPP
 
-#include "operators.hpp"
+#include "numeric/mp_operators.hpp"
 
+#include "operators.hpp"
 #include "util/compare.hpp"
 
-#include "boost/variant.hpp"
-
-#include "mp_operators.hpp"
+#include <boost/variant.hpp>
 
 namespace numeric {
 
@@ -133,6 +132,10 @@ public:
 
   unsigned long get_ulong() const;
     signed long get_slong() const;
+
+  const fmpz* get_fmpz_t() const;
+  const fmpq* get_fmpq_t() const;
+  mpfr_srcptr get_mpfr_t() const;
   //@}
   /*!\}*/
 
