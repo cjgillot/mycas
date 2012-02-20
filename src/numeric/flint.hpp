@@ -5,8 +5,14 @@
 #include <mpfr.h>
 
 #ifdef __cplusplus
-extern "C" {
+#define GUARD_BEGIN extern "C" {
+#define GUARD_END   }
+#else
+#define GUARD_BEGIN /**/
+#define GUARD_END   /**/
 #endif
+
+GUARD_BEGIN
 
 #ifdef FLINT_H
 #error "DO NOT INCLUDE FLINT.H BEFORE THIS FILE"
@@ -32,9 +38,10 @@ extern "C" {
 #include <fmpq_mat.h>
 #include <fmpq_poly.h>
 
-#ifdef __cplusplus
-}
-#endif
+GUARD_END
+
+#undef GUARD_BEGIN
+#undef GUARD_END
 
 #undef ulong
 

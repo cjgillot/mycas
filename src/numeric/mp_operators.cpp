@@ -1,5 +1,6 @@
 #include "mp_operators.hpp"
 
+#include <iostream>
 #include <string>
 
 mpfr_rnd_t  MpFrC::rnd = GMP_RNDN;
