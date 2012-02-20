@@ -72,7 +72,7 @@ template<unsigned N>
 class function
 : public exprseq< typename detail::choose_container<expr, N>::type >
 {
-  REGISTER_CLASS( function<N>, basic )
+  REGISTER_STATIC_CLASS( function<N>, basic, FUNCTION_RTTI )
 
 private:
   typedef typename function::exprseq_ super;

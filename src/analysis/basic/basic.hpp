@@ -20,7 +20,7 @@ namespace analysis {
 class basic
 : private util::nonassignable {
 
-  REGISTER_BASE( basic )
+  REGISTER_BASE( basic, MAX_RTTI )
   REGISTER_MEMORY()
 
 private: // flags, mutable to allow update by basecase eval() and expand()

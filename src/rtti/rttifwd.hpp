@@ -16,10 +16,7 @@ struct rtti_node;
 //! \brief Friend structure for in-class rtti access
 struct rtti_getter;
 
-template<class Rt>
-class creator;
-
-template<class T, class Rt = void>
+template<class T>
 struct get_holder;
 
 } // namespace detail

@@ -48,18 +48,28 @@ namespace visitor = ::rtti::visitor;
 } // namespace analysis
 
 //! \brief ABC case
-#define REGISTER_BASE( klass )  \
-  MAKE_REFCOUNTED( klass );           \
-  ABSTRACT_RTTI( klass );             \
-public:                               \
+#define REGISTER_BASE( klass, max_rtti )  \
+  MAKE_REFCOUNTED( klass );               \
+  ABSTRACT_RTTI( klass, max_rtti );       \
+public:                                   \
   MAKE_VISITABLE( klass )
 
 //! \brief Derived case
 #define REGISTER_CLASS( klass, parent ) \
   IMPLEMENT_RTTI( klass, parent );
 
+//! \brief Static derived case
+#define REGISTER_STATIC_CLASS( klass, parent, id ) \
+  STATIC_RTTI( klass, parent, id );
+
 //! \brief Final case
 #define REGISTER_FINAL( klass, parent ) \
   FINAL_RTTI( klass, parent );
+
+//! \brief Static final case
+#define REGISTER_STATIC_FINAL( klass, parent, id ) \
+  STATIC_FINAL_RTTI( klass, parent, id );
+
+#include "analysis/rtti.hpp"
 
 #endif

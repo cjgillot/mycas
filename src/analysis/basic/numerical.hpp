@@ -10,7 +10,7 @@ namespace analysis {
 class numerical
 : public basic {
 
-  REGISTER_FINAL( numerical, basic )
+  REGISTER_STATIC_FINAL( numerical, basic, NUMERICAL_RTTI )
 
   friend class number;
 

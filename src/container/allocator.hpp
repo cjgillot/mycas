@@ -4,6 +4,8 @@
 #include <memory>
 #include <boost/intrusive_ptr.hpp>
 
+#include <boost/type_traits/remove_const.hpp>
+
 namespace container {
 namespace detail {
 

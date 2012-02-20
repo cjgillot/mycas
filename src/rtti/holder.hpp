@@ -4,6 +4,7 @@
 #include <boost/type_traits/is_const.hpp>
 
 #include "rtti/rttifwd.hpp"
+#include "rtti/creator.hpp"
 #include "rtti/getter.hpp"
 
 #include "util/assert.hpp"
@@ -25,31 +26,16 @@ namespace detail {
  * integer.
  */
 
-//! \brief RTTI id type
-typedef unsigned int rtti_type;
-
 //! \brief POD class holding a hierarchy bottom-up
 struct rtti_node {
   rtti_type id;
   const rtti_node* const base;
 };
 
-template<class Rt>
-class creator {
-
-  STATIC_ASSERT( boost::is_const<Rt>::value );
-
-public:
-  static rtti_type create();
-
-private:
-  static rtti_type current;
-};
-
 //! Arguments must be const-qualified to avoid unnecessary instanciations
 template<class T, class Rt>
-struct holder {
-
+struct holder
+{
   static rtti_node node;
 
   static inline
@@ -74,10 +60,8 @@ private:
 
   static void initialize();
 
-  struct initializer_t {
-    initializer_t() { holder::assert_initialized(); }
-    void touch() {}
-  } static initializer;
+  struct initializer_t;
+  static initializer_t initializer;
 };
 
 template<class Rt>
@@ -102,12 +86,8 @@ struct holder<Rt,Rt> {
 };
 
 //! \brief Grant access to the holder
-template<class T, class Rt>
-struct get_holder {
-  typedef holder<const T, const Rt> type;
-};
 template<class T>
-struct get_holder<T, void> {
+struct get_holder {
   typedef typename RTTI_GETTER::traits<T>::base Rt;
   typedef holder<const T, const Rt> type;
 };
@@ -116,4 +96,4 @@ struct get_holder<T, void> {
 
 #endif
 
-#include "rtti/holder.ipp"
+// #include "rtti/holder.ipp"

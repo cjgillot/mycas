@@ -16,7 +16,7 @@ class prod
   // grant access to super
   friend class vectorseq<prod, power>;
   typedef vectorseq<prod, power> super;
-  REGISTER_FINAL( prod, super )
+  REGISTER_STATIC_FINAL( prod, super, PROD_RTTI )
 
 //   friend class power;
   friend class sum;

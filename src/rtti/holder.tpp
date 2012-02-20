@@ -1,5 +1,5 @@
-#ifndef RTTI_HOLDER_IPP
-#define RTTI_HOLDER_IPP
+#ifndef RTTI_HOLDER_TPP
+#define RTTI_HOLDER_TPP
 
 #include "rtti/holder.hpp"
 #include "rtti/getter.hpp"
@@ -8,28 +8,22 @@
 
 #include <boost/type_traits/is_const.hpp>
 
+#include "rtti/holder.hpp"
+
+#include "rtti/creator.tpp"
+
 namespace rtti {
 namespace detail {
 
-// ***** creator ***** //
+// ***** holder<>::initializer_t ***** //
+template<class T, class Rt>
+struct holder<T,Rt>::initializer_t
+{
+  initializer_t() { holder::assert_initialized(); }
+  void touch() {}
+};
 
-template<class Rt>
-inline rtti_type
-creator<Rt>::create() {
-  // check for overflow
-  ASSERT_MSG(
-    current != 0
-  , "Too many instanciated classes for current RTTI."
-  );
-  return current++;
-}
-
-// initialize with 1, base class has static 0 id
-template<class Rt>
-rtti_type creator<Rt>::current = 1;
-
-// ***** holder ***** //
-
+// ***** holder<T,Rt> ***** //
 template<class T, class Rt>
 inline void
 holder<T, Rt>::assert_initialized()
@@ -44,8 +38,8 @@ template<class T, class Rt>
 inline void
 holder<T, Rt>::initialize()
 {
-  // scope lock a mutex if needed
-  node.id = creator<Rt>::create();
+  // won't be called for static ids
+  node.id = creator<Rt>::template create<T>();
 }
 
 // ***** holder<Rt,Rt> ***** //
@@ -59,8 +53,8 @@ holder<Rt, Rt>::assert_initialized()
 // standard ensures initialization before any non-trivial constructor called
 template<class T, class Rt>
 rtti_node holder<T,Rt>::node = {
-  0 // undefined id
-, &get_holder<super, Rt>::type::node // constant pointer
+  creator<Rt>::template init_value<T>::value // static id or 0(undefined)
+, &get_holder<super>::type::node // constant pointer
 };
 template<class T, class Rt>
 typename holder<T,Rt>::initializer_t holder<T,Rt>::initializer;

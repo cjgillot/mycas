@@ -47,6 +47,17 @@ struct rtti_getter {
     enum {
       abstract = T::rtti_is_abstract
     , final = T::rtti_is_final
+    , static_ = T::rtti_is_static
+    , static_max = T::rtti_static_max
+    };
+
+    // instanciation guard class around static_id
+    template<bool>
+    struct static_id
+    {
+      enum {
+        value = T::rtti_static_id
+      };
     };
   };
 

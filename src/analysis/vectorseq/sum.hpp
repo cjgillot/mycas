@@ -23,7 +23,7 @@ class sum
 
   friend class vectorseq<sum, prod>;
   typedef vectorseq<sum, prod> super;
-  REGISTER_FINAL( sum, super )
+  REGISTER_STATIC_FINAL( sum, super, SUM_RTTI )
 
 //   friend class prod;
 //   friend class power;

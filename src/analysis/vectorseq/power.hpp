@@ -17,7 +17,7 @@ namespace analysis {
 class power
 : public basic {
 
-  REGISTER_FINAL( power, basic )
+  REGISTER_STATIC_FINAL( power, basic, POWER_RTTI )
 
   friend class prod;
 //   friend class sum;

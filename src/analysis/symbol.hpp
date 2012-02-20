@@ -11,7 +11,7 @@ class symbol;
 class symbol_
 : public basic {
 
-  REGISTER_CLASS( symbol_, basic )
+  REGISTER_STATIC_CLASS( symbol_, basic, SYMBOL_RTTI )
 
   friend class symbol;
 
