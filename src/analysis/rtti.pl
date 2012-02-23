@@ -3,8 +3,14 @@
 use strict;
 use warnings;
 
-my @classes = qw(basic numerical symbol
-  sum prod power function
+my @classes = qw(
+  basic numerical symbol
+  sum prod power
+  function
+);
+
+my @functions = qw(
+  exp log
 );
 
 open( HH, ">rtti.hpp" );
@@ -26,5 +32,23 @@ foreach my $class ( @classes )
 }
 
 print HH "#define MAX_RTTI $counter\n";
+
+print ML <<EOF ;
+type corefuncs = [
+EOF
+
+foreach my $f ( @functions )
+{
+  $f =~ s/\b(\w)/\U$1/g;
+  print ML "| `$f\n";
+
+  my $fun = $f;
+  $fun =~ s/(\w)/\U$1/g;
+  print HH "#define $fun\_HASH \"$f\"\n";
+}
+
+print ML <<EOF ;
+]
+EOF
 
 close( HH ); close( ML );

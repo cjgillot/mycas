@@ -1,8 +1,6 @@
 #ifndef EXPAIRSEQ_TPP_
 #define EXPAIRSEQ_TPP_
 
-#warning "wizz"
-
 #include "analysis/expr.hpp"
 #include "analysis/vectorseq/vectorseq.hpp"
 
