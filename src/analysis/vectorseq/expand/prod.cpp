@@ -1,21 +1,16 @@
 #include "analysis/vectorseq/expand/fwd.hpp"
 
-namespace analysis {
-namespace expand_detail {
-
-namespace {
+using namespace analysis;
+using namespace expand_detail;
 
 struct power_expander
-: std::unary_function<const power*, ptr<const basic> >
+: std::unary_function<const basic*, ptr<const basic> >
 {
-  inline ptr<const basic> operator()( const power* ep ) const
-  { return power_expand( *ep ); }
+  inline ptr<const basic> operator()( const basic* ep ) const
+  { return power_expand( static_cast<const power&>( *ep ) ); }
 };
 
-}
-
-// prod
-expr prod_expand(const prod &self)
+expr expand_detail::prod_expand(const prod &self)
 {
   { // trivial case ?
     foreach( const power* p, self )
@@ -118,6 +113,3 @@ expr prod_expand(const prod &self)
 
   return expand_prod_sum( non_sum, last );
 }
-
-
-}} // namespace analysis::expand_detail

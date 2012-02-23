@@ -23,7 +23,8 @@ struct partial_not_pred
 };
 
 template<class Iterator>
-inline void sort(const Iterator &beg, const Iterator &end)
+inline void
+sort(const Iterator &beg, const Iterator &end)
 {
   Iterator it = std::adjacent_find( beg, end, partial_not_pred() );
   if( it == end )

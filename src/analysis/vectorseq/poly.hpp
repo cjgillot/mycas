@@ -5,24 +5,23 @@
 // a pool for bucket allocation
 
 #include "container/unsafe_vector.hpp"
+#include "container/ptr_container.hpp"
 
 #include <new>
 #include <memory> // for allocator
 #include <iterator> // for reverse_iterator
 
-#include <boost/noncopyable.hpp>
-#include <boost/pool/singleton_pool.hpp>
-
 #include "util/null.hpp"
 #include "util/assert.hpp"
+#include "util/refcounted.hpp"
 
 namespace analysis {
-namespace epseq {
+namespace vseq {
 
 template<class _Tp, class _Alloc>
 class poly
 {
-  typedef container::unsafe_vector<_Tp, _Alloc> vector_type;
+  typedef container::ptr_unsafe_vector<_Tp, _Alloc> vector_type;
 
   MAKE_REFCOUNTED( poly );
 
@@ -120,44 +119,6 @@ private: // disallow array operators
   static void  operator delete[]( void* )       throw();
 };
 
-struct poly_pool_tag {};
-
-template<class _Tp, class _Alloc>
-void* poly<_Tp, _Alloc>::operator new( std::size_t n, std::nothrow_t ) throw()
-{
-  ASSERT( n == sizeof( poly ) ); (void)n;
-
-  typedef boost::singleton_pool<poly_pool_tag, sizeof( poly )> pool_type;
-
-  return pool_type::malloc();
-}
-template<class _Tp, class _Alloc>
-void poly<_Tp, _Alloc>::operator delete( void* p, std::nothrow_t ) throw()
-{
-  typedef boost::singleton_pool<poly_pool_tag, sizeof( poly )> pool_type;
-
-  // is this necessary ?
-  if( ! p ) return;
-
-  ASSERT( pool_type::is_from( p ) );
-  pool_type::free( p );
-}
-
-template<class _Tp, class _Alloc>
-void* poly<_Tp, _Alloc>::operator new( std::size_t n ) throw( std::bad_alloc )
-{
-  void* p = poly::operator new( n, std::nothrow );
-
-  if( p ) return p;
-  throw std::bad_alloc();
-}
-template<class _Tp, class _Alloc>
-void poly<_Tp, _Alloc>::operator delete( void* p ) throw()
-{
-  poly::operator delete( p, std::nothrow );
-}
-
-
-}} // namespace analysis::epseq
+}} // namespace analysis::vseq
 
 #endif

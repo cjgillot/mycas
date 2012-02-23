@@ -13,13 +13,13 @@ class vectorseq;
 template<class H, class Mono>
 struct ExpairseqHandle;
 
-namespace epseq {
+namespace vseq {
 
 template<class I, class M>
 struct handle;
 
 //! \brief Polynomial container embedded in the \ref vectorseq
-template<class T, class Alloc = std::allocator<T> >
+template<class T, class Alloc = std::allocator<T*> >
 class poly;
 
 //! \brief Construct a vector by negation
@@ -46,7 +46,7 @@ poly<epair>* do_range_const(const Iter &beg, const Iter &end, std::size_t &hash)
 template<class epair, class Iter>
 poly<epair>* do_range_mutable(Iter beg, const Iter &end, std::size_t &hash);
 
-} // namespace epseq
+} // namespace vseq
 
 } // namespace analysis
 
@@ -55,8 +55,8 @@ namespace std {
 
 template<class I, class M>
 inline void swap(
-  analysis::epseq::handle<I,M> &a
-, analysis::epseq::handle<I,M> &b
+  analysis::vseq::handle<I,M> &a
+, analysis::vseq::handle<I,M> &b
 );
 
 } // namespace std

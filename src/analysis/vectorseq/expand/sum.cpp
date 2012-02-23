@@ -1,20 +1,16 @@
 #include "analysis/vectorseq/expand/fwd.hpp"
 
-namespace analysis {
-namespace expand_detail {
-
-namespace {
+using namespace analysis;
+using namespace expand_detail;
 
 struct prod_expander
-: std::unary_function<const prod*, ptr<const basic> >
+: std::unary_function<const basic*, ptr<const basic> >
 {
-  inline ptr<const basic> operator()( const prod* ep ) const
-  { return prod_expand( *ep ); }
+  inline ptr<const basic> operator()( const basic* ep ) const
+  { return prod_expand( static_cast<const prod&>( *ep ) ); }
 };
 
-}
-
-expr sum_expand(const sum &self)
+expr expand_detail::sum_expand(const sum &self)
 {
   typedef std::vector< expr > exvec_t;
   util::scoped_ptr< exvec_t > children ( self.map_children( prod_expander() ) );
@@ -45,5 +41,3 @@ expr sum_expand(const sum &self)
 
   return retp->basic::expand();
 }
-
-}} // namespace analysis::expand_detail

@@ -3,48 +3,62 @@
 
 #include "container/unsafe_vector.hpp"
 #include "analysis/vectorseq/poly.hpp"
+#include "analysis/vectorseq/iterator.hpp"
 
 #include "util/functor.hpp"
 #include <boost/range.hpp>
+#include <boost/bind.hpp>
 
 #include "util/foreach.hpp"
 #include "util/assert.hpp"
 #include "util/move.hpp" // scoped_ptr
 
 namespace analysis {
-namespace epseq {
+namespace vseq {
 
-namespace detail {
+namespace {
 
-template<class T>
-struct sca_hash
-: std::unary_function<T, T> {
-  std::size_t &h;
-  const number &n;
+template<class EP>
+struct negate
+: public std::unary_function<const basic*, const basic*>
+{
+  typedef typename EP::monomial_type M;
 
-  sca_hash(std::size_t &h_, const number &n_)
-  : h(h_), n(n_) {}
-
-  T operator()(const T &o) {
-    const T &ret = o.sca(n);
-    h ^= ret.hash();
-    return ret;
-  }
+  inline const basic*
+  operator()(const basic* p)
+  { return EP::neg( static_cast<const M*>( p ) ); }
 };
 
-} // namespace detail
+template<class EP>
+struct scale
+: public std::unary_function<const basic*, const basic*>
+{
+  typedef typename EP::monomial_type M;
 
-template<class epair>
-poly<epair>*
-do_neg( const poly<epair> &a ) {
-  typedef poly<epair> vector_type;
-  util::scoped_ptr<vector_type>
-    ret ( new vector_type( a.size() ) );
+  scale(const number &n_)
+  : n( n_ ) {}
+
+  inline const basic*
+  operator()(const basic* p)
+  { return EP::sca( static_cast<const M*>( p ), n ); }
+
+private:
+  const number &n;
+};
+
+}
+
+template<class EP, class Poly>
+Poly*
+do_neg( const Poly &a )
+{
+  util::scoped_ptr< Poly >
+    ret ( new Poly( a.size() ) );
 
   std::transform(
     a.begin(), a.end()
   , std::back_inserter( *ret )
-  , functor::negate<epair>()
+  , negate<EP>()
   );
 
   ret->shrink();
@@ -53,18 +67,18 @@ do_neg( const poly<epair> &a ) {
   return ret.release();
 }
 
-template<class epair>
-poly<epair>*
-do_sca( const poly<epair> &a
-      , const number &n ) {
-  typedef poly<epair> vector_type;
-  util::scoped_ptr<vector_type>
-    ret ( new vector_type( a.size() ) );
+template<class EP, class Poly>
+Poly*
+do_sca( const Poly &a
+      , const number &n )
+{
+  util::scoped_ptr< Poly >
+    ret ( new Poly( a.size() ) );
 
   std::transform(
     a.begin(), a.end()
   , std::back_inserter( *ret )
-  , functor::multiplies_left<number, epair, epair>( n )
+  , scale<EP>( n )
   );
 
   ret->shrink();
@@ -73,16 +87,19 @@ do_sca( const poly<epair> &a
   return ret.release();
 }
 
-template<class epair>
-poly<epair>*
-do_add( const poly<epair> &a
-      , const poly<epair> &b ) {
-  typedef poly<epair> vector_type;
-  util::scoped_ptr<vector_type>
-    retp ( new vector_type( a.size() + b.size() ) );
-  vector_type &ret = *retp;
+template<class EP, class Poly>
+Poly*
+do_add( const Poly &a
+      , const Poly &b )
+{
+  typedef typename EP::monomial_type M;
 
-  typename vector_type::const_iterator
+  util::scoped_ptr< Poly >
+    retp ( new Poly( a.size() + b.size() ) );
+  Poly &ret = *retp;
+
+  typedef eps_iterator< M, typename Poly::const_iterator > iterator;
+  iterator
     i1 = a.begin(), e1 = a.end(),
     i2 = b.begin(), e2 = b.end();
 
@@ -93,7 +110,7 @@ do_add( const poly<epair> &a
     // integer null testing is faster than iterator::operator!=
   {
     //! hot point : comparison
-    util::cmp_t c = epair::compare( *i1, *i2 );
+    util::cmp_t c = EP::compare( *i1, *i2 );
 
     //! *i1 < *i2  then push *i1
     if( c < 0 )
@@ -113,10 +130,10 @@ do_add( const poly<epair> &a
 
     //! collision case : *i1 >< *i2
 
-    ret.push_back( *i1 + *i2 );
-    const epair &e = ret.back();
+    ret.push_back( EP::add( *i1, *i2 ) );
+    const M* e = static_cast<const M*>( ret.back() );
 
-    if( e.null() )
+    if( EP::null(e) )
       ret.pop_back();
 
     ++i1; --d1;
@@ -131,16 +148,19 @@ do_add( const poly<epair> &a
   return ret.empty() ? nullptr : retp.release();
 }
 
-template<class epair>
-poly<epair>*
-do_sub( const poly<epair> &a
-      , const poly<epair> &b ) {
-  typedef poly<epair> vector_type;
-  util::scoped_ptr<vector_type>
-    retp ( new vector_type( a.size() + b.size() ) );
-  vector_type &ret = *retp;
+template<class EP, class Poly>
+Poly*
+do_sub( const Poly &a
+      , const Poly &b )
+{
+  typedef typename EP::monomial_type M;
 
-  typename vector_type::const_iterator
+  util::scoped_ptr< Poly >
+    retp ( new Poly( a.size() + b.size() ) );
+  Poly &ret = *retp;
+
+  typedef eps_iterator< M, typename Poly::const_iterator > iterator;
+  iterator
     i1 = a.begin(), e1 = a.end(),
     i2 = b.begin(), e2 = b.end();
 
@@ -151,7 +171,7 @@ do_sub( const poly<epair> &a
     // integer null testing is faster than iterator::operator!=
   {
     //! hot point : comparison
-    util::cmp_t c = epair::compare( *i1, *i2 );
+    util::cmp_t c = EP::compare( *i1, *i2 );
 
     //! *i1 < *i2  then push *i1
     if( c < 0 )
@@ -164,17 +184,17 @@ do_sub( const poly<epair> &a
     //! *i1 > *i2  then push *i2
     if( c != 0 ) // ie : c > 0
     {
-      ret.push_back( - *i2 );
+      ret.push_back( EP::neg( *i2 ) );
       ++i2; --d2;
       continue;
     }
 
     //! collision case : *i1 >< *i2
 
-    ret.push_back( *i1 - *i2 );
-    const epair &e = ret.back();
+    ret.push_back( EP::sub( *i1, *i2 ) );
+    const M* e = static_cast<const M*>( ret.back() );
 
-    if( e.null() )
+    if( EP::null(e) )
       ret.pop_back();
 
     ++i1; --d1;
@@ -182,7 +202,7 @@ do_sub( const poly<epair> &a
   }
 
   std::copy( i1, e1, std::back_inserter(ret) );
-  std::transform( i2, e2, std::back_inserter(ret), functor::negate<epair>() );
+  std::transform( i2, e2, std::back_inserter(ret), EP::neg );
 
   ret.shrink();
 

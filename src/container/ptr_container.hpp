@@ -100,10 +100,53 @@ private:
 };
 
 template< class T, class Alloc = std::allocator<T*> >
-class ptr_unsafe_vector
-: public unsafe_vector< T*, intrusive_allocator< Alloc > >
+class ptr_vector
+: public std::vector< T*, intrusive_allocator< T*, Alloc > >
 {
-  typedef container::unsafe_vector< T*, intrusive_allocator< Alloc > > super_type;
+  typedef intrusive_allocator< T*, Alloc > Policy;
+  typedef std::vector< T*, Policy > super_type;
+
+public:
+  ptr_vector()
+  : super_type() {}
+
+  template<class A1>
+  explicit
+  ptr_vector( const A1 &a1 )
+  : super_type( a1 ) {}
+
+  template<class A1, class A2>
+  ptr_vector( const A1 &a1, const A2 &a2 )
+  : super_type( a1, a2 ) {}
+
+  template<class A1, class A2, class A3>
+  ptr_vector( const A1 &a1, const A2 &a2, const A3 &a3 )
+  : super_type( a1, a2, a3 ) {}
+
+public:
+  typedef ptr_iterator<typename super_type::iterator, Policy> iterator;
+  typedef typename super_type::const_iterator const_iterator;
+
+  typedef ptr_iterator<typename super_type::reverse_iterator, Policy> reverse_iterator;
+  typedef typename super_type::const_reverse_iterator const_reverse_iterator;
+
+  const_iterator          begin() const { return super_type::begin(); }
+  const_iterator          end()   const { return super_type::end(); }
+  const_reverse_iterator rbegin() const { return super_type::rbegin(); }
+  const_reverse_iterator rend()   const { return super_type::rend(); }
+
+  iterator                begin()       { return iterator( super_type::begin(), super_type::get_allocator() ); }
+  iterator                end()         { return iterator( super_type::end(),   super_type::get_allocator() ); }
+  reverse_iterator       rbegin()       { return reverse_iterator( super_type::rbegin(), super_type::get_allocator() ); }
+  reverse_iterator       rend()         { return reverse_iterator( super_type::rend(),   super_type::get_allocator() ); }
+};
+
+template< class T, class Alloc = std::allocator<T*> >
+class ptr_unsafe_vector
+: public unsafe_vector< T*, intrusive_allocator< T*, Alloc > >
+{
+  typedef intrusive_allocator< T*, Alloc > Policy;
+  typedef container::unsafe_vector< T*, Policy > super_type;
 
 public:
   template<class A1>
@@ -120,31 +163,33 @@ public:
   : super_type( a1, a2, a3 ) {}
 
 public:
-  typedef typename super_type::iterator       iterator;
-  typedef typename super_type::iterator const_iterator;
+  typedef ptr_iterator<typename super_type::iterator, Policy> iterator;
+  typedef typename super_type::const_iterator const_iterator;
 
-  typedef typename super_type::const_reverse_iterator       reverse_iterator;
+  typedef ptr_iterator<typename super_type::reverse_iterator, Policy> reverse_iterator;
   typedef typename super_type::const_reverse_iterator const_reverse_iterator;
 
-  iterator       begin()       { return super_type::begin(); }
-  const_iterator begin() const { return super_type::begin(); }
-
-  iterator       end()         { return super_type::end(); }
-  const_iterator end()   const { return super_type::end(); }
-
-  reverse_iterator       rbegin()       { return super_type::rbegin(); }
+  const_iterator          begin() const { return super_type::begin(); }
+  const_iterator          end()   const { return super_type::end(); }
   const_reverse_iterator rbegin() const { return super_type::rbegin(); }
-
-  reverse_iterator       rend()         { return super_type::rend(); }
   const_reverse_iterator rend()   const { return super_type::rend(); }
+
+  iterator                begin()       { return iterator( super_type::begin(), super_type::get_allocator() ); }
+  iterator                end()         { return iterator( super_type::end(),   super_type::get_allocator() ); }
+  reverse_iterator       rbegin()       { return reverse_iterator( super_type::rbegin(), super_type::get_allocator() ); }
+  reverse_iterator       rend()         { return reverse_iterator( super_type::rend(),   super_type::get_allocator() ); }
 };
 
-}
+} // namespace container
 
 namespace std {
 
 template<class Ptr, class Policy>
 void swap( container::ptr_proxy<Ptr, Policy> &a, container::ptr_proxy<Ptr, Policy> &b )
+{ a.swap(b); }
+
+template<class Iter, class Policy>
+void iter_swap( container::ptr_iterator<Iter, Policy> &a, container::ptr_iterator<Iter, Policy> &b )
 { a.swap(b); }
 
 }

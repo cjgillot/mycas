@@ -13,20 +13,18 @@
 
 using namespace analysis;
 
-namespace {
-
 template<class Mono>
 struct subser
-: std::unary_function<ptr<const basic>, const Mono*>
+: std::unary_function<const basic*, ptr<const basic> >
 {
   typedef ptr<const basic> result_type;
 
   subser( const exmap &m )
   : m_map( &m ) {}
 
-  inline ptr<const basic> operator()( const Mono* p ) const
+  inline ptr<const basic> operator()( const basic* p ) const
   {
-    result_type ret = subs_fnc( p );
+    result_type ret = subs_fnc( static_cast<const Mono*>(p) );
     exmap::const_iterator end = m_map->end(), it = end;
 
     for(;;)
@@ -75,8 +73,6 @@ ptr<const Eps> eps_subs(const Eps &self, const exmap &map, F nadd)
   nadd( ret->coef(), self.coef() );
 
   return ret;
-}
-
 }
 
 expr   sum::subs( const exmap &map ) const
