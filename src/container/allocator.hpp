@@ -24,20 +24,23 @@ struct alloc_swap< Alloc, 0 > {
 
 } // namespace detail
 
-template< class Alloc >
+template< class T, class Alloc >
 class intrusive_allocator
-: private Alloc
+: private Alloc::template rebind<T>::other
 {
-  typedef Alloc super_type;
+  typedef typename Alloc::template rebind<T>::other super_type;
 
 public:
-  typedef typename super_type::value_type       value_type;
+  typedef typename super_type::size_type        size_type;
+  typedef typename super_type::difference_type  difference_type;
 
   typedef typename super_type::const_pointer    const_pointer;
   typedef typename super_type::pointer          pointer;
 
   typedef typename super_type::const_reference  const_reference;
   typedef typename super_type::reference        reference;
+
+  typedef typename super_type::value_type       value_type;
 
   typedef boost::true_type has_assign;
   typedef boost::true_type has_swap;
@@ -46,18 +49,23 @@ public:
   template<class U>
   struct rebind
   {
-    typedef intrusive_allocator<
-      typename Alloc::template rebind<
-        typename boost::remove_const<U>::type
-      >::other
-    > other;
+    typedef intrusive_allocator< U, Alloc > other;
   };
 
 public:
   intrusive_allocator() {}
   intrusive_allocator( const intrusive_allocator &o )
   : super_type( o ) {}
+  template<class U, class B>
+  intrusive_allocator( const intrusive_allocator<U,B> &o )
+  : super_type( o ) {}
   intrusive_allocator& operator=( const intrusive_allocator &o )
+  {
+    super_type::operator=( o );
+    return *this;
+  }
+  template<class U, class B>
+  intrusive_allocator& operator=( const intrusive_allocator<U,B> &o )
   {
     super_type::operator=( o );
     return *this;
@@ -65,6 +73,9 @@ public:
 
   void swap( intrusive_allocator &o )
   { detail::alloc_swap<Alloc>( *this, o ); }
+
+  using super_type::address;
+  using super_type::max_size;
 
   using super_type::allocate;
   using super_type::deallocate;
@@ -86,9 +97,9 @@ public:
 
 namespace std {
 
-template<class Alloc>
-void swap( container::intrusive_allocator<Alloc> &a,
-           container::intrusive_allocator<Alloc> &b )
+template< class T, class Alloc >
+void swap( container::intrusive_allocator<T,Alloc> &a,
+           container::intrusive_allocator<T,Alloc> &b )
 { a.swap( b ); }
 
 }
