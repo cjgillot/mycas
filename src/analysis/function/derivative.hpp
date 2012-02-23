@@ -22,7 +22,7 @@ public:
 
 private:
   typedef std::map<unsigned, unsigned> diff_map;
-  using super::m_name;
+  using super::id;
 
 public:
   typedef typename super::iterator_tag iterator_tag;
@@ -32,10 +32,10 @@ public:
     const InputIterator &b
   , const InputIterator &e
   , const diff_map &ds
-  , const symbol &n
+  , const func_id &i
   , iterator_tag
   )
-  : super( n, b, e, iterator_tag() )
+  : super( i, b, e, iterator_tag() )
   , m_map(ds) {}
 
 #define CT_ARGS( z, n, data )  \
@@ -79,7 +79,7 @@ private:
   {
     const derivative &o = static_cast<const derivative&>(o_);
 
-    util::cmp_t c = symbol::compare( m_name, o.m_name );
+    util::cmp_t c = symbol::compare( id().name, o.id().name );
     if(c) return c;
 
     c = util::compare( m_map.size(), o.m_map.size() );
@@ -111,7 +111,7 @@ private:
     typedef std::pair<unsigned, unsigned> pair_t;
     foreach( const pair_t &d, m_map )
       os << d.first << '@' << d.second << ' ';
-    os << m_name << "]" << ' ';
+    os << id().name << "]" << ' ';
     super::print_children(os);
     os << ')';
   }
@@ -143,7 +143,7 @@ expr function<N>::differentiate(const symbol &s) const
 
     if( dit.null() ) continue;
 
-    const ptr<fd_t> &fd = new fd_t( be, en, dm_t(), m_name, iterator_tag() );
+    const ptr<fd_t> &fd = new fd_t( be, en, dm_t(), id(), iterator_tag() );
     ++fd->m_map[n];
     ret += dit * fd;
   }
@@ -169,7 +169,7 @@ expr derivative<N>::differentiate(const symbol &s) const
 
     if( dit.null() ) continue;
 
-    const ptr<derivative> &fd = new derivative( be, en, m_map, m_name, iterator_tag() );
+    const ptr<derivative> &fd = new derivative( be, en, m_map, id(), iterator_tag() );
     ++fd->m_map[n];
     ret += dit * expr(fd);
   }

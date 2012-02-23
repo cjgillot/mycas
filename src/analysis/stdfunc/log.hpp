@@ -9,7 +9,7 @@ namespace analysis {
 class log_
 : public function<1>
 {
-  static symbol m_name;
+  static func_id s_id;
 
 public:
   typedef function<1> super;

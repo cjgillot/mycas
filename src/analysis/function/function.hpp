@@ -45,9 +45,9 @@ struct construction
   static void reserve( unsigned, cont_t & )
   {}
 
-  static void construct( unsigned n, cont_t &cont, const expr &value )
+  static void construct( unsigned n, cont_t &cont, const expr &val )
   {
-    cont.get_allocator().construct( cont.begin() + n, value );
+    cont.get_allocator().construct( cont.begin() + n, val );
   }
 };
 
@@ -68,43 +68,71 @@ struct construction<0>
 
 } // namespace detail
 
+struct func_id
+{
+  symbol name;
+  std::size_t hash; // != name.hash()
+};
+
+class function_base
+{
+protected:
+  inline function_base(const func_id &i)
+  : m_id(i) {}
+  virtual ~function_base() {}
+
+public:
+  const func_id &id() const
+  { return m_id; }
+
+private:
+  const func_id &m_id;
+};
+
 template<unsigned N>
 class function
-: public exprseq< typename detail::choose_container<expr, N>::type >
+: public exprseq< typename detail::choose_container<expr, N>::type, true >
+, public function_base
 {
   REGISTER_STATIC_CLASS( function<N>, basic, FUNCTION_RTTI )
 
 private:
   typedef typename function::exprseq_ super;
 
-protected:
-  const symbol &m_name;
-
 public:
   struct iterator_tag {};
 
   template<class InputIterator>
-  function(const symbol &n, const InputIterator &b, const InputIterator &e, iterator_tag)
-  : super( b, e ), m_name(n) {}
+  function(const func_id &i, const InputIterator &b, const InputIterator &e, iterator_tag)
+  : super( b, e ), function_base(i) {}
 
 #define ARGS( z, n, data )  \
   , const expr &BOOST_PP_CAT( arg, n )
 
-#define CT_ONE( z, n, data )  \
-  op_t::construct( n, this->super::get_container(), arg##n );
+#define CONT this->super::get_container()
 
-#define CTOR( z, n, data )  \
-  template<class Dummy>     \
-  function( const Dummy &name BOOST_PP_REPEAT_##z( n, ARGS, data ) ) \
-  : super( detail::construction<N>::tag() ), m_name( name ) { \
-    STATIC_ASSERT(( detail::make_dependant<Dummy, N, n>::value ));  \
-    typedef detail::construction<N> op_t;  \
-    op_t::reserve( n, this->super::get_container() ); \
+#define CT_ONE( z, n, data )  \
+  op_t::construct( n, CONT, arg##n );
+
+#define CTOR( z, n, data )                  \
+  template<class Dummy>                     \
+  function(                                 \
+    const Dummy &i                          \
+    BOOST_PP_REPEAT_##z( n, ARGS, data )    \
+  )                                         \
+  : super( detail::construction<N>::tag() ) \
+  , function_base( i ) {                    \
+    STATIC_ASSERT((                         \
+      detail::make_dependant<Dummy, N, n>   \
+        ::value ));                         \
+    typedef detail::construction<N> op_t;   \
+    op_t::reserve( n, CONT );               \
     BOOST_PP_REPEAT_##z( n, CT_ONE, data ); \
   }
 
   BOOST_PP_REPEAT_FROM_TO( 1, 20, CTOR, () )
 
+#undef CONT
 #undef CTOR
 #undef CT_ONE
 #undef ARGS
@@ -157,7 +185,7 @@ public:
 
   void print(std::basic_ostream<char> &os) const
   {
-    os << '(' << m_name << ' ';
+    os << '(' << id().name << ' ';
     print_children(os);
     os << ')';
   }
