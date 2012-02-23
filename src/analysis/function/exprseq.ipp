@@ -16,7 +16,8 @@
 namespace analysis {
 
 template<class C>
-std::size_t exprseq<C>::hash() const
+std::size_t
+exprseq<C, false>::hash() const
 {
   std::size_t seed = 0u;
   foreach( const expr &a, m_container )
@@ -25,7 +26,8 @@ std::size_t exprseq<C>::hash() const
 }
 
 template<class C>
-util::cmp_t exprseq<C>::compare_same_type(const basic &o_) const
+util::cmp_t
+exprseq<C, false>::compare_same_type(const basic &o_) const
 {
   const exprseq &o = static_cast<const exprseq&>(o_);
 
@@ -33,7 +35,8 @@ util::cmp_t exprseq<C>::compare_same_type(const basic &o_) const
 }
 
 template<class C>
-bool exprseq<C>::has(const symbol &s) const
+bool
+exprseq<C, false>::has(const symbol &s) const
 {
   foreach(const expr &e, m_container)
     if( e.has(s) )
@@ -42,7 +45,8 @@ bool exprseq<C>::has(const symbol &s) const
 }
 
 template<class C>
-void exprseq<C>::print_children(std::basic_ostream<char> &os) const
+void
+exprseq<C, false>::print_children(std::basic_ostream<char> &os) const
 {
   if( size() > 0 )
   {
@@ -57,7 +61,8 @@ void exprseq<C>::print_children(std::basic_ostream<char> &os) const
 }
 
 template<class C>
-bool exprseq<C>::match_same_type(const basic &o, match_state &mm) const
+bool
+exprseq<C, false>::match_same_type(const basic &o, match_state &mm) const
 {
   const exprseq &pat = static_cast<const exprseq&>( o );
 
@@ -102,7 +107,8 @@ bool exprseq<C>::match_same_type(const basic &o, match_state &mm) const
 }
 
 template<class C>
-expr exprseq<C>::subs(const exmap &map) const
+expr
+exprseq<C, false>::subs(const exmap &map) const
 {
   util::scoped_ptr<exprseq> ret;
 
@@ -127,14 +133,13 @@ expr exprseq<C>::subs(const exmap &map) const
   if( !ret )
     return this->basic::subs_once(map);
 
-  const expr &re = ret.release();
-  // TODO get rid of dynamic_cast here
-  if( dynamic_cast<const exprseq*>(re.get()) )
+  const expr re = ret.release();
+
+  if( RTTI_ID( re.get() ) == RTTI_ID( this ) )
     return re.get()->subs_once( map );
 
   return re;
 }
-
 
 } // namespace analysis
 

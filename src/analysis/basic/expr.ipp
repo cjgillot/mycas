@@ -42,6 +42,9 @@ inline void expr::eval(unsigned lv) const
 template<class V>
 inline void expr::accept(const V &visitor) const
 { m_impl->accept( visitor ); }
+template<class V>
+inline void expr::accept(V &visitor) const
+{ m_impl->accept( visitor ); }
 
 // has
 inline bool expr::has(const symbol &s) const

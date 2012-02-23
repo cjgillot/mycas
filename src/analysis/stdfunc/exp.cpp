@@ -8,11 +8,8 @@
 
 using namespace analysis;
 
-template<>
-symbol exp_::m_name( "exp" );
-
 inline exp_::exp_(const expr &a)
-: super(m_name, a) {}
+: super(s_id, a) {}
 
 exp_::~exp_() {}
 
@@ -45,3 +42,11 @@ expr exp_::eval(unsigned lv) const
 
   return basic::eval( ++lv );
 }
+
+#include "caml.hpp"
+
+template<>
+func_id exp_::s_id = {
+  symbol( "exp" ),
+  caml_hash_variant( EXP_HASH )
+};

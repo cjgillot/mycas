@@ -44,8 +44,9 @@ struct init_helper {
     // Trampoline implemented as local class
     struct trampoline
     {
+      typedef typename boost::remove_const<Visitor>::type ncv_t;
       static void invoker( const Visitor &v, const Base &b )
-      { v.visit( static_cast<const T&>( b ) ); }
+      { const_cast<ncv_t&>(v).visit( static_cast<const T&>( b ) ); }
     };
 
     // check function type compatibility

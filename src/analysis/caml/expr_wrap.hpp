@@ -19,6 +19,6 @@ value expr_move(const expr &);
 } // namespace analysis
 
 #define Expr_val( x ) \
-  ( reinterpret_cast< const ::analysis::expr* >( Data_custom_val( (x) ) ) )
+  ( reinterpret_cast< const ::analysis::expr* >( Field((x),2) ) )
 
 #endif

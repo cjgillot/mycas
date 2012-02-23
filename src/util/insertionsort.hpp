@@ -7,11 +7,7 @@
 #include <algorithm>
 #include <utility>
 
-#if HAS_MOVE || __cplusplus > 199711L // C++11
-#define MOVE(x) std::move(x)
-#else
-#define MOVE(x) (x)
-#endif
+#include "util/move.hpp"
 
 namespace util {
 
@@ -23,18 +19,18 @@ namespace detail {
 // unguarded_linear_insert(_RandomAccessIterator last)
 // {
 //   typename iterator_traits<_RandomAccessIterator>::value_type
-//     val = MOVE(*last);
+//     val = std::move(*last);
 //
 //   _RandomAccessIterator next = last;
 //
 //   --next;
 //   while( val < *next )
 //   {
-//     *last = MOVE( *next );
+//     *last = std::move( *next );
 //     last = next;
 //     --next;
 //   }
-//   *last = MOVE( val );
+//   *last = std::move( val );
 // }
 
 /// This is a helper function for the sort routine.
@@ -43,18 +39,18 @@ void
 unguarded_linear_insert( _RandomAccessIterator last, _Compare comp )
 {
   typename std::iterator_traits<_RandomAccessIterator>::value_type
-    val = MOVE(*last);
+    val = std::move(*last);
 
   _RandomAccessIterator next = last;
 
   --next;
   while( comp(val, *next) )
   {
-    *last = MOVE( *next );
+    *last = std::move( *next );
     last = next;
     --next;
   }
-  *last = MOVE( val );
+  *last = std::move( val );
 }
 
 // /// This is a helper function for the sort routine.
@@ -93,9 +89,9 @@ insertion_sort(_RandomAccessIterator first,
     if( comp(*i, *first) )
     {
       typename std::iterator_traits<_RandomAccessIterator>::value_type
-        val = MOVE(*i);
-      std::copy_backward( first, i, i + 1);
-      *first = MOVE(val);
+        val = std::move(*i);
+      std::copy_backward( first, i, i + 1 );
+      *first = std::move(val);
     }
     else
       unguarded_linear_insert(i, comp);

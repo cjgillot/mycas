@@ -38,12 +38,18 @@ struct custom_operations expr_ops = {
 
 value expr_allocate()
 {
-  // TODO maybe adapt the used/max values to the stored expr ?
-  return caml_alloc_custom( &expr_ops, sizeof( expr ), 0, 1000 );
+#define wosize ( 2 + (sizeof(expr) + sizeof(value) - 1) / sizeof(value) )
+  value ret;
+  if( wosize < Max_young_wosize )
+    ret = caml_alloc_small( wosize, Custom_tag );
+  else
+    ret = caml_alloc_shr( wosize, Custom_tag );
+  Field( ret, 0 ) = (value)&expr_ops;
+  return ret;
 }
 
 #define expr_construct( e ) \
-  new( Data_custom_val( e ) )
+  new( (void*)Expr_val((e)) )
 
 } // namespace _caml_expr
 
@@ -54,6 +60,7 @@ namespace analysis {
 value expr_copy(const expr &e)
 {
   value res = expr_allocate();
+  Field( res, 1 ) = RTTI_ID( e.get() );
   expr_construct( res ) expr( e );
   return res;
 }
@@ -65,6 +72,7 @@ value expr_move(const expr &e)
 #endif
 {
   value res = expr_allocate();
+  Field( res, 1 ) = RTTI_ID( e.get() );
   expr_construct( res ) expr( std::move(e) );
   return res;
 }
@@ -81,12 +89,13 @@ EXPORT value __caml_expr_new_of_int( value arg )
   int n = Int_val( arg );
 
   res = expr_allocate();
+  Field( res, 1 ) = RTTI_TYPE_ID( numerical );
   expr_construct( res ) expr( n );
 
   CAMLreturn( res );
 }
 
-
+// test
 EXPORT value __caml_expr_null( value ex )
 {
   return Val_bool( Expr_val( ex )->null() );
@@ -160,7 +169,6 @@ EXPORT value __caml_expr_subs( value ex, value rules_array )
   CAMLreturn( res );
 }
 
-
 EXPORT value __caml_expr_expand( value ex )
 {
   CAMLparam1( ex );
@@ -172,6 +180,19 @@ EXPORT value __caml_expr_expand( value ex )
   CAMLreturn( res );
 }
 
+EXPORT value __caml_expr_series( value ex, value sym )
+{
+  CAMLparam2( ex, sym );
+  const symbol_* s = Expr_val( sym )->as_a<symbol_>();
+  const expr   * e = Expr_val( ex );
+
+  CAMLlocal1( res );
+  res = expr_move( std::move( e->series( symbol(s) ) ) );
+
+  CAMLreturn( res );
+}
+
+// TODO match & series
 
 // unary operations
 EXPORT value __caml_expr_neg( value e1 )
@@ -269,56 +290,3 @@ EXPORT value __caml_expr_hash( value ex )
 
   return Val_int( e->hash() );
 }
-
-#if 0
-// for debugging purpose only
-EXPORT value print_ws (value v) {
-//   CAMLparam1(v);
-  int taille,i ;
-  if (Is_long(v)) printf("%d", Long_val(v));
-  else {
-    taille=Wosize_val(v);
-    switch (Tag_val(v))
-    {
-    case String_tag :
-      printf("\"%s\"", String_val(v));
-      break;
-    case Double_tag:
-      printf("%g", Double_val(v));
-      break;
-    case Double_array_tag :
-      printf ("[|");
-              if (taille>0) printf("%g", Double_field(v,0));
-      for (i=1;i<(taille/2);i++)  printf("; %g", Double_field(v,i));
-      printf("|]");
-      break;
-    case Abstract_tag :
-    case Custom_tag :
-      printf("<abstract>");
-      break;
-    case Closure_tag :
-      printf("<%d, ",Code_val(v)) ;
-      if (taille>1) print_ws(Field(v,1)) ;
-      for (i=2;i<taille;i++) {
-        printf("; ") ;
-        print_ws(Field(v,i));
-      }
-      printf(">");
-      break;
-    default:
-      if (Tag_val(v)>=No_scan_tag) printf("?");
-      else {
-        printf("(");
-        if (taille>0) print_ws(Field(v,0));
-        for (i=1;i<taille;i++) {
-          printf(", ");
-          print_ws(Field(v,i));
-        }
-        printf(")");
-      }
-    }
-  }
-  fflush(stdout);
-  return Val_unit;
-}
-#endif

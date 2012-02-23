@@ -9,7 +9,7 @@
 #include "util/compare.hpp"
 
 namespace analysis {
-namespace epseq {
+namespace vseq {
 
 template<class I, class M>
 struct handle
@@ -19,72 +19,43 @@ private:
   typedef vectorseq<I, M> eps_t;
 
 public:
+  typedef I monomial_type;
   typedef const I* const_pointer;
 
-public: // cdtor
-  handle(const eps_t*);
-
-  handle(const handle &);
-  handle &operator=(const handle &);
-
-  ~handle() throw();
-
-  void swap(handle &) throw();
-
-public: // coercion
-  handle(const expr&);
-  operator expr() const;
-
+public:
   // from expr coercion implementation
   // shall be specialized in derived classes
   static const_pointer from_expr(const expr &);
 
 public: // operations
-  handle operator+(const handle &o) const;
-  handle operator-(const handle &o) const;
-  handle operator-() const;
-  handle sca(const number &n) const;
+  static const_pointer add(const_pointer, const_pointer);
+  static const_pointer sub(const_pointer, const_pointer);
+  static const_pointer neg(const_pointer);
 
-  handle operator*(const handle &o) const;
+  static const_pointer sca(const_pointer, const number &);
+
+  static const_pointer mul(const_pointer, const_pointer);
 
 public: // tests & comparison
-  bool null() const;
+  static bool null(const_pointer);
 
-  static util::cmp_t compare(const handle &a, const handle &b);
-  static util::cmp_t deep_compare(const handle &a, const handle &b);
+  static util::cmp_t      compare(const_pointer, const_pointer);
+  static util::cmp_t deep_compare(const_pointer, const_pointer);
 
-  std::size_t       hash() const;
-  std::size_t  coef_hash() const;
-  std::size_t value_hash() const;
-  void         sort_hash(std::size_t &, std::size_t &) const;
+  static std::size_t       hash(const_pointer);
+  static std::size_t  coef_hash(const_pointer);
+  static std::size_t value_hash(const_pointer);
+  static void         sort_hash(const_pointer, std::size_t &, std::size_t &);
 
 public: // printing
   template<class S>
-  void print(S &os) const;
-
-  const_pointer get() const throw();
+  static void print(const_pointer, S &os);
 
 private:
   // operations implementation
-  eps_t* chg_coef(const number &n) const throw();
-
-private: // member data
-  //! \invariant Non null pointer
-  ptr<const eps_t> m_ptr;
+  static const_pointer chg_coef(const_pointer, const number &n) throw();
 };
 
-}} // namespace analysis::epseq
-
-namespace std {
-
-template<class I, class M>
-inline void swap(
-  analysis::epseq::handle<I,M> &a
-, analysis::epseq::handle<I,M> &b
-) {
-  a.swap( b );
-}
-
-} // namespace std
+}} // namespace analysis::vseq
 
 #endif

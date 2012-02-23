@@ -11,8 +11,8 @@
 
 namespace analysis {
 
-namespace epseq {
-template<class> struct sort_pred;
+namespace vseq {
+template<class, class> struct sort_pred;
 }
 
 /*!\brief Implementation class for \c sum and \c mul
@@ -34,18 +34,19 @@ class vectorseq
 : public vectorseq_detail::vectorseq_base {
 
 private: // These types shall never get outside vectorseq
-  typedef typename Mono::handle epair;
-  CONCEPT_ASSERT(( ExpairseqHandle<epair, Mono> ));
+  typedef typename Mono::handle EP;
+  CONCEPT_ASSERT(( ExpairseqHandle<EP, Mono> ));
 
-  typedef epseq::poly<epair> poly_t;
+  typedef vectorseq_detail::vectorseq_base super;
+  using super::poly_t;
 
   typedef typename poly_t::const_iterator         raw_const_iterator;
   typedef typename poly_t::const_reverse_iterator raw_const_reverse_iterator;
 
 protected: // This type will be inherited and specialized by derived
   //! \brief Handle class
-  typedef epseq::handle<Impl, Mono> handle;
-  friend class epseq::handle<Impl, Mono>;
+  typedef vseq::handle<Impl, Mono> handle;
+  friend class vseq::handle<Impl, Mono>;
 
 public: // simple cdtor
   explicit vectorseq(const number &n);
@@ -53,7 +54,19 @@ public: // simple cdtor
 
   virtual vectorseq* clone() const = 0;
 
-protected: // named constructors, none modifies the coefficient
+protected: // access from derived
+  using super::is_monomial;
+  const Mono* monomial() const { return static_cast<const Mono*>( super::monomial() ); }
+
+protected:
+  /*!\name Named constructors
+   *
+   * None of these constructors shall modifies the coefficient,
+   * except \c construct_expr_range.
+   *
+   * \{
+   */
+  //@{
   void construct_monomial(const Mono*);
 
   void construct_add(const vectorseq &, const vectorseq &);
@@ -64,92 +77,68 @@ protected: // named constructors, none modifies the coefficient
 
   void rehash();
 
-  typedef epseq::sort_pred< epair > sort_predicate;
+  typedef vseq::sort_pred<EP, Mono> sort_predicate;
 
   template<class Iter> void construct_mono_range       (const Iter &, const Iter &);
   template<class Iter> void construct_sorted_mono_range(const Iter &, const Iter &);
 
-  // this one though does modify m_coef
+  // this one though does modify coef()
   template<class Iter, class EMono, class NAdd>
   void construct_expr_range(Iter beg, const Iter &en, EMono emono, NAdd nadd);
-
-protected: // access from derived
-  bool     is_monomial() const    { return m_poly && m_poly->size() == 1; }
-  const Mono* monomial() const    { ASSERT( is_monomial() ); return m_poly->begin()->get(); }
+  //@}
+  /*!\}*/
 
 public: // range
   /*!\name Range operations
    *
    * All range operations are proxied by by an iterator adaptor
-   * that converts \ref epair to <tt>const Mono*</tt>.
+   * that converts <tt>const basic*</tt> to <tt>const Mono*</tt>.
    *
    * \{
    */
   //@{
-  typedef epseq::eps_iterator< Mono, raw_const_iterator >         const_iterator;
-  typedef epseq::eps_iterator< Mono, raw_const_reverse_iterator > const_reverse_iterator;
+  typedef vseq::eps_iterator< Mono, raw_const_iterator >         const_iterator;
+  typedef vseq::eps_iterator< Mono, raw_const_reverse_iterator > const_reverse_iterator;
 
   typedef const_iterator         iterator;
   typedef const_reverse_iterator reverse_iterator;
 
-  const_iterator          begin() const { ASSERT( m_poly ); return const_iterator( m_poly->begin() ); }
-  const_iterator          end()   const { ASSERT( m_poly ); return const_iterator( m_poly->end() ); }
+  const_iterator          begin() const { ASSERT( poly() ); return const_iterator( poly()->begin() ); }
+  const_iterator          end()   const { ASSERT( poly() ); return const_iterator( poly()->end() ); }
 
-  const_reverse_iterator rbegin() const { ASSERT( m_poly ); return const_reverse_iterator( m_poly->rbegin() ); }
-  const_reverse_iterator rend()   const { ASSERT( m_poly ); return const_reverse_iterator( m_poly->rend() ); }
+  const_reverse_iterator rbegin() const { ASSERT( poly() ); return const_reverse_iterator( poly()->rbegin() ); }
+  const_reverse_iterator rend()   const { ASSERT( poly() ); return const_reverse_iterator( poly()->rend() ); }
 
-  std::size_t             size()  const { return m_poly ? m_poly->size() : 0; }
-  bool                    empty() const { return ! m_poly; }
-
-  template< class F >
-  std::vector< expr >* map_children(F f) const;
+  using super::size;
+  using super::empty;
+  using super::map_children;
   //@}
   /*!\}*/
 
 private: // comparison
-  using vectorseq_base::hash;
-  using vectorseq_base::coef_hash;
-  using vectorseq_base::value_hash;
-  using vectorseq_base::sort_hash;
+  using super::hash;
+  using super::coef_hash;
+  using super::value_hash;
+  using super::sort_hash;
 
-  friend class epseq::sort_pred<handle>;
+  friend class vseq::sort_pred<handle,Mono>;
 
   util::cmp_t partial_compare(const vectorseq &) const;
   util::cmp_t compare_same_type(const basic &) const;
-
-public:
-  void print(std::basic_ostream<char> &os) const;
-  bool has(const symbol &) const;
-
-private: // member data
-  //! \brief Shared polynomial vector
-  //! \invariant an empty polynomial is represented by \c nullptr
-  ptr<const poly_t> m_poly;
 };
 
-namespace epseq {
+namespace vseq {
 
-template<class epair>
+template<class EP, class M>
 struct sort_pred
-: std::binary_function<const epair, const epair, bool>
+: std::binary_function<const M*, const M*, bool>
 {
-  inline bool operator()( const epair &a, const epair &b ) const
-  { return epair::compare( a, b ) < 0; }
+  inline bool
+  operator()( const M* a, const M* b ) const
+  { return EP::compare( a, b ) < 0; }
 };
 
-template<class I, class M>
-struct sort_pred<handle<I,M> >
-: std::binary_function<const handle<I,M>, const handle<I,M>, bool>
-{
-  typedef vectorseq<I,M> vec_t;
-  typedef handle<I,M> epair;
-  inline bool operator()( const epair &a, const epair &b ) const
-  { return epair::compare( a, b ) < 0; }
-  inline bool operator()( const vec_t *a, const vec_t *b ) const
-  { return a->partial_compare( *b ) < 0; }
-};
-
-} // namespace detail
+} // namespace vseq
 
 } // namespace analysis
 

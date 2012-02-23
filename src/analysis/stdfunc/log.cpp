@@ -8,11 +8,8 @@
 
 using namespace analysis;
 
-template<>
-symbol log_::m_name( "log" );
-
 inline log_::log_(const expr &a)
-: super(m_name, a) {}
+: super(s_id, a) {}
 
 log_::~log_() {}
 
@@ -45,3 +42,11 @@ expr log_::eval(unsigned lv) const
 
   return basic::eval( ++lv );
 }
+
+#include "caml.hpp"
+
+template<>
+func_id log_::s_id = {
+  symbol( "log" ),
+  caml_hash_variant( LOG_HASH )
+};

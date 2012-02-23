@@ -12,29 +12,29 @@
 
 namespace analysis {
 
+#define VS vectorseq<I,M>
+
 // ***** simple cdtor ***** //
 
 template<class I, class M>
-inline vectorseq<I,M>::
-vectorseq(const number &n)
+inline
+VS::vectorseq(const number &n)
 : vectorseq_base( n )
-, m_poly( /* null */ )
 {}
 
 template<class I, class M>
-inline vectorseq<I,M>::
-~vectorseq() {}
+inline
+VS::~vectorseq() {}
 
 // ***** named constructors ***** //
 
 //!\brief Monomial construction
 template<class I, class M>
-inline void vectorseq<I,M>::
-construct_monomial( const M* p )
+inline void
+VS::construct_monomial( const M* p )
 {
-  const epair ep ( p );
-  vectorseq_base::construct_mon( ep.coef_hash(), ep.value_hash() );
-  m_poly.reset( new poly_t(1, ep) );
+  vectorseq_base::construct_mon( EP::coef_hash( p ), EP::value_hash( p ) );
+  poly().reset( new poly_t( 1, p ) );
 }
 
 // operation constructors
@@ -42,12 +42,13 @@ construct_monomial( const M* p )
 // add/sub/neg/sca -> .tpp
 
 template<class I, class M>
-inline void vectorseq<I,M>::rehash()
+inline void
+VS::rehash()
 {
-  if( ! m_poly )
+  if( ! poly() )
     return;
-  foreach( const epair &ep, *m_poly )
-    vectorseq_base::cons_hash( ep.coef_hash(), ep.value_hash() );
+  foreach( const M* p, *this )
+    vectorseq_base::cons_hash( EP::coef_hash(p), EP::value_hash(p) );
 }
 
 /*!\name Monomial-range construction
@@ -62,23 +63,23 @@ inline void vectorseq<I,M>::rehash()
 //@{
 template<class I, class M>
 template<class Iter>
-inline void vectorseq<I,M>::
-construct_mono_range( const Iter &beg, const Iter &en )
+inline void
+VS::construct_mono_range( const Iter &beg, const Iter &en )
 {
   CONCEPT_ASSERT(( boost::InputIterator<Iter> ));
   if( beg != en )
-    m_poly.reset( epseq::do_range_const<epair>( beg, en ) );
+    poly().reset( vseq::do_range_const<EP>( beg, en ) );
   rehash();
 }
 
 template<class I, class M>
 template<class Iter>
-inline void vectorseq<I,M>::
-construct_sorted_mono_range( const Iter &beg, const Iter &en )
+inline void
+VS::construct_sorted_mono_range( const Iter &beg, const Iter &en )
 {
   CONCEPT_ASSERT(( boost::InputIterator<Iter> ));
   if( beg != en )
-    m_poly.reset( epseq::do_range_sorted<epair>( beg, en ) );
+    poly().reset( vseq::do_range_sorted<EP>( beg, en ) );
   rehash();
 }
 //@}
@@ -95,18 +96,18 @@ construct_sorted_mono_range( const Iter &beg, const Iter &en )
   */
 template<class I, class M>
 template<class Iter, class EM, class NA>
-inline void vectorseq<I,M>::
-construct_expr_range( Iter beg, const Iter &en, EM emono, NA nadd )
+inline void
+VS::construct_expr_range( Iter beg, const Iter &en, EM emono, NA nadd )
 {
   CONCEPT_ASSERT(( boost::InputIterator<Iter> ));
 
   if( beg == en )
     return;
 
-  std::vector<epair> seq;
+  container::ptr_vector<const M> seq;
   // quite a good start :
   //   exact if no numeric and no nested
-  seq.reserve( epseq::distance_ra( beg, en ) );
+  seq.reserve( vseq::distance_ra( beg, en ) );
 
   for(; beg != en; ++beg)
   {
@@ -124,8 +125,8 @@ construct_expr_range( Iter beg, const Iter &en, EM emono, NA nadd )
       // ex has been evaluated
       ASSERT( ! eps.empty() );
 
-      foreach( const epair &ep, *eps.m_poly )
-        seq.push_back( ep );
+      foreach( const M* p, eps )
+        seq.push_back( p );
     }
 
     else
@@ -140,64 +141,7 @@ construct_expr_range( Iter beg, const Iter &en, EM emono, NA nadd )
 
 // .tpp
 
-// ***** range operation ***** //
-
-/*!\brief Function mapping
-  *
-  * \param f a unary function mapping <tt>const Mono*</tt> to \c expr
-  *
-  * \return \c nullptr if nothing has changed, the mapped vector else
-  *
-  * Nothing has changed case includes :
-  * - empty polynomial
-  * - pointer equality of original \c epair and result \c expr
-  */
-template<class I, class M>
-template<class F>
-inline std::vector<expr>* vectorseq<I,M>::
-map_children( F f ) const
-{
-  if( ! m_poly )
-    return nullptr;
-
-  raw_const_iterator
-    it = m_poly->begin(),
-    en = m_poly->end();
-
-  for( ; it != en; ++it )
-  {
-    // not expr to avoid automatic evaluation
-    ptr<const basic> r = f( it->get() );
-
-    if( r.get() != it->get() )
-    {
-      // something has changed
-      // create a new vector
-      typedef std::vector< expr > vec_t;
-      util::scoped_ptr< vec_t > retp ( new vec_t );
-      vec_t &ret = *retp;
-      ret.reserve( m_poly->size() );
-
-      // unchanged terms
-      for( raw_const_iterator i2 = m_poly->begin(); i2 != it; ++i2 )
-        ret.push_back( i2->get() );
-
-      // current term
-      ret.push_back( r );
-      ++it;
-
-      // remaining terms
-      for( ; it != en; ++it )
-        ret.push_back( f( it->get() ) );
-
-      return retp.release();
-    }
-  }
-
-  // nothing has changed
-  return nullptr;
-}
-
+#undef VS
 
 } // namespace analysis
 
