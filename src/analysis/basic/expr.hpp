@@ -65,8 +65,8 @@ public:
 
 public:
   //! \brief Visitor accept
-  template<class V>
-  void accept(const V &) const;
+  template<class V> void accept(V &) const;
+  template<class V> void accept(const V &) const;
 
 public:
   //! \brief Nullity test
