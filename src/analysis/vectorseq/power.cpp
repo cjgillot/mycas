@@ -2,40 +2,55 @@
 
 #include "analysis/expr.hpp"
 
+#include <boost/functional/hash.hpp>
+
 using namespace analysis;
 
 // ************** power handle implementation **********//
 
+#define HNDL power::handle
+#define PTR HNDL::const_pointer
+
 util::cmp_t
-power::handle::compare(const handle &a, const handle &b)
-{ return expr::compare(a.m_ptr->m_base, b.m_ptr->m_base); }
+HNDL::compare(PTR a, PTR b)
+{ return expr::compare( a->base(), b->base() ); }
 
 // all operations :
-power::handle
-power::handle::operator+(const handle &o) const {
-  ASSERT(compare(*this, o) == 0);
+PTR HNDL::add(PTR a, PTR b)
+{
+  ASSERT( HNDL::compare( a,b ) == 0 );
 
   return new power(
-    m_ptr->m_base
-  , m_ptr->m_expo + o.m_ptr->m_expo
+    a->base()
+  , a->expo() + b->expo()
   );
 }
-power::handle
-power::handle::operator-(const handle &o) const {
-  ASSERT(compare(*this, o) == 0);
+PTR HNDL::sub(PTR a, PTR b)
+{
+  ASSERT( HNDL::compare( a,b ) == 0 );
 
   return new power(
-    m_ptr->m_base
-  , m_ptr->m_expo - o.m_ptr->m_expo
+    a->base()
+  , a->expo() - b->expo()
   );
 }
-power::handle
-power::handle::operator-() const {
+PTR HNDL::neg(PTR p)
+{
   return new power(
-    m_ptr->m_base
-  , - m_ptr->m_expo
+    p->base()
+  , - p->expo()
   );
 }
+PTR HNDL::sca(PTR p, const number &n)
+{
+  return new power(
+    p->base()
+  , n * p->expo()
+  );
+}
+
+#undef PTR
+#undef HNDL
 
 //********** power class implementation ***********//
 

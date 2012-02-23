@@ -6,6 +6,8 @@
 #include "analysis/vectorseq/handle_concept.hpp" // for handle
 #include "analysis/vectorseq/iterator.hpp" // for eps_iterator
 
+#include "analysis/vectorseq/poly.hpp"
+
 #include "analysis/expr.hpp"
 
 namespace analysis {
@@ -13,7 +15,11 @@ namespace vectorseq_detail {
 
 //!\brief Non template base for \c vectorseq<>
 class vectorseq_base
-: public basic {
+: public basic
+{
+protected: // polynomial types used by vectorseq<>
+  typedef vseq::poly<const basic> poly_t;
+  typedef boost::intrusive_ptr<const poly_t> polyptr_t;
 
 public: // simple cdtor
   explicit vectorseq_base(const number &);
@@ -35,8 +41,25 @@ protected: // named constructors, set up hashing. Implemented in hash.hpp
 public: // access
   const number &coef() const  { return m_coef; }
 
+public: // range
+  typedef typename poly_t::const_iterator         const_piterator;
+
+  const_piterator pbegin() const { return poly() ? poly()->begin() : nullptr; }
+  const_piterator pend  () const { return poly() ? poly()->end  () : nullptr; }
+
+  std::size_t size()  const { return poly() ? poly()->size() : 0ul; }
+  bool        empty() const { return ! poly(); }
+
+  template< class F >
+  std::vector< expr >* map_children(F f) const;
+
 protected: // access from derived
   number &coef() { return m_coef; }
+  polyptr_t &poly() { return m_poly; }
+  const polyptr_t &poly() const { return m_poly; }
+
+  bool      is_monomial() const    { return poly() && poly()->size() == 1; }
+  const basic* monomial() const    { ASSERT( is_monomial() ); return *poly()->begin(); }
 
 public: // comparison
   std::size_t       hash() const;
@@ -64,9 +87,18 @@ protected:
     return c;
   }
 
+public:
+  bool has(const symbol &) const;
+  void print(std::basic_ostream<char> &os) const;
+private:
+  virtual void print_base(std::basic_ostream<char> &os) const = 0;
+
 private: // member data
   //! \brief Constant coefficient
   number m_coef;
+  //! \brief Shared polynomial vector
+  //! \invariant an empty polynomial is represented by \c nullptr
+  polyptr_t m_poly;
 
   //! hashes, see hash.hpp
   std::size_t m_seqhash;
@@ -75,6 +107,6 @@ private: // member data
 
 }} // namespace analysis::vectorseq_detail
 
-#include "hash.hpp"
-
 #endif // VECTORSEQ_BASE_HPP
+
+#include "vectorseq_base.ipp"

@@ -39,10 +39,10 @@ expand_prod_sum( const expr &scale, const sum  &addition )
   container::ptr_unsafe_vector< const prod > seq ( addition.size() + 1 );
 
   { // coefficient handling
-    const prod::handle ph = scale_prod.get();
+    const prod* ph = scale_prod.get();
 
     // cannot be numerical since [scale_prod] isn't
-    seq.push_back( ph.sca( addition.coef() ).get() );
+    seq.push_back( prod::handle::sca( ph, addition.coef() ) );
   }
   foreach( const prod* p, addition )
   {

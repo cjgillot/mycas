@@ -71,71 +71,43 @@ struct power::handle
 : private util::implement_concept< ExpairseqHandle< power::handle, power > >
 {
 public:
+  typedef power monomial_type;
   typedef const power* const_pointer;
 
-public: // cdtor
-  handle(const_pointer p)
-  : m_ptr(p) { ASSERT(p); }
-  ~handle() throw() {}
-
-  void swap(handle &o) throw()
-  { m_ptr.swap( o.m_ptr ); }
-
-public: // coercion with expr
-  handle( const expr &ex )
-  : m_ptr( ex.get()->as_power() ) {}
-  operator expr() const
-  { return expr( m_ptr.get() ); }
-
 public: // operations
-  handle operator+(const handle &) const;
-  handle operator-(const handle &) const;
-  handle operator-() const;
+  static const_pointer add(const_pointer, const_pointer);
+  static const_pointer sub(const_pointer, const_pointer);
+  static const_pointer neg(const_pointer);
+
+  static const_pointer sca(const_pointer, const number &);
 
 public: // tests
-  bool null() const
-  { return m_ptr->m_expo.null(); }
+  static bool null(const_pointer p)
+  { return p->expo().null(); }
 
-  static util::cmp_t compare(const handle &a, const handle &b);
-  static util::cmp_t deep_compare(const handle &a, const handle &b)
+  static util::cmp_t compare(const_pointer a, const_pointer b);
+  static util::cmp_t deep_compare(const_pointer a, const_pointer b)
   {
-    util::cmp_t c = util::compare( a.hash() , b.hash() );
+    util::cmp_t c = util::compare( handle::hash( a ) , handle::hash( b ) );
     if(c) return c;
-    return a.m_ptr->power::compare_same_type(*b.m_ptr);
+    return a->power::compare_same_type( *b );
   }
 
 public: // misc
-  std::size_t hash() const
-  { return m_ptr->power::hash(); }
+  static std::size_t hash(const_pointer p)
+  { return p->power::hash(); }
 
-  std::size_t coef_hash() const
-  { return m_ptr->m_expo.get()->hash(); }
+  static std::size_t coef_hash(const_pointer p)
+  { return p->expo().hash(); }
 
-  std::size_t value_hash() const
-  { return m_ptr->m_base.get()->hash(); }
+  static std::size_t value_hash(const_pointer p)
+  { return p->base().hash(); }
 
   template<class S>
-  void print(S &os) const
-  { m_ptr->power::print(os); }
-
-  const_pointer get() const
-  { return m_ptr.get(); }
-
-private: // data
-  ptr<const power> m_ptr;
+  static void print(const_pointer p, S &os)
+  { p->power::print(os); }
 };
 
-}
-
-namespace std {
-
-inline void swap(
-  analysis::power::handle &a
-, analysis::power::handle &b
-) {
-  a.swap( b );
-}
-
-} // namespace std
+} // namespace analysis
 
 #endif /* POWER_HPP_ */

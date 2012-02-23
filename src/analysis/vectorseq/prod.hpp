@@ -118,14 +118,14 @@ inline prod* prod::from_sorted_power_range(const number &n, const Iter &b, const
 }
 
 // specialize handle::from_expr
-namespace epseq {
+namespace vseq {
 
 template<>
 inline prod::handle::const_pointer
 prod::handle::from_expr( const expr &e )
 { return e.get()->as_prod(); }
 
-} // namespace epseq
+} // namespace vseq
 
 } // namespace analysis
 

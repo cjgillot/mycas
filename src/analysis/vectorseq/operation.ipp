@@ -12,7 +12,7 @@
 #include "util/move.hpp" // move_ptr
 
 namespace analysis {
-namespace epseq {
+namespace vseq {
 
 namespace detail {
 
@@ -24,14 +24,14 @@ template<class Iter>
 std::size_t distance_ra_imp( const Iter &a, const Iter &b, boost::incrementable_traversal_tag )
 { return 0; }
 
-template<class epair, class Iter>
+template<class EP, class Iter>
 bool is_sorted_epair( Iter first, const Iter &last )
 {
   if( first == last )
     return true;
 
   for( Iter next = first; ++next != last; first = next )
-    if( epair::compare( *first, *next ) > 0 )
+    if( EP::compare( *first, *next ) > 0 )
       return false;
 
   return true;
@@ -44,16 +44,17 @@ std::size_t distance_ra( const Iter &a, const Iter &b )
 { return detail::distance_ra_imp( a, b, typename boost::iterator_traversal<Iter>::type() ); }
 
 //! \brief Construct a vector from a sorted range of \c epair
-template<class epair, class Iter>
-poly<epair>*
+template<class EP, class Iter>
+poly<const basic>*
 do_range_sorted( Iter beg, const Iter &end )
 {
   CONCEPT_ASSERT(( boost::InputIterator<Iter> ));
 
-  typedef poly<epair> vec_t;
+  typedef typename EP::monomial_type M;
+  typedef poly<const basic> vec_t;
 
   // test range is sorted
-  ASSERT( detail::is_sorted_epair<epair>( beg, end ) );
+  ASSERT( detail::is_sorted_epair<EP>( beg, end ) );
 
   typename std::iterator_traits< Iter >::difference_type
     dist = std::distance( beg, end );
@@ -64,30 +65,30 @@ do_range_sorted( Iter beg, const Iter &end )
 
   { // unique_copy and hash
 
-    epair buf ( *beg );
+    ptr<const M> buf ( *beg );
 
     while( ++beg != end )
     {
-      util::cmp_t c = epair::compare( buf, *beg );
+      util::cmp_t c = EP::compare( buf.get(), *beg );
 
       // collision : accumulate in buf
       if( c == 0 )
       {
-        buf = buf + *beg;
+        buf = EP::add( buf.get(), *beg );
         continue;
       }
 
       // no collision, commit and update
-      if( ! buf.null() )
-        ret->push_back( buf );
+      if( ! EP::null( buf.get() ) )
+        ret->push_back( buf.get() );
 
       // load new value in buf
-      buf = *beg;
+      buf.reset( *beg );
     }
 
     // commit remaining
-    if( ! buf.null() )
-      ret->push_back( buf );
+    if( ! EP::null( buf.get() ) )
+      ret->push_back( buf.get() );
   }
 
   ret->shrink();
@@ -96,21 +97,21 @@ do_range_sorted( Iter beg, const Iter &end )
 }
 
 //! \brief Construct a vector from an unsorted range of \c epair
-template<class epair, class Iter>
-poly<epair>*
-do_range_const( const Iter &beg
-              , const Iter &end ) {
+template<class epair, class M, class Iter>
+poly<M>*
+do_range_const( const Iter &beg, const Iter &end )
+{
   CONCEPT_ASSERT(( boost::InputIterator<Iter> ));
 
-  typedef std::vector<epair> vec_t;
+  typedef std::vector<M> vec_t;
   vec_t tmp ( beg, end );
 
-  typedef sort_pred< epair > p_t;
+  typedef sort_pred<epair,M> p_t;
   std::sort( tmp.begin(), tmp.end(), p_t() );
 
   return do_range_sorted<epair>( tmp.begin(), tmp.end() );
 }
 
-}} // namespace analysis::epseq
+}} // namespace analysis::vseq
 
 #endif

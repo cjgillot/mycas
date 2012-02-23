@@ -29,13 +29,13 @@ expand_sum_sum( const sum &a, const sum &b )
   const number &bc = b.coef();
 
   { // hard multiplication work
-    const prod::handle
+    ptr<const prod>
       ach = prod::from_number( ac ),
       bch = prod::from_number( bc );
-    expand_detail::expand_heap( seq, ach, a, bch, b );
+    expand_detail::expand_heap<prod::handle>( seq, ach.get(), a, bch.get(), b );
   }
 
-  sort( seq.begin(), seq.end() );
+  expand_detail::sort( seq.begin(), seq.end() );
 
   ptr< const sum > retp ( sum::from_sorted_prod_range( ac * bc, seq.begin(), seq.end() ) );
   retp->basic::expand();

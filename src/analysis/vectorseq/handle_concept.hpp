@@ -20,41 +20,30 @@ private:
 
 public:
   typedef typename H::const_pointer const_pointer;
+  typedef typename H::monomial_type monomial_type;
 
   // const_pointer consistency
+  STATIC_ASSERT (( boost::is_same< monomial_type, Mono >::value ));
   STATIC_ASSERT (( boost::is_same< const_pointer, const Mono* >::value ));
-
-  // construction
-  CONCEPT_ASSERT(( boost::CopyConstructible<H> ));
-  CONCEPT_ASSERT(( boost::Assignable<H> ));
-
-  // coercion
-  CONCEPT_ASSERT(( boost::Convertible<expr, H> ));
-  CONCEPT_ASSERT(( boost::Convertible<H, expr> ));
-
-  // operations
-  CONCEPT_ASSERT(( boost::PlusOp<H, H, H> ));
-  CONCEPT_ASSERT(( boost::SubtractOp<H, H, H> ));
-  CONCEPT_ASSERT((        NegateOp ));
 
   CONCEPT_USAGE( ExpairseqHandle )
   {
-    H h ( ptr ); // construction from pointer
-    h.swap( h ); // swap
+    null = H::null( ptr );  // null testing
 
-    same_type( h.get(), ptr ); // pointer access
+    // operations
+    ptr = H::add( ptr, ptr );
+    ptr = H::sub( ptr, ptr );
+    ptr = H::neg( ptr );
 
-    null = h.null();  // null testing
-
-    cmp = H::compare( h, h ); // comparison
-    cmp = H::deep_compare( h, h ); // deep comparison
+    cmp = H::compare( ptr, ptr ); // comparison
+    cmp = H::deep_compare( ptr, ptr ); // deep comparison
 
     // hashing, see hash.hpp
-    hash = h.      hash();
-    hash = h. coef_hash();
-    hash = h.value_hash();
+    hash = H::      hash( ptr );
+    hash = H:: coef_hash( ptr );
+    hash = H::value_hash( ptr );
 
-    h.print( os ); // printing
+    H::print( ptr, os ); // printing
   }
 
 private:

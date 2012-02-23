@@ -9,138 +9,106 @@
 #include "util/move.hpp"
 
 namespace analysis {
-namespace epseq {
+namespace vseq {
 
-// cdtor
-template<class I, class M>
-inline handle<I,M>::
-handle(const eps_t* p)
-: m_ptr(p) { ASSERT(p); }
-
-template<class I, class M>
-inline handle<I,M>::
-handle(const handle &o)
-: m_ptr(o.m_ptr) {}
-
-template<class I, class M>
-inline handle<I,M> &handle<I,M>::
-operator=(const handle &o)
-{
-  m_ptr = o.m_ptr;
-  return *this;
-}
-
-template<class I, class M>
-inline handle<I,M>::
-~handle() throw() {}
-
-template<class I, class M>
-inline void handle<I,M>::
-swap(handle &o) throw()
-{ m_ptr.swap( o.m_ptr ); }
-
-// coercion
-template<class I, class M>
-handle<I,M>::handle( const expr &e )
-: m_ptr( from_expr( e ) ) {}
-
-template<class I, class M>
-inline
-handle<I,M>::operator expr() const
-{ return expr(m_ptr.get()); }
+#define HNDL handle<I,M>
+#define PTR  typename HNDL::const_pointer
 
 // operations
 template<class I, class M>
-inline handle<I,M>
-handle<I,M>::operator+(const handle &o) const {
-  ASSERT(compare(*this, o) == 0);
-  return chg_coef( m_ptr->coef() + o.m_ptr->coef() );
-}
-
-template<class I, class M>
-inline handle<I,M>
-handle<I,M>::operator-(const handle &o) const {
-  ASSERT(compare(*this, o) == 0);
-  return chg_coef( m_ptr->coef() - o.m_ptr->coef() );
-}
-template<class I, class M>
-inline handle<I,M>
-handle<I,M>::operator-() const {
-  return chg_coef( - m_ptr->coef() );
-}
-template<class I, class M>
-inline handle<I,M>
-handle<I,M>::sca(const number &n) const {
-  return chg_coef( n * m_ptr->coef() );
-}
-
-template<class I, class M>
-inline handle<I,M>
-handle<I,M>::operator*(const handle &o) const
+inline PTR
+HNDL::add(PTR a, PTR b)
 {
-  util::scoped_ptr<I> ret ( I::from_number( m_ptr->coef() * o.m_ptr->coef() ) );
-  ret->construct_add( *m_ptr, *o.m_ptr );
+  ASSERT( handle::compare( a, b ) == 0 );
+  return handle::chg_coef( a, a->coef() + b->coef() );
+}
+
+template<class I, class M>
+inline PTR
+HNDL::sub(PTR a, PTR b)
+{
+  ASSERT( handle::compare( a, b ) == 0 );
+  return handle::chg_coef( a, a->coef() - b->coef() );
+}
+
+template<class I, class M>
+inline PTR
+HNDL::neg(PTR p)
+{
+  return handle::chg_coef( p, -p->coef() );
+}
+template<class I, class M>
+inline PTR
+HNDL::sca(PTR p, const number &n)
+{
+  return handle::chg_coef( p, n * p->coef() );
+}
+
+template<class I, class M>
+inline PTR
+HNDL::mul(PTR a, PTR b)
+{
+  util::scoped_ptr<I> ret ( I::from_number( a->coef() * b->coef() ) );
+  ret->construct_add( *a, *b );
   return ret.release();
 }
 
 // tests & comparison
 template<class I, class M>
 inline bool
-handle<I,M>::null() const
-{ return m_ptr->coef().null(); }
+HNDL::null(PTR p)
+{ return p->coef().null(); }
 
 template<class I, class M>
 inline util::cmp_t
-handle<I,M>::compare(const handle &a, const handle &b)
-{ return a.m_ptr->partial_compare(*b.m_ptr); }
+HNDL::compare(PTR a, PTR b)
+{ return a->partial_compare( *b ); }
 
 template<class I, class M>
 inline util::cmp_t
-handle<I,M>::deep_compare(const handle &a, const handle &b)
-{ return basic::compare(*a.m_ptr, *b.m_ptr); }
+HNDL::deep_compare(PTR a, PTR b)
+{ return basic::compare( *a, *b ); }
 
 template<class I, class M>
 inline std::size_t
-handle<I,M>::hash() const
-{ return m_ptr->hash(); }
+HNDL::hash(PTR p)
+{ return p->hash(); }
 
 template<class I, class M>
 inline std::size_t
-handle<I,M>::coef_hash() const
-{ return m_ptr->coef_hash(); }
+HNDL::coef_hash(PTR p)
+{ return p->coef_hash(); }
 
 template<class I, class M>
 inline std::size_t
-handle<I,M>::value_hash() const
-{ return m_ptr->value_hash(); }
+HNDL::value_hash(PTR p)
+{ return p->value_hash(); }
 
 template<class I, class M>
 inline void
-handle<I,M>::sort_hash(std::size_t &high, std::size_t &low) const
-{ return m_ptr->sort_hash( high, low ); }
+HNDL::sort_hash(PTR p, std::size_t &high, std::size_t &low)
+{ return p->sort_hash( high, low ); }
 
 // printing
 template<class I, class M>
 template<class S>
 inline void
-handle<I,M>::print(S &os) const
-{ m_ptr->print(os); }
-
-template<class I, class M>
-inline typename handle<I,M>::const_pointer
-handle<I,M>::get() const throw()
-{ return static_cast< const_pointer >( m_ptr.get() ); }
+HNDL::print(PTR p, S &os)
+{ p->print(os); }
 
 // operations implementation
 template<class I, class M>
-inline typename handle<I,M>::eps_t*
-handle<I,M>::chg_coef(const number &n) const throw()
+inline PTR
+HNDL::chg_coef(PTR p, const number &n) throw()
 {
-  util::scoped_ptr< eps_t > retp ( new I( *get() ) );
+  util::scoped_ptr< eps_t > retp ( new I( *p ) );
   retp->coef() = n;
-  return retp.release();
+  return static_cast<PTR>( retp.release() );
 }
 
-}} // namespace analysis::epseq
+#undef PTR
+#undef HNDL
+
+}} // namespace analysis::vseq
 
 #endif

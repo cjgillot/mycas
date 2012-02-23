@@ -4,7 +4,7 @@
 #include <boost/iterator/iterator_adaptor.hpp>
 
 namespace analysis {
-namespace epseq {
+namespace vseq {
 
 template< class Mono, class Base >
 struct eps_iterator
@@ -22,7 +22,6 @@ private:
 public:
   eps_iterator() {}
 
-  explicit
   eps_iterator( const Base &it )
   : super( it ) {}
 
@@ -30,9 +29,9 @@ private:
   friend class boost::iterator_core_access;
 
   const Mono* dereference() const
-  { return super::base_reference()->get(); }
+  { return static_cast<const Mono*>( *super::base_reference() ); }
 };
 
-}} // namespace analysis::epseq
+}} // namespace analysis::vseq
 
 #endif
