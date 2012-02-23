@@ -8,7 +8,7 @@ OCAMLGENC=perl ../../../caml/gen_funcs.pl
 
 INCLUDE=-I../../../ -I/usr/local/lib/ocaml
 CFLAGS =
-MLFLAGS=
+MLFLAGS=-I ../../caml
 
 ifdef DEBUG
 CFLAGS  += -g
@@ -23,7 +23,6 @@ LDFLAGS=-L/usr/local/lib/ocaml -lasmrun -ldl -lm -lunix
 
 
 MLSRC =	\
-	expr.ml		\
 	base.ml		\
 	aors.ml		\
 	mul.ml		\
