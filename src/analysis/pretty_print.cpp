@@ -4,6 +4,8 @@
 
 #include "analysis/symbol.hpp"
 
+#include "analysis/function/exprarray.hpp"
+
 #include "rtti/visitor.hpp"
 
 using namespace analysis;
@@ -23,6 +25,7 @@ struct pretty_printer
     ( power   )
     ( symbol_ )
     ( numerical )
+    ( exprarray )
   )
 
 public:
@@ -126,6 +129,27 @@ public:
     if( lv >= 2 )
       *stream << " )";
     level = lv;
+  }
+
+  void visit( const exprarray &e ) const
+  {
+    *stream << '[' << RTTI_ID( e ) << ']';
+
+    const expr
+      *it = e.pbegin(),
+      *en = e.pend();
+
+    *stream << '(';
+
+    if( it != en )
+    {
+      *stream << *it; ++it;
+
+      for( ; it != en; ++it )
+        *stream << ", " << *it;
+    }
+
+    *stream << ')';
   }
 };
 
