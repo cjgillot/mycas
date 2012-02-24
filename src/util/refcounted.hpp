@@ -65,7 +65,10 @@ public:
 
   //! \brief Destructor
   inline ~refcounter() throw()
-  { ASSERT(m_refc == 0); }
+  {
+    // allow the case of static allocations
+    ASSERT(m_refc <= 1);
+  }
 
 public:
   //! \brief Incrementation
@@ -101,7 +104,7 @@ public:
 
 public:
   //! \brief Reference count
-  unsigned long m_refc;
+  std::size_t m_refc;
 };
 
 /*!
