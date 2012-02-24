@@ -283,7 +283,7 @@ class TimSort {
 
     template <typename Iter>
     static int
-    gallopLeft(ref_t key, Iter base, diff_t len, diff_t hint, compare_t compare) {
+    gallopLeft(const value_t &key, Iter base, diff_t len, diff_t hint, compare_t compare) {
         assert( len > 0 && hint >= 0 && hint < len );
 
         int lastOfs = 0;
@@ -343,7 +343,7 @@ class TimSort {
 
     template <typename Iter>
     static int
-    gallopRight(ref_t key, Iter base, diff_t len, diff_t hint, compare_t compare) {
+    gallopRight(const value_t &key, Iter base, diff_t len, diff_t hint, compare_t compare) {
         assert( len > 0 && hint >= 0 && hint < len );
 
         int ofs = 1;
