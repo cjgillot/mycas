@@ -60,11 +60,10 @@ rtti.ml: ../rtti.ml
 
 partialclean:
 	rm -f *.o *.cm*
-	rm -f export.def export.cc export.ml
 
 clean: partialclean
 	rm -f *.a
-	rm -f cdepend.mk mldepend.mk
+	rm -f mldepend.mk rtti.ml
 
 distclean: clean
 
