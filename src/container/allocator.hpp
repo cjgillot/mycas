@@ -6,6 +6,8 @@
 
 #include <boost/type_traits/remove_const.hpp>
 
+#include "util/move.hpp"
+
 namespace container {
 namespace detail {
 
@@ -92,6 +94,15 @@ public:
   {
     intrusive_ptr_release( *p );
     super_type::destroy( p );
+  }
+
+  void assign( pointer p, value_type x )
+  {
+    value_type y = std::move( *p );
+
+    intrusive_ptr_add_ref( x );
+    *p = std::move( x );
+    intrusive_ptr_release( y );
   }
 };
 
