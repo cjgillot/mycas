@@ -29,6 +29,36 @@ inline expr::expr( const ptr<T> &bp )
 inline expr::expr( const number &n )
 : m_impl( new numerical( n ) ) {}
 
+#define INTEGER_CTOR( type )                \
+inline expr::expr(signed type n)            \
+: m_impl( /* null */ ) {                    \
+  if( (unsigned long)std::abs(n)            \
+    <= small_numeric_cache_limit )          \
+    m_impl.reset( small_numeric_cache(n) ); \
+  else                                      \
+    m_impl.reset( new numerical( n ) );     \
+}
+INTEGER_CTOR(int) INTEGER_CTOR(long) // INTEGER_CTOR(long long)
+#undef INTEGER_CTOR
+
+#define UNSIGNED_CTOR( type )               \
+inline expr::expr(unsigned type n)          \
+: m_impl( /* null */ ) {                    \
+  if( n <= small_numeric_cache_limit )      \
+    m_impl.reset( small_numeric_cache(n) ); \
+  else                                      \
+    m_impl.reset( new numerical( n ) );     \
+}
+UNSIGNED_CTOR(int) UNSIGNED_CTOR(long) // UNSIGNED_CTOR(long long)
+#undef UNSIGNED_CTOR
+
+#define FLOAT_CTOR( type )      \
+inline expr::expr(type n)       \
+: m_impl( new numerical( n ) )  \
+{}
+FLOAT_CTOR(float) FLOAT_CTOR(double) FLOAT_CTOR(long double)
+#undef FLOAT_CTOR
+
 // eval
 inline void expr::eval(unsigned lv) const
 {

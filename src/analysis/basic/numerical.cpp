@@ -4,8 +4,6 @@
 
 #include "numeric/number.hpp"
 
-#include "algebra/real.hpp"
-
 using namespace analysis;
 
 numerical::numerical(const numerical &o)
@@ -17,9 +15,9 @@ numerical* numerical::clone() const
 { return new numerical(m_value); }
 
 bool numerical::null() const
-{ return algebra::null(m_value); }
+{ return m_value.null(); }
 bool numerical::unit() const
-{ return algebra::unit(m_value); }
+{ return m_value.unit(); }
 
 #define OP( op, name )                  \
   const numerical* numerical::name(         \

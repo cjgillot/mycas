@@ -12,6 +12,8 @@
 
 #include "analysis/forward.hpp"
 
+#define EXPR_NUMERIC_CACHE_LIMIT 20
+
 namespace analysis {
 
 /*!\brief Expression class
@@ -24,7 +26,9 @@ class expr
 , operators::ordered<expr
 > > {
 
-  struct enabler {};
+private:
+  static const unsigned long small_numeric_cache_limit = EXPR_NUMERIC_CACHE_LIMIT;
+  static const numerical* small_numeric_cache(long);
 
 public:
   expr();
@@ -47,9 +51,10 @@ public:
 //   explicit
   expr(const number &);
 
-  template<class T>
-  expr(T n, typename boost::enable_if<boost::is_arithmetic<T>, enabler>::type = enabler() )
-  : m_impl( new numerical( n ) ) {}
+  expr(int); expr(long); // expr(long long);
+  expr(unsigned); expr(unsigned long); // expr(unsigned long long);
+
+  expr(float); expr(double); expr(long double);
 
 public: // ptr<> behaviour
   operator const ptr<const basic> &() const { return m_impl; }
