@@ -73,4 +73,6 @@ vectorseq_base::map_children( F f ) const
 
 }} // namespace analysis::vectorseq_detail
 
+#include "hash.ipp"
+
 #endif // VECTORSEQ_BASE_HPP

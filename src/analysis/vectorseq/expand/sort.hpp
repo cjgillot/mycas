@@ -26,10 +26,20 @@ template<class Iterator>
 inline void
 sort(const Iterator &beg, const Iterator &end)
 {
-  Iterator it = std::adjacent_find( beg, end, partial_not_pred() );
-  if( it == end )
-    util::insertion_sort( beg, end, sum::sort_predicate() );
-  else
+  std::size_t nruns = 0;
+
+  Iterator it = beg;
+  do
+  { // create runs for timsort
+    Iterator next = std::adjacent_find( it, end, partial_not_pred() );
+    // insertion_sort should not behave too bad
+    // on subranges already hash-sorted
+    util::insertion_sort( it, next, sum::sort_predicate() );
+    it = next; ++nruns;
+  }
+  while( it != end );
+
+  if( nruns > 1 )
     util::timsort( beg, end, sum::sort_predicate() );
 }
 

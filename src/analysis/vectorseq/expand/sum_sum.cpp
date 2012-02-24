@@ -3,6 +3,8 @@
 
 #include "analysis/vectorseq/expand/sort.hpp"
 
+#include <iostream>
+
 namespace analysis {
 namespace expand_detail {
 
@@ -28,12 +30,8 @@ expand_sum_sum( const sum &a, const sum &b )
   const number &ac = a.coef();
   const number &bc = b.coef();
 
-  { // hard multiplication work
-    ptr<const prod>
-      ach = prod::from_number( ac ),
-      bch = prod::from_number( bc );
-    expand_detail::expand_heap<prod::handle>( seq, ach.get(), a, bch.get(), b );
-  }
+  // hard multiplication work
+  expand_detail::expand_heap<prod::handle>( seq, ac, a, bc, b );
 
   expand_detail::sort( seq.begin(), seq.end() );
 

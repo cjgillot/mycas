@@ -13,7 +13,7 @@
  * A handle over vectorseq has its sorting hash designed like following (32 bit example)
  * - 8  bits of coeffseq hash
  * - 24 bits of sequence hash
- * This hashing emulates a grlex ordering, used for faster expansion code.
+ * This hashing emulates a glex ordering, used for faster expansion code.
  */
 
 #include <cstdlib>

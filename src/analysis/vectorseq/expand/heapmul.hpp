@@ -62,13 +62,13 @@ public:
   void next()
   {
     ASSERT( git != gen );
-    cur = EP::mul( f, *git );
+    cur.reset( EP::mul( f.get(), *git ) );
     EP::sort_hash( cur.get(), chash, shash );
     ++git;
   }
 
 private:
-  const M* f;
+  ptr<const M> f;
 
   Iter git, gen;
 
@@ -93,11 +93,11 @@ struct predicate
  * - Comparison : n*m*lg(n)
  * - Space : n
  */
-template<class EP, class M, class RRange, class ARange>
+template<class EP, class RRange, class ARange>
 void expand_heap(
     RRange &ret,
-    const M* f0, const ARange &F,
-    const M* g0, const ARange &G
+    const number &f0, const ARange &F,
+    const number &g0, const ARange &G
 ) {
   if( F.size() > G.size() )
   {
@@ -107,19 +107,25 @@ void expand_heap(
 
   typedef typename ARange::const_iterator iter_t;
   typedef heap_obj_base hob_t;
-  typedef heap_obj<EP, M, iter_t> ho_t;
+  typedef heap_obj<EP, prod, iter_t> ho_t;
 
   container::unsafe_vector<ho_t  > objs ( F.size() + 2 );
   container::unsafe_vector<hob_t*> heap ( F.size() + 2 );
 
   {
-    objs.push_back( ho_t( f0, G.begin(), G.end() ) );
-    heap.push_back( &objs.back() );
+    if( !f0.null() )
+    {
+      objs.push_back( ho_t( prod::from_number(f0), G.begin(), G.end() ) );
+      heap.push_back( &objs.back() );
+    }
 
-    objs.push_back( ho_t( g0, F.begin(), F.end() ) );
-    heap.push_back( &objs.back() );
+    if( !g0.null() )
+    {
+      objs.push_back( ho_t( prod::from_number(g0), F.begin(), F.end() ) );
+      heap.push_back( &objs.back() );
+    }
   }
-  foreach( const M* f, F )
+  foreach( const prod* f, F )
   {
     objs.push_back( ho_t( f, G.begin(), G.end() ) );
     heap.push_back( &objs.back() );
@@ -150,5 +156,14 @@ void expand_heap(
 }
 
 }} // namespace analysis::expand_detail
+
+namespace std {
+
+template<class EP, class M, class I>
+void swap(const analysis::expand_detail::heap_obj<EP,M,I> &a,
+          const analysis::expand_detail::heap_obj<EP,M,I> &b)
+{ a.swap( b ); }
+
+}
 
 #endif // EXPAND_HEAPMUL_HPP
