@@ -3,8 +3,6 @@
 
 #include "analysis/function/exprseq.hpp"
 
-#include "algebra/compare.hpp"
-
 #include "util/foreach.hpp"
 #include "util/assert.hpp"
 #include "util/move.hpp"
@@ -31,7 +29,7 @@ exprseq<C, false>::compare_same_type(const basic &o_) const
 {
   const exprseq &o = static_cast<const exprseq&>(o_);
 
-  return algebra::range_compare( m_container, o.m_container, expr::compare );
+  return util::compare_range( m_container, o.m_container, expr::compare );
 }
 
 template<class C>

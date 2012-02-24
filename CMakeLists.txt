@@ -13,8 +13,8 @@ include(FindBoost)
 find_package( Boost 1.48.0 )
 
 # add_definitions(-std=c++0x)
-add_definitions(-g -Wall -Wextra -Winline -Winit-self -pedantic -ansi -Wunreachable-code -Wshadow)
-# add_definitions(-O3 -Os -fexpensive-optimizations -DNDEBUG -fomit-frame-pointer) # -pg)
+add_definitions(-g -Wall -Wextra -Winit-self -pedantic -ansi -Wunreachable-code -Wshadow)
+# add_definitions(-O3 -DNDEBUG -pg)
 # add_definitions(-fno-rtti)
 
 set_property(GLOBAL PROPERTY CAML_STARTUP_LIBS "")

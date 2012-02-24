@@ -1,5 +1,7 @@
 #include "flint.hpp"
 
+#include "number.hpp"
+
 #define HASH_BITS (8 * sizeof(size_t))
 #define ROT_BITS ((HASH_BITS / 5) + 2) // pure random choice
 
@@ -86,8 +88,6 @@ mpfr_hash(mpfr_srcptr f)
       hash = -2;
   return hash;
 }
-
-#include "number.hpp"
 
 using numeric::number;
 using numeric::detail::wrapper;

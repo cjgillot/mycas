@@ -5,6 +5,8 @@
 #include <boost/type_traits/is_integral.hpp>
 #include <boost/type_traits/make_signed.hpp>
 
+#include <boost/range.hpp>
+
 #include "util/assert.hpp"
 
 namespace util {
@@ -67,6 +69,25 @@ compare(const T* a, const T* b) {
   return detail::sign( a - b );
 }
 
+template<class Range, class BinOp>
+inline cmp_t
+compare_range(const Range &a, const Range &b, BinOp op)
+{
+  typedef typename boost::range_iterator<Range>::type iterator;
+  iterator
+    it1 = boost::begin(a), en1 = boost::end(a),
+    it2 = boost::begin(b), en2 = boost::end(b);
+  for( ; it1 != en1 && it2 != en2; ++it1, ++it2 )
+  {
+    cmp_t c = op( *it1, *it2 );
+    if( c ) return c;
+  }
+
+  if( it1 != en1 ) return 1;
+  if( it2 != en2 ) return-1;
+
+  return 0;
+}
 
 }
 

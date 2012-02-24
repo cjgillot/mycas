@@ -1,7 +1,5 @@
 #include "analysis/function/exprarray.hpp"
 
-#include "algebra/compare.hpp"
-
 #include "util/move.hpp"
 
 #include "analysis/match_state.hpp"

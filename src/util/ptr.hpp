@@ -1,15 +1,7 @@
-/*
- * utils/ptr.hpp
- *
- *  Created on: 14 juin 2011
- *      Author: k1000
- */
-
 #ifndef UTILS_PTR_HPP_
 #define UTILS_PTR_HPP_
 
 #include "operators.hpp"
-#include "algebra/compare.hpp"
 
 namespace util {
 
@@ -19,14 +11,12 @@ namespace util {
  * \brief pointer class
  *
  * This proxy class behaves like
- * a raw pointer, forwarding printing and ordering
- * operators.
+ * a raw pointer, forwarding printing operators.
  */
 template<class T>
 class ptr
-: public operators::ordered<ptr<T>
-, operators::printable<ptr<T> >
-> {
+: public operators::printable<ptr<T> >
+{
   T* p;
 
 public:
@@ -90,11 +80,6 @@ public:
   inline void
   print(S &ios) const {
     ios << *p;
-  }
-  //! \brief Comparison function forwarding
-  static inline int
-  compare(const ptr &a, const ptr &b) {
-    return algebra::compare(*a.p, *b.p);
   }
 };
 
