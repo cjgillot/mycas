@@ -2,7 +2,7 @@
 #define MP_OPERATORS_HPP
 
 #include <iosfwd>
-#include <iostream>
+// #include <iostream>
 #include <cstring>  /* for strlen */
 // #include <string>
 #include <cstdlib>
@@ -30,15 +30,9 @@ int fmpq_cmp_si(const fmpq_t,  long, ulong);
 /* set */
 #define STR(x) (const_cast<char*>(x))
 // int fmpz_set_str(fmpz_t, const char*, int);
-int fmpq_set_str(fmpq_t, const char*, int);
-
+int  fmpq_set_str(fmpq_t, const char*, int);
 void fmpz_set_q(fmpz_t, const fmpq_t);
-
 void mpfr_set_fz(mpfr_ptr, const fmpz_t, mpfr_rnd_t);
-
-/* 2exp */
-void fmpq_mul_2exp(fmpq_t, const fmpq_t, ulong);
-void fmpq_div_2exp(fmpq_t, const fmpq_t, ulong);
 
 /* bitwise */
 void fmpz_com(fmpz_t, const fmpz_t);
@@ -46,6 +40,10 @@ void fmpz_and(fmpz_t, const fmpz_t, const fmpz_t);
 void fmpz_ior(fmpz_t, const fmpz_t, const fmpz_t);
 void fmpz_xor(fmpz_t, const fmpz_t, const fmpz_t);
 
+/* hash */
+size_t fmpz_hash(const fmpz_t);
+size_t fmpq_hash(const fmpq_t);
+size_t mpfr_hash(mpfr_srcptr);
 }
 
 // routines in gmpfrxx.cpp
@@ -81,6 +79,8 @@ public:
    to a direct call to the relevant function, thus yielding no overhead
    over the C interface. */
 
+// operators
+//@{
 struct __gmp_unary_plus
 {
   static void eval(fmpz_t z, const fmpz_t w) { fmpz_set(z, w); }
@@ -1001,7 +1001,10 @@ struct __gmp_unary_decrement
   { fmpz_sub(fmpq_numref(q), fmpq_numref(q), fmpq_denref(q)); }
   static void eval(mpfr_ptr f) { mpfr_sub_ui(f, f, 1, MpFrC::get_rnd()); }
 };
+//@}
 
+// unary functions
+//@{
 struct __gmp_abs_function
 {
   static void eval(fmpz_t z, const fmpz_t w) { fmpz_abs(z, w); }
@@ -1040,7 +1043,10 @@ struct __gmp_ceil_function
 {
   static void eval(mpfr_ptr f, mpfr_srcptr g) { mpfr_ceil(f, g); }
 };
+//@}
 
+// powering functions
+//@{
 struct __gmp_sqr_function // not in gmpxx
 {
   static void eval(mpfr_ptr f, mpfr_srcptr g)
@@ -1081,7 +1087,10 @@ struct __gmp_pow_function // not in gmpxx
   static void eval(mpfr_ptr f, unsigned long int l, unsigned long int h)
   { mpfr_ui_pow_ui(f, l, h, MpFrC::get_rnd()); }
 };
+//@}
 
+// transcendental functions
+//@{
 struct __gmp_log_function // not in gmpxx
 {
   static void eval(mpfr_ptr f, mpfr_srcptr g)
@@ -1117,7 +1126,10 @@ struct __gmp_exp10_function // not in gmpxx
   static void eval(mpfr_ptr f, mpfr_srcptr g)
   { mpfr_exp10(f, g, MpFrC::get_rnd()); }
 };
+//@}
 
+// trigonometry functions
+//@{
 struct __gmp_cos_function // not in gmpxx
 {
   static void eval(mpfr_ptr f, mpfr_srcptr g)
@@ -1177,7 +1189,10 @@ struct __gmp_atan2_function // not in gmpxx
   static void eval(mpfr_ptr f, mpfr_srcptr g, mpfr_srcptr h)
   { mpfr_atan2(f, g, h, MpFrC::get_rnd()); }
 };
+//@}
 
+// hyperbolic functions
+//@{
 struct __gmp_cosh_function // not in gmpxx
 {
   static void eval(mpfr_ptr f, mpfr_srcptr g)
@@ -1231,7 +1246,10 @@ struct __gmp_atanh_function // not in gmpxx
   static void eval(mpfr_ptr f, mpfr_srcptr g)
   { mpfr_atanh(f, g, MpFrC::get_rnd()); }
 };
+//@}
 
+// special functions
+//@{
 struct __gmp_fac_ui_function // not in gmpxx
 {
   static void eval(mpfr_ptr f, unsigned long int l)
@@ -1340,7 +1358,10 @@ struct __gmp_agm_function // not in gmpxx
   static void eval(mpfr_ptr f, mpfr_srcptr g, mpfr_srcptr h)
   { mpfr_agm(f, g, h, MpFrC::get_rnd()); }
 };
+//@}
 
+// constants
+//@{
 struct __gmp_const_log2_function // not in gmpxx
 {
   static void eval(mpfr_ptr f)
@@ -1364,7 +1385,24 @@ struct __gmp_const_catalan_function // not in gmpxx
   static void eval(mpfr_ptr f)
   { mpfr_const_catalan(f, MpFrC::get_rnd()); }
 };
+//@}
 
+// integer functions
+//@{
+struct __gmp_gcd_function
+{
+  static void eval(fmpz_t r, const fmpz_t a, const fmpz_t b)
+  { fmpz_gcd( r, a, b ); }
+};
+struct __gmp_lcm_function
+{
+  static void eval(fmpz_t r, const fmpz_t a, const fmpz_t b)
+  { fmpz_lcm( r, a, b ); }
+};
+//@}
+
+// utility functions
+//@{
 struct __gmp_max_function // not in gmpxx
 {
   static void eval(mpfr_ptr f, mpfr_srcptr g, mpfr_srcptr h)
@@ -1498,6 +1536,14 @@ struct __gmp_cmp_function
   static int eval(double d, mpfr_srcptr f)
   { return -mpfr_cmp_d(f, d); }
 };
+
+struct __gmp_hash_function
+{
+  static size_t eval(const fmpz_t a) { return fmpz_hash(a); }
+  static size_t eval(const fmpq_t a) { return fmpq_hash(a); }
+  static size_t eval(mpfr_srcptr  a) { return mpfr_hash(a); }
+};
+//@}
 
 struct __gmp_ternary_addmul // z = w + v * u
 {
@@ -1909,6 +1955,8 @@ public:
     return *this;
   }
 
+  void swap(__gmp_expr &o) { fmpz_swap( mp, o.mp ); }
+
   // string input/output functions
   int set_str(const char *s, int base)
   { return fmpz_set_str(mp, STR(s), base); }
@@ -2091,6 +2139,8 @@ public:
       throw std::invalid_argument ("fmpq_set_str");
     return *this;
   }
+
+  void swap(__gmp_expr &o) { fmpq_swap( mp, o.mp ); }
 
   // string input/output functions
   int set_str(const char *s, int base)
@@ -2314,6 +2364,8 @@ public:
       throw std::invalid_argument ("mpfr_set_str");
     return *this;
   }
+
+  void swap(__gmp_expr &o) { mpfr_swap( mp, o.mp ); }
 
   // string input/output functions
   int set_str(const char *s, int base)
@@ -4047,6 +4099,10 @@ __GMP_DEFINE_BINARY_FUNCTION(hypot, __gmp_hypot_function)
 __GMP_DEFINE_UNARY_FUNCTION(frac, __gmp_frac_function) // not in gmpxx.h
 __GMP_DEFINE_BINARY_FUNCTION(remainder, __gmp_remainder_function) // not in gmpxx.h
 
+__GMP_DEFINE_BINARY_FUNCTION(gcd, __gmp_gcd_function)
+__GMP_DEFINE_BINARY_FUNCTION(lcm, __gmp_lcm_function)
+
+__GMP_DEFINE_UNARY_TYPE_FUNCTION(size_t, hash, __gmp_hash_function)
 __GMP_DEFINE_UNARY_TYPE_FUNCTION(int, sgn, __gmp_sgn_function)
 __GMP_DEFINE_BINARY_TYPE_FUNCTION(int, cmp, __gmp_cmp_function)
 
@@ -4286,5 +4342,16 @@ public:
 #undef __GMPZ_DEFINE_INCREMENT_OPERATOR
 #undef __GMPQ_DEFINE_INCREMENT_OPERATOR
 #undef __MPFR_DEFINE_INCREMENT_OPERATOR
+
+namespace std {
+
+inline void swap(fmpz_class &a, fmpz_class &b)
+{ a.swap( b ); }
+inline void swap(fmpq_class &a, fmpq_class &b)
+{ a.swap( b ); }
+inline void swap(mpfr_class &a, mpfr_class &b)
+{ a.swap( b ); }
+
+}
 
 #endif /* __GMP_PLUSPLUS__ */

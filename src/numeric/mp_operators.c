@@ -1,3 +1,6 @@
+#include <sys/types.h>
+#include <limits.h>
+
 #include <fmpz.h>
 #include <fmpq.h>
 
@@ -148,110 +151,6 @@ void mpfr_set_fq(mpfr_ptr f, const fmpq_t q, mpfr_rnd_t rnd)
     mpfr_div_si(f, f, *fmpq_denref(q), rnd );
 }
 
-/* 2exp */
-#if 1
-
-static void _fmpq_mul_2exp(fmpz_t qn, fmpz_t qd, const fmpz_t rn, const fmpz_t rd, ulong e)
-{
-  /* FIXME : overflow ? */
-  fmpz_t two = { 2 };
-  ulong de = fmpz_remove( qd, rd, two );
-
-  if( de <= e )
-    fmpz_mul_2exp( qn, rn, e - de );
-
-  else
-  {
-    fmpz_set( qn, rn );
-    fmpz_mul_2exp( qd, rd, de - e );
-  }
-}
-
-#else
-
-#include "mpir.h"
-#include "mpir/gmp-impl.h"
-#include "mpir/longlong.h"
-
-#define mpq_mul_2exp  static mpq_dummy_mul_2e
-#define mpq_div_2exp  static mpq_dummy_div_2e
-
-#include "mpir/mpq/md_2exp.c"
-
-static void _fmpq_mul_2exp(fmpz_t qn, fmpz_t qd, const fmpz_t rn, const fmpz_t rd, ulong e)
-{
-  ulong plow = 0;
-
-  mpz_t rn_tmp; mpz_srcptr rn_p = 0; int rn_set = 0;
-
-  mpq_t qn_tmp; mpz_ptr qn_p = 0; int qn_set = 0;
-  mpq_t qd_tmp; mpz_ptr qd_p = 0; int qd_set = 0;
-
-  if( ! COEFF_IS_MPZ( *rd ) )
-  {
-    count_trailing_zeros( rd, plow )
-
-    if( plow < e )
-    {
-      qd = rd >> plow;
-      fmpz_mul_2exp( qn, rn, e - plow );
-    }
-    else
-    {
-      qd = rd >> e;
-      if( qn != rn )
-        fmpz_set( qn, rn );
-    }
-
-    return;
-  }
-
-#define BIND( x )                   \
-  if( COEFF_IS_MPZ( *x ) )          \
-    x##_p = COEFF_TO_PTR( *x );     \
-  else                              \
-  {                                 \
-    mpz_init_set_si( x##_tmp, *x ); \
-    x##_set = 1;                    \
-  }
-
-  BIND( rn ) BIND( qn ) BIND( qd )
-
-#undef BIND
-
-  mord_2exp( qn_p, qd_p, rn_p, COEFF_TO_PTR( *qd ), e );
-
-#define UNBIND( x )       \
-  if( x##_set )           \
-    mpz_clear( x##_tmp );
-
-  UNBIND( rn )
-
-#undef UNBIND
-
-#define UNBIND( x )               \
-  if( x##_set )                   \
-  {                               \
-    fmpz_set_mpz( *x, x##_tmp );  \
-    mpz_clear( x##_tmp );         \
-  }
-
-  UNBIND( qn ) UNBIND( qd )
-
-#undef UNBIND
-}
-
-#endif
-
-void fmpq_mul_2exp(fmpq_t q, const fmpq_t r, ulong e)
-{
-  _fmpq_mul_2exp( fmpq_numref(q), fmpq_denref(q), fmpq_numref(r), fmpq_denref(r), e );
-}
-void fmpq_div_2exp(fmpq_t q, const fmpq_t r, ulong e)
-{
-  _fmpq_mul_2exp( fmpq_denref(q), fmpq_numref(q), fmpq_denref(r), fmpq_numref(r), e );
-}
-
 /* bitwise */
 void fmpz_com(fmpz_t r, const fmpz_t a)
 {
@@ -368,4 +267,93 @@ void fmpz_xor(fmpz_t r, const fmpz_t a, const fmpz_t b)
     else
       fmpz_set_ui( r, *a ^ *b );
   }
+}
+
+/* hash */
+
+#define HASH_BITS (8 * sizeof(size_t))
+#define ROT_BITS ((HASH_BITS / 5) + 2) /* pure random choice */
+
+#define HASH_MODULUS (~((size_t)0))
+#define HASH_PINF  314159
+#define HASH_MINF -HASH_PINF
+#define HASH_NAN  0
+
+#define rotate( xx, bits )  \
+  ( ( xx << bits ) | ( xx >> ( HASH_BITS - bits ) ) )
+
+size_t fmpz_hash(const fmpz_t z)
+{
+  __mpz_struct* mpz;
+  size_t hash;
+
+  if( !COEFF_IS_MPZ( *z ) )
+    return *z;
+
+  mpz = COEFF_TO_PTR( *z );
+  hash = mpn_mod_1(mpz->_mp_d, mpz_size(mpz), HASH_MODULUS);
+
+  if (mpz_sgn(mpz)<0)
+      hash = -hash;
+  if (~hash == 0)
+      hash = -2;
+
+  return hash;
+}
+
+size_t fmpq_hash(const fmpq_t q)
+{
+  /* TODO change to use HASH_MODULUS-computation */
+  size_t hq = fmpz_hash( fmpq_denref( q ) );
+  return fmpz_hash( fmpq_numref( q ) ) ^ rotate( hq, ROT_BITS );
+}
+
+size_t mpfr_hash(mpfr_srcptr f)
+{
+  size_t hash = 0;
+  ssize_t exp;
+  size_t msize;
+  int sign;
+
+  /* Handle special cases first */
+  if (!mpfr_number_p(f))
+  {
+    if (mpfr_inf_p(f))
+      if (mpfr_sgn(f) > 0)
+        return HASH_PINF;
+      else
+        return HASH_MINF;
+    else
+      return HASH_NAN;
+  }
+
+  /* Calculate the number of limbs in the mantissa. */
+  msize = (f->_mpfr_prec + mp_bits_per_limb - 1) / mp_bits_per_limb;
+
+  /* Calculate the hash of the mantissa. */
+  if (mpfr_sgn(f) > 0)
+  {
+    hash = mpn_mod_1(f->_mpfr_d, msize, HASH_MODULUS);
+    sign = 1;
+  }
+  else if (mpfr_sgn(f) < 0)
+  {
+    hash = mpn_mod_1(f->_mpfr_d, msize, HASH_MODULUS);
+    sign = -1;
+  }
+  else
+    return 0;
+
+  /* Calculate the final hash. */
+  exp = f->_mpfr_exp - (msize * mp_bits_per_limb);
+  if( exp >= 0 )
+    exp %= HASH_BITS-1;
+  else
+    exp = HASH_BITS-1-((-1-exp) % (HASH_BITS-1));
+  hash = rotate( hash, exp );
+
+  hash *= sign;
+  if (~hash == 0)
+      hash = -2;
+  return hash;
 }
