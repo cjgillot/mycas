@@ -5,7 +5,7 @@
 
 namespace analysis {
 
-namespace memory {
+namespace __memory {
   // for private use only
   void* allocate( std::size_t ) throw();
   void  release ( void* )       throw();
@@ -16,14 +16,14 @@ namespace memory {
 #define REGISTER_MEMORY()                                             \
 public:                                                               \
   static void operator delete( void* p, std::nothrow_t ) throw()      \
-  { analysis::memory::release( p ); }                                 \
+  { analysis::__memory::release( p ); }                               \
   static void operator delete( void* p ) throw()                      \
-  { analysis::memory::release( p ); }                                 \
+  { analysis::__memory::release( p ); }                               \
   static void* operator new( std::size_t n, std::nothrow_t ) throw()  \
-  { return analysis::memory::allocate( n ); }                         \
+  { return analysis::__memory::allocate( n ); }                       \
   static void* operator new( std::size_t n ) throw( std::bad_alloc )  \
   {                                                                   \
-    void* p = analysis::memory::allocate( n );                        \
+    void* p = analysis::__memory::allocate( n );                      \
     if( p ) return p;                                                 \
     throw std::bad_alloc();                                           \
   }                                                                   \

@@ -34,12 +34,13 @@ union max_align {
   int i;
   long l;
   long long ll;
+  size_t sz;
 
   void* p;
-  long max_align::*mp;
+  max_align max_align::*mp;
 
-  void (*fp)();
-  void (max_align::*mfp)();
+  max_align (*fp)();
+  max_align (max_align::*mfp)();
 };
 
 struct initializer_t
@@ -60,6 +61,10 @@ public:
 #define tag_size (sizeof(max_align))
 #define vp_size (sizeof(void*))
 
+#define TAG( p ) (*(void**)p)
+
+STATIC_ASSERT( vp_size <= tag_size );
+
 // aggregate initializer
 static boost::pool<>* pools [3] = { 0, 0, 0 };
 static const initializer_t initializer;
@@ -70,42 +75,42 @@ get_pool( std::size_t sz )
 {
   initializer.touch();
 
-  ASSERT( sz > sizeof( void* ) );
+  ASSERT( sz > vp_size );
 
-  sz = ( sz + sizeof( void* ) - 1 ) / sizeof( void* );
+  sz = ( sz + vp_size - 1 ) / vp_size;
   sz = ( sz + 3 ) / 4;
 
   return ( sz < 4 ) ? pools[ sz - 1 ] : nullptr;
 }
 
-#define DATA( p ) ( static_cast<void**>( p ) )
 void*
-analysis::memory::allocate( std::size_t n )
+analysis::__memory::allocate( std::size_t n )
   throw()
 {
-  std::size_t sz = n + sizeof( void* );
+  std::size_t sz = n + tag_size;
 
   boost::pool<>* pool = get_pool( sz );
 
   ASSERT( !pool || pool->get_requested_size() >= sz );
 
-  void* p = pool
-  ? pool->malloc()
-  : ::operator new( sz, std::nothrow );
+  max_align* p = pool
+  ? (max_align*)pool->malloc()
+  : (max_align*)::operator new( sz, std::nothrow );
 
-  *DATA( p ) = pool;
-  return DATA( p ) + 1;
+  TAG(p) = pool;
+  return ++p;
 }
 
 void
-analysis::memory::release( void* p )
+analysis::__memory::release( void* p )
   throw()
 {
-  p = DATA( p ) - 1;
+  --*(max_align**)&p;
 
-  if( *DATA( p ) )
+  if( TAG(p) )
   {
-    boost::pool<>* pool = *static_cast<boost::pool<>**>( p );
+    boost::pool<>* pool = static_cast<boost::pool<>*>( TAG(p) );
+
     ASSERT( pool->is_from( p ) );
     pool->free( p );
   }
