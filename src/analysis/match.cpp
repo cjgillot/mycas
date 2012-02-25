@@ -1,11 +1,12 @@
-#include "analysis/match.hpp"
+#include "analysis/wildcard.hpp"
 
 #include "analysis/expr.hpp"
 
 using namespace analysis;
 using match_detail::wildcard_;
 
-bool matched_wild_p( const wildcard_ &pattern, match_state &mm )
+static bool
+matched_wild_p( const wildcard_ &pattern, match_state &mm )
 {
   unsigned pid = pattern.id();
   match_state::const_iterator it = mm.find( pid );
@@ -13,7 +14,8 @@ bool matched_wild_p( const wildcard_ &pattern, match_state &mm )
   return ( it != mm.end() && it->first == pid );
 }
 
-bool match_wild( const basic &self, const wildcard_ &pattern, match_state &mm )
+static bool
+match_wild( const basic &self, const wildcard_ &pattern, match_state &mm )
 {
   unsigned pid = pattern.id();
   {

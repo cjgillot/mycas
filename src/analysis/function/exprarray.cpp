@@ -2,7 +2,7 @@
 
 #include "util/move.hpp"
 
-#include "analysis/match_state.hpp"
+#include "analysis/wildcard.hpp"
 
 #include <boost/functional/hash.hpp>
 

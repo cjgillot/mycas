@@ -1,6 +1,6 @@
 #include "analysis/expr.hpp"
 
-#include "analysis/match_state.hpp"
+#include "analysis/wildcard.hpp"
 
 #include "util/move.hpp"
 #include "util/functor.hpp"
@@ -19,7 +19,11 @@ expr basic::subs_once(const exmap &map) const
 
   for( it =  map.begin(); it != end; ++it )
     if( match( it->first, s ) )
-      return it->second.subs( s.as_exmap() );
+    {
+      exmap m;
+      s.as_exmap( m );
+      return it->second.subs( m );
+    }
 
   return this->eval(2);
 }
