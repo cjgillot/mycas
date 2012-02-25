@@ -3,8 +3,6 @@
 
 #include <caml.hpp>
 
-#include <iostream>
-
 using namespace caml;
 
 static std::size_t counter = 0;

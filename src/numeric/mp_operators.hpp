@@ -2,9 +2,7 @@
 #define MP_OPERATORS_HPP
 
 #include <iosfwd>
-// #include <iostream>
 #include <cstring>  /* for strlen */
-// #include <string>
 #include <cstdlib>
 #include <stdexcept>
 
