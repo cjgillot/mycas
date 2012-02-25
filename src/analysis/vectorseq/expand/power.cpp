@@ -1,7 +1,7 @@
 #include "analysis/vectorseq/expand/fwd.hpp"
 
-namespace analysis {
-namespace expand_detail {
+using namespace analysis;
+using namespace expand_detail;
 
 namespace {
 
@@ -14,12 +14,12 @@ struct repower
   : base( &b ) {}
 
   inline expr operator()( const expr &p ) const
-  { return base->pow( p ).expand(); }
+  { return expr::pow( *base, p ).expand(); }
 };
 
 }
 
-expr power_expand(const power &self)
+expr analysis::expand_detail::power_expand(const power &self)
 {
   const expr &e_base = self.base().expand();
   const expr &e_expo = self.expo().expand();
@@ -30,7 +30,7 @@ expr power_expand(const power &self)
     const sum &s_expo = *e_expo.as_a< sum >();
 
     // (^ b ec)
-    const expr &base_coef = e_base.pow( s_expo.coef() ).expand();
+    const expr &base_coef = expr::pow( e_base, s_expo.coef() ).expand();
 
     // (^ b e1) * (^ b e2) * ...
     expr rest ( number( 0 ) );
@@ -99,13 +99,13 @@ expr power_expand(const power &self)
       return e_base;
 
     if( e == -1 )
-      return e_base.pow( e_expo );
+      return expr::pow( e_base, e_expo );
 
     if( e < 0 )
     {
       const unsigned long me = -e;
       const expr ex = expand_sum_pow( s_base, me );
-      const expr ret = ex.pow( -1 );
+      const expr ret = expr::inv( ex );
       ret.get()->basic::expand();
       return ret;
     }
@@ -119,9 +119,7 @@ expr power_expand(const power &self)
   }
 
 fini:
-  expr ret = e_base.pow( e_expo );
+  expr ret = expr::pow( e_base, e_expo );
   ret.get()->basic::expand();
   return ret;
 }
-
-}} // namespace analysis::expand_detail

@@ -44,16 +44,16 @@ const numerical* numerical::inv(const numerical &a)
 expr
 numerical::pow(const expr &expo) const {
   return expo.is_numerical()
-  ? pow( *expo.as_a< numerical >() )
+  ? numerical::pow( *this, *expo.as_a< numerical >() )
   : basic::pow( expo );
 }
 const numerical*
-numerical::pow(const numerical &expo) const {
+numerical::pow(const numerical &base, const numerical &expo) {
   if( expo.null() )
     return one();
   if( expo.unit() )
-    return this;
-  return new numerical( m_value.pow( expo.m_value ) );
+    return &base;
+  return new numerical( base.m_value.pow( expo.m_value ) );
 }
 
 void numerical::print(std::basic_ostream<char> &os) const

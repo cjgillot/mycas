@@ -6,26 +6,9 @@ using namespace analysis;
 
 const unsigned expr::default_eval_depth = 10;
 
-// tests
-bool expr::null() const
-{
-  if( m_impl->null() )
-  {
-//     expr( number::zero() ).swap( *this );
-    return true;
-  }
-  return false;
-}
-bool expr::unit() const
-{
-  if( m_impl->unit() )
-  {
-//     expr( number::one() ).swap( *this );
-    return true;
-  }
-  return false;
-}
-
+//!\brief Expression comparison function
+//! This is the fundamental method for expression canonical form.
+//! \see basic::compare
 util::cmp_t
 expr::compare(const expr &a, const expr &b)
 {
@@ -85,16 +68,16 @@ BINARY( prod, div, /= )
 #undef OPERATE_NUM
 
 #define OPERATE_UN( klass, op ) do {\
-  PREPARE( ap, *this, klass );      \
+  PREPARE( ap, a, klass );          \
   expr ret ( klass::op( *ap ) );    \
   ret.eval();                       \
   return ret;                       \
 } while(0) //;
 
 #define UNARY( klass, name )        \
-expr expr::name() const {           \
-  if( IS_NUM( *this ) )             \
-    return numerical::name( *NUM( *this ) );  \
+expr expr::name(const expr &a) {    \
+  if( IS_NUM( a ) )                 \
+    return numerical::name( *NUM( a ) );  \
   OPERATE_UN( klass, name );        \
 }
 
@@ -104,22 +87,25 @@ UNARY( prod, inv )
 #undef UNARY
 #undef OPERATE_UN
 
+expr expr::pow(const expr &b, const expr &e)
+{
+  if( IS_NUM(b) && IS_NUM(e) )
+    return numerical::pow( *NUM(b), *NUM(e) );
+  return b.get()->pow(e);
+}
+
 #undef IS_NUM
 #undef NUM
 
 #undef CLONE_TO
 #undef PREPARE
 
-expr expr::pow(const expr &o) const
-{
-  return get()->pow( o );
-}
-
 // numerical cache
 
 #include <boost/preprocessor/repeat.hpp>
 #include <boost/preprocessor/enum.hpp>
 
+namespace {
 struct numerical_cache_guard
 {
   numerical_cache_guard(numerical* array)
@@ -132,6 +118,7 @@ struct numerical_cache_guard
   }
   ~numerical_cache_guard() {}
 };
+}
 
 const numerical* expr::small_numeric_cache(long n)
 {

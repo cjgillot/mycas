@@ -201,7 +201,7 @@ EXPORT value __caml_expr_neg( value e1 )
   const expr* a = Expr_val( e1 );
 
   CAMLlocal1( res );
-  res = expr_move( std::move( a->neg() ) );
+  res = expr_move( std::move( expr::neg( *a ) ) );
 
   CAMLreturn( res );
 }
@@ -211,7 +211,7 @@ EXPORT value __caml_expr_inv( value e1 )
   const expr* a = Expr_val( e1 );
 
   CAMLlocal1( res );
-  res = expr_move( std::move( a->inv() ) );
+  res = expr_move( std::move( expr::inv( *a ) ) );
 
   CAMLreturn( res );
 }
@@ -270,7 +270,7 @@ EXPORT value __caml_expr_pow( value e1, value e2 )
   const expr* b = Expr_val( e2 );
 
   CAMLlocal1( res );
-  res = expr_move( std::move( a->pow( *b ) ) );
+  res = expr_move( std::move( expr::pow( *a, *b ) ) );
 
   CAMLreturn( res );
 }

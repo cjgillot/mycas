@@ -24,25 +24,45 @@ class basic
   REGISTER_MEMORY()
 
 private: // flags, mutable to allow update by basecase eval() and expand()
-  struct flags_t {
+  struct __flags_t {
     bool evaluated : 1;
     bool expanded  : 1;
   };
-  mutable flags_t m_flags;
+  mutable __flags_t m_flags;
 
 protected:
-  basic()
-  : m_flags() {}
-
-  basic(const basic &o)
-  : m_flags( o.m_flags ) {}
-
-  //! \brief Virtual destructor
-  virtual ~basic() {}
+  basic();
+  basic(const basic&);
+  virtual ~basic();
 
 public:
   //! \brief Virtual clone
   virtual basic* clone() const = 0;
+
+public:
+  /*!\brief Auto-evaluation function
+   *
+   * This function is meant to be overridden by all
+   * the compound derived classes.
+   * It evaluates the object, modifies it if needed
+   * without changing the represented value, and returns the most
+   * simple form.
+   *
+   * If you want to return \c this, you must return instead
+   * <tt>this->basic::eval( lv )</tt> to avoid infinite loop.
+   *
+   * This function must not have any recursive call if \a lv == 0.
+   *
+   * All recursive calls must be made with parameter \a lv - 1.
+   *
+   * Default implementation : no-op
+   *
+   * \param lv : the recursion level
+   * \return the evaluated form
+   */
+  virtual expr eval(unsigned lv) const;
+
+  bool is_evaluated() const;
 
 public:
   /*!\brief Nullity test
@@ -91,44 +111,19 @@ private:
   virtual bool match_same_type(const basic &, match_state &) const;
 
 public: // subs
-  /*!\brief Subs function
+  /*!\brief Pattern substitution function
    *
-   * \param mm : a match map
-   * \return the expression with all
-   *
-   * Side effects :
-   *   if <tt>match( p, mm )</tt> returns \c false,
-   *   \c mm must not be modified.
+   * \param mm : a substitution map
+   * \return the substutituted expression
    */
   virtual expr subs(const exmap &) const = 0;
 
-// protected: // g++ rejects power::subs when protected
-  expr subs_once(const exmap &) const;
-
-public:
-  /*!\brief Evaluation function
+  /*!\brief Substitution base case
    *
-   * This function is meant to be overridden by all
-   * the compound derived classes.
-   * It evaluates the object, modifies it if needed
-   * without changing the represented value, and returns the most
-   * simple form.
-   *
-   * If you want to return \c this, you must return instead
-   * <tt>this->basic::eval( lv )</tt> to avoid infinite loop.
-   *
-   * This function must not have any recursive call if \a lv == 0.
-   *
-   * All recursive calls must be made with parameter \a lv - 1.
-   *
-   * Default implementation : no-op
-   *
-   * \param lv : the recursion level
-   * \return the evaluated form
+   * Same as previous \c basic::subs, but return the first
+   * substitution found.
    */
-  virtual expr eval(unsigned lv) const;
-
-  bool is_evaluated() const;
+  expr subs_once(const exmap &) const;
 
 public:
   /*!\brief Differentiation function
@@ -223,6 +218,6 @@ public:
   static util::cmp_t compare(const basic&, const basic&);
 };
 
-}
+} // namespace analysis
 
 #endif /* BASIC_HPP_ */

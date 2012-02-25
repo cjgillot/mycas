@@ -55,18 +55,19 @@ public:
   virtual const prod* as_prod() const;
 
 public:
-  static const numerical* add(const numerical &, const numerical&);
-  static const numerical* sub(const numerical &, const numerical&);
+  static const numerical* add(const numerical&, const numerical&);
+  static const numerical* sub(const numerical&, const numerical&);
 
-  static const numerical* mul(const numerical &, const numerical&);
-  static const numerical* div(const numerical &, const numerical&);
+  static const numerical* mul(const numerical&, const numerical&);
+  static const numerical* div(const numerical&, const numerical&);
 
-  static const numerical* neg(const numerical &);
-  static const numerical* inv(const numerical &);
+  static const numerical* neg(const numerical&);
+  static const numerical* inv(const numerical&);
+
+  static const numerical* pow(const numerical&, const numerical &);
 
 public:
   expr pow(const expr &o) const;
-  const numerical* pow(const numerical &o) const;
   void print(std::basic_ostream<char> &os) const;
   expr subs(const exmap &) const;
 

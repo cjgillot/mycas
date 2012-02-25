@@ -1,3 +1,8 @@
+/*!\namespace analysis
+ * \brief Namespace containing implementation of symbolic manipulation classes
+ */
+namespace analysis {}
+
 #include "analysis/basic/basic.hpp"
 #include "analysis/basic/expr.hpp"
 

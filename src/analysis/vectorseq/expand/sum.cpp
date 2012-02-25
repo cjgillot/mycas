@@ -4,9 +4,10 @@ using namespace analysis;
 using namespace expand_detail;
 
 struct prod_expander
-: std::unary_function<const basic*, ptr<const basic> >
+: std::unary_function<const basic*, expr>
 {
-  inline ptr<const basic> operator()( const basic* ep ) const
+  inline expr
+  operator()( const basic* ep ) const
   { return prod_expand( static_cast<const prod&>( *ep ) ); }
 };
 

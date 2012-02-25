@@ -5,15 +5,13 @@
 
 namespace analysis {
 
-#define BIN_OP_DECL( op, arg1, arg2 ) \
-  inline expr operator op( arg1, arg2 )
-
-#define BIN_OP_IMPL( name, arg1, arg2 ) \
-  { return expr::name( arg1, arg2 ); }
-
-#define BIN_OP( op, name )                          \
-  BIN_OP_DECL( op, const expr  &a, const expr  &b ) \
-  BIN_OP_IMPL( name, a, b )
+//! \name Operator overloads
+//! \{
+#define BIN_OP( op, name )  \
+  inline expr& expr::operator op##=(const expr &o)        \
+  { expr::name( *this, o ).swap( *this ); return *this; } \
+  inline expr operator op(const expr &a, const expr &b)   \
+  { return expr::name( a, b ); }
 
 BIN_OP( +, add )
 BIN_OP( -, sub )
@@ -21,11 +19,28 @@ BIN_OP( *, mul )
 BIN_OP( /, div )
 
 #undef BIN_OP
-#undef BIN_OP_IMPL
-#undef BIN_OP_DECL
+
+inline expr&
+expr::ineg()
+{
+  expr::neg( *this ).swap( *this );
+  return *this;
+}
+inline expr&
+expr::iinv()
+{
+  expr::inv( *this ).swap( *this );
+  return *this;
+}
 
 inline const expr &operator+(const expr &e) { return e; }
-inline expr        operator-(const expr &e) { return e.neg(); }
+inline expr        operator-(const expr &e) { return expr::neg(e); }
+
+inline expr
+pow(const expr &b, const expr &e)
+{ return expr::pow(b, e); }
+
+//! \}
 
 }
 

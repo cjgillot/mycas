@@ -4,9 +4,10 @@ using namespace analysis;
 using namespace expand_detail;
 
 struct power_expander
-: std::unary_function<const basic*, ptr<const basic> >
+: std::unary_function<const basic*, expr>
 {
-  inline ptr<const basic> operator()( const basic* ep ) const
+  inline expr
+  operator()( const basic* ep ) const
   { return power_expand( static_cast<const power&>( *ep ) ); }
 };
 

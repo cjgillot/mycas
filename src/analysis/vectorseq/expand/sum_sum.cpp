@@ -3,8 +3,6 @@
 
 #include "analysis/vectorseq/expand/sort.hpp"
 
-#include <iostream>
-
 namespace analysis {
 namespace expand_detail {
 
