@@ -30,14 +30,14 @@ private:
   reference m_ref;
 
 private:
-  ptr_proxy();
+  ptr_proxy() = delete;
 
 public:
   ptr_proxy(reference r, const Policy &pol)
   : Policy(pol), m_ref(r) {}
 
   ptr_proxy(const ptr_proxy &o)
-  : Policy(o), m_ref(o.m_ref) {}
+  : Policy{o}, m_ref{o.m_ref} {}
   ptr_proxy&
   operator=(const ptr_proxy &o)
   {
@@ -56,8 +56,7 @@ public:
   ~ptr_proxy() {}
 
 public:
-  typename ptr_traits<value_type>::reference
-  operator*() const
+  auto operator*() const -> decltype( *m_ref )
   { return *m_ref; }
 
   value_type operator->() const
@@ -66,21 +65,10 @@ public:
   operator value_type() const
   { return  m_ref; }
 
-//   template<class T>
-//   operator T() const
-//   { return  m_ptr; }
-
-//   operator void() const {}
-
   void swap(ptr_proxy &o)
   {
     std::swap( m_ref, o.m_ref );
   }
-
-//   void setup(reference p)
-//   {
-//     m_ptr = p;
-//   }
 };
 
 template<class Iter, class Policy>
@@ -114,30 +102,10 @@ private:
 
   typename super_t::reference
   dereference() const
-  { return typename super_t::reference( *super_t::base_reference(), *policy ); }
+  { return { *super_t::base_reference(), *policy }; }
 
   const Policy* policy;
 };
-
-#define TDECL( z, n, data ) \
-  typename BOOST_PP_CAT( _TArg, n )
-
-#define ADECL( z, n, data )  \
-  const BOOST_PP_CAT( _TArg, n ) &BOOST_PP_CAT( arg, n )
-
-#define ARGS( z, n, data )  \
-  BOOST_PP_CAT( arg, n )
-
-#define CTOR( z, n, data )                  \
-  template<                                 \
-    BOOST_PP_ENUM_##z( n, TDECL, data )     \
-  >                                         \
-  data(                                     \
-    BOOST_PP_ENUM_##z( n, ADECL, data )     \
-  )                                         \
-  : super_type(                             \
-      BOOST_PP_ENUM_##z( n, ARGS, data )    \
-  ) {}
 
 #define DEFINE_PTR_CONTAINER( name, base_container )              \
 template< class T, class Alloc = std::allocator<T*> >             \
@@ -147,9 +115,8 @@ class name                                                        \
   typedef base_container< T*, Policy > super_type;                \
 public:                                                           \
   name(): super_type() {}                                         \
-  template<class A1>                                              \
-  explicit name( const A1 &a1 ): super_type( a1 ) {}              \
-  BOOST_PP_REPEAT_FROM_TO( 2, 20, CTOR, name )                    \
+  template<typename... Args>                                      \
+  explicit name( Args&& ...a1 ): super_type( std::forward<Args>(a1)... ) {}     \
 public:                                                           \
   typedef ptr_iterator<typename super_type::iterator, Policy> iterator; \
   typedef typename super_type::const_iterator const_iterator;           \
@@ -169,10 +136,6 @@ DEFINE_PTR_CONTAINER( ptr_unsafe_vector, unsafe_vector )
 DEFINE_PTR_CONTAINER( ptr_vector, std::vector )
 
 #undef DEFINE_PTR_CONTAINER
-#undef CTOR
-#undef ARGS
-#undef ADECL
-#undef TDECL
 
 } // namespace container
 

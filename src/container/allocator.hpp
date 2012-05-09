@@ -6,8 +6,6 @@
 
 #include <boost/type_traits/remove_const.hpp>
 
-#include "util/move.hpp"
-
 namespace container {
 namespace detail {
 
@@ -87,7 +85,14 @@ public:
   void construct( pointer p, value_type x )
   {
     super_type::construct( p, x );
-    intrusive_ptr_add_ref( x );
+    intrusive_ptr_add_ref( *p );
+  }
+
+  template<typename... Args>
+  void construct( pointer p, Args&& ...args )
+  {
+    super_type::construct( p, std::forward<Args>(args)... );
+    intrusive_ptr_add_ref( *p );
   }
 
   void destroy( pointer p )

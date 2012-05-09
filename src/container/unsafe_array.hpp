@@ -121,7 +121,7 @@ public: // cdtor
       std::swap( *cur, *ocur );
   }
 
-  ~unsafe_array() throw()
+  ~unsafe_array() noexcept
   {
     pointer cur = address();
 
@@ -232,29 +232,6 @@ private: // check range (may be private because it is static)
     STATIC_ASSERT( I < N );
   }
 };
-
-/*
-template< class T, std::size_t N, class Alloc = std::allocator<T*> >
-class ptr_unsafe_array
-: public unsafe_array< T*, N, intrusive_allocator< Alloc > >
-{
-  typedef container::unsafe_array< T*, N, intrusive_allocator< Alloc > > super_type;
-
-public:
-  template<class A1>
-  explicit
-  ptr_unsafe_array( const A1 &a1 )
-  : super_type( a1 ) {}
-
-  template<class A1, class A2>
-  ptr_unsafe_array( const A1 &a1, const A2 &a2 )
-  : super_type( a1, a2 ) {}
-
-  template<class A1, class A2, class A3>
-  ptr_unsafe_array( const A1 &a1, const A2 &a2, const A3 &a3 )
-  : super_type( a1, a2, a3 ) {}
-};
-*/
 
 } // namespace container
 

@@ -7,7 +7,6 @@
 #include <boost/noncopyable.hpp>
 #include <boost/pool/singleton_pool.hpp>
 
-#include "util/null.hpp"
 #include "util/assert.hpp"
 #include "util/concept.hpp"
 
@@ -187,6 +186,14 @@ public: // modifiers
   {
     ASSERT( size() < m_number );
     get_allocator().construct( m_finish, x );
+    ++m_finish;
+  }
+
+  template<typename... Args>
+  void emplace_back(Args&& ...args)
+  {
+    ASSERT( size() < m_number );
+    get_allocator().construct( m_finish, std::forward<Args>(args)... );
     ++m_finish;
   }
 
