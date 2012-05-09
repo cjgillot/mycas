@@ -1,7 +1,8 @@
 #include "caml_support.hpp"
-#include "util/null.hpp"
 
 #include <caml.hpp>
+
+#include <cstdlib>
 
 using namespace caml;
 
