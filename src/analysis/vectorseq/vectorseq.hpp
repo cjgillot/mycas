@@ -12,7 +12,7 @@
 namespace analysis {
 
 namespace vseq {
-template<class, class> struct sort_pred;
+template<class> struct sort_pred;
 }
 
 /*!\brief Implementation class for \c sum and \c mul
@@ -45,8 +45,8 @@ private: // These types shall never get outside vectorseq
 
 protected: // This type will be inherited and specialized by derived
   //! \brief Handle class
-  typedef vseq::handle<Impl, Mono> handle;
-  friend class vseq::handle<Impl, Mono>;
+  typedef vseq::handle<Impl> handle;
+  friend class vseq::handle<Impl>;
 
 public: // simple cdtor
   explicit vectorseq(const number &n);
@@ -77,7 +77,7 @@ protected:
 
   void rehash();
 
-  typedef vseq::sort_pred<EP, Mono> sort_predicate;
+  typedef vseq::sort_pred<EP> sort_predicate;
 
   template<class Iter> void construct_mono_range       (const Iter &, const Iter &);
   template<class Iter> void construct_sorted_mono_range(const Iter &, const Iter &);
@@ -121,7 +121,7 @@ private: // comparison
   using super::value_hash;
   using super::sort_hash;
 
-  friend class vseq::sort_pred<handle,Mono>;
+  friend class vseq::sort_pred<handle>;
 
   util::cmp_t partial_compare(const vectorseq &) const;
   util::cmp_t compare_same_type(const basic &) const;
@@ -129,12 +129,18 @@ private: // comparison
 
 namespace vseq {
 
-template<class EP, class M>
+template<class EP>
 struct sort_pred
-: std::binary_function<const M*, const M*, bool>
+: std::binary_function<
+  typename EP::const_pointer
+, typename EP::const_pointer
+, bool
+>
 {
+  typedef typename EP::const_pointer ptr_t;
+
   inline bool
-  operator()( const M* a, const M* b ) const
+  operator()(ptr_t a, ptr_t b) const
   { return EP::compare( a, b ) < 0; }
 };
 

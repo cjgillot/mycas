@@ -19,9 +19,6 @@ class wildcard_base
 private:
   unsigned m_id;
 
-private:
-  wildcard_base(const wildcard_base&);
-
 protected:
   wildcard_base(unsigned);
 
@@ -42,7 +39,7 @@ private:
   util::cmp_t compare_same_type(const basic &o_) const;
 };
 
-class wildcard_
+class wildcard_ final
 : public wildcard_base
 {
   REGISTER_FINAL( wildcard_, wildcard_base )

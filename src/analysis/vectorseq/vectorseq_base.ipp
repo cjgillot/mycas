@@ -5,12 +5,19 @@
 #include "analysis/vectorseq/vectorseq_base.hpp"
 #include "analysis/expr.hpp"
 
-#include "util/move.hpp"
-
-#include <boost/mpl/if.hpp>
-
 namespace analysis {
 namespace vectorseq_detail {
+
+template<typename T>
+struct buffer_type
+{
+  typedef T type;
+};
+template<>
+struct buffer_type<expr>
+{
+  typedef ptr<const basic> type;
+};
 
 /*!\brief Function mapping
   *
@@ -36,18 +43,15 @@ vectorseq_base::map_children( F f ) const
   for( ; it != en; ++it )
   {
     // not expr to avoid automatic evaluation
-    typedef typename boost::mpl::if_<
-      boost::is_same<expr, typename F::result_type>
-    , expr, ptr<const basic>
-    >::type buf_t;
-    buf_t r = f( *it );
+    typedef typename buffer_type<typename F::result_type>::type buf_t;
+    buf_t r { f( *it ) };
 
     if( r.get() != *it )
     {
       // something has changed
       // create a new vector
       typedef std::vector< expr > vec_t;
-      util::scoped_ptr< vec_t > retp ( new vec_t );
+      std::unique_ptr< vec_t > retp { new vec_t };
       vec_t &ret = *retp;
       ret.reserve( m_poly->size() );
 

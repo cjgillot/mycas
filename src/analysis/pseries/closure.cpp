@@ -20,8 +20,7 @@ extern "C" CAMLprim value caml_call_map_closure( value closure, value arg )
 
   map_closure_t* fun = (map_closure_t*)closure;
 
-  const expr re = (*fun->func)( *Expr_val(arg), fun->data );
-  ret = expr_move( re );
+  ret = expr_move( (*fun->func)( *Expr_val(arg), fun->data ) );
 
   CAMLreturn( ret );
 }

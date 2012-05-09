@@ -11,14 +11,13 @@ using namespace analysis;
 
 // numerical
 expr numerical::differentiate(const symbol &) const
-{ return 0l; }
+{ return 0; }
 
 // symbol
 expr symbol_::differentiate(const symbol &s) const
 {
   return symbol_::has(s) // means [this == s]
-  ? 1l : 0l
-  ;
+  ? 1 : 0 ;
 }
 
 // power
@@ -39,7 +38,7 @@ expr diff_log(
 , const expr &dexpo
 )
 {
-  expr ret = 0l;
+  expr ret;
 
   if( ! dbase.null() )
     ret  = expo * dbase / base;
@@ -54,20 +53,20 @@ expr diff_log(
 
 expr power::differentiate(const symbol &s) const
 {
-  const expr &db = m_base.diff(s);
-  const expr &de = m_expo.diff(s);
+  const expr db = m_base.diff(s);
+  const expr de = m_expo.diff(s);
 
   const bool bh = ! db.null();
   const bool eh = ! de.null();
 
   // trivial case
   if( !bh & !eh )
-    return 0l;
+    return 0;
 
   // d(b^e) = e * d(b) * b^(e-1) when e is constant
   if( !eh )
     return m_expo * db
-         * expr::pow( m_base, m_expo - 1l );
+         * expr::pow( m_base, m_expo - 1 );
 
   // d(b^e) = b^e * dlog( b^e )
   return expr(this)
@@ -75,30 +74,6 @@ expr power::differentiate(const symbol &s) const
 }
 
 // prod
-namespace {
-
-struct diff_log_f
-: std::unary_function<const power*, expr>
-{
-  diff_log_f(const symbol* s)
-  : sym(s) {}
-
-  inline expr operator()( const power* p ) const
-  {
-    const expr &base = p->base();
-    const expr &expo = p->expo();
-    return diff_log(
-      base, base.diff( *sym )
-    , expo, expo.diff( *sym )
-    );
-  }
-
-private:
-  const symbol* sym;
-};
-
-}
-
 expr prod::differentiate(const symbol &s) const
 {
   const number &c = super::coef();
@@ -118,7 +93,28 @@ expr prod::differentiate(const symbol &s) const
   // => dlog(this) = d(this)/this = sum_i dlog(p_i)
   // => d(this) = this * sum_i dlog(p_i)
 
-  const diff_log_f dlf ( &s );
+  struct diff_log_f
+  : std::unary_function<const power*, expr>
+  {
+    diff_log_f(const symbol* s)
+    : sym(s) {}
+
+    inline expr
+    operator()( const power* p ) const
+    {
+      const expr &base = p->base();
+      const expr &expo = p->expo();
+      return diff_log(
+        base, base.diff( *sym )
+      , expo, expo.diff( *sym )
+      );
+    }
+
+  private:
+    const symbol* sym;
+  };
+  const diff_log_f dlf { &s };
+
   const expr &dl_sum =
     sum::from_expr_range(
       boost::make_transform_iterator( begin(), dlf )
@@ -129,29 +125,23 @@ expr prod::differentiate(const symbol &s) const
 }
 
 // sum
-namespace {
-
-template<expr (prod::*F)(const symbol&) const>
-struct diff_prod
-: std::unary_function<const prod*, expr>
-{
-  diff_prod(const symbol* s)
-  : sym( s ) {}
-
-  inline expr
-  operator()(const prod* p) const
-  { return (p->*F)( *sym ); }
-
-private:
-  const symbol* sym;
-};
-
-}
-
 expr sum::differentiate(const symbol &s) const
 {
-  typedef diff_prod<&prod::differentiate> dp_t;
-  const dp_t dp ( &s );
+  struct diff_prod
+  : std::unary_function<const prod*, expr>
+  {
+    diff_prod(const symbol* s)
+    : sym(s) {}
+
+    inline expr
+    operator()(const prod* p) const
+    { return p->prod::differentiate( *sym ); }
+
+  private:
+    const symbol* sym;
+  };
+  const diff_prod dp { &s };
+
   return sum::from_expr_range(
     boost::make_transform_iterator( begin(), dp )
   , boost::make_transform_iterator( end(),   dp )

@@ -4,8 +4,6 @@
 
 #include "analysis/pseries/repr.hpp"
 
-#include "util/ptr.hpp"
-
 using namespace analysis;
 
 pseries::pseries(const symbol& var)

@@ -12,7 +12,11 @@ class exprarray
   REGISTER_CLASS( exprarray, basic )
 
 protected:
-  // default cdtor
+  exprarray() = default;
+  exprarray(const exprarray&) = default;
+
+public:
+  ~exprarray() = default;
 
 public: // range
   virtual       expr* pbegin() = 0;

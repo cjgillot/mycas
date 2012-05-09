@@ -20,8 +20,7 @@ private:
   typedef typename eps_iterator::iterator_adaptor_ super;
 
 public:
-  eps_iterator() {}
-
+  eps_iterator() = default;
   eps_iterator( const Base &it )
   : super( it ) {}
 

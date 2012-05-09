@@ -65,11 +65,7 @@ value expr_copy(const expr &e)
   return res;
 }
 
-#ifdef BOOST_HAS_RVALUE_REFS // c++0x
-value expr_move(const expr&&e)
-#else
-value expr_move(const expr &e)
-#endif
+value expr_move(expr&&e)
 {
   value res = expr_allocate();
   Field( res, 1 ) = RTTI_ID( e.get() );

@@ -31,12 +31,12 @@ public:
 
   void visit(const sum &s)
   {
-    foreach( const prod* p, s )
+    for(const prod* p : s)
       visit( *p );
   }
   void visit(const prod &p)
   {
-    foreach( const power* pw, p )
+    for(const power* pw : p)
       visit( *pw );
   }
   void visit(const power &p)

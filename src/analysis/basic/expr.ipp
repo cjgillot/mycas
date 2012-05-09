@@ -9,36 +9,26 @@ namespace analysis {
 //@{
 //!\brief Default ctor : zero
 inline expr::expr()
-: m_impl( small_numeric_cache(0) ) {}
-
-//!\brief Copy ctor
-inline expr::expr(const expr &o)
-: m_impl( o.m_impl ) {}
-//!\brief Assignment operator
-inline expr& expr::operator=(const expr &o)
-{ m_impl = o.m_impl; return *this; }
+: m_impl{ small_numeric_cache(0) } {}
 
 //!\brief Non-throwing swap
 inline void expr::swap(expr &o)
 { m_impl.swap(o.m_impl); }
 
-//!\brief Dtor
-inline expr::~expr() {}
-
 //! \brief Explicit creation from \c basic instance
 //! \param b a non-null pointer to a \c basic instance
 inline expr::expr( const basic* bp )
-: m_impl( bp ) { ASSERT( bp ); eval(); }
+: m_impl{bp} { ASSERT( bp ); eval(); }
 
 //! \brief Creation from \ref ptr instance
 //! \param bp a non-null \c ptr to a \c basic instance
 template<class T>
 inline expr::expr( const ptr<T> &bp )
-: m_impl( bp ) { ASSERT( bp ); eval(); }
+: expr{bp.get()} {}
 
 //! \brief Creation from \ref number
 inline expr::expr( const number &n )
-: m_impl( new numerical( n ) ) {}
+: expr{ new numerical{n} } {}
 
 //! \name Arithmetic ctor
 //! \brief Creation from fondamental arithmetic types
@@ -50,7 +40,7 @@ inline expr::expr( const number &n )
 //@{
 #define INTEGER_CTOR( type )                \
 inline expr::expr(signed type n)            \
-: m_impl( /* null */ ) {                    \
+: m_impl{ /* null */ } {                    \
   if( (unsigned long)std::abs(n)            \
     <= EXPR_NUMERIC_CACHE_LIMIT )          \
     m_impl.reset( small_numeric_cache(n) ); \
@@ -64,7 +54,7 @@ INTEGER_CTOR(long)
 
 #define UNSIGNED_CTOR( type )               \
 inline expr::expr(unsigned type n)          \
-: m_impl( /* null */ ) {                    \
+: m_impl{ /* null */ } {                    \
   if( n <= EXPR_NUMERIC_CACHE_LIMIT )      \
     m_impl.reset( small_numeric_cache(n) ); \
   else                                      \
@@ -77,7 +67,7 @@ UNSIGNED_CTOR(long)
 
 #define FLOAT_CTOR( type )      \
 inline expr::expr(type n)       \
-: m_impl( new numerical( n ) )  \
+: expr{ new numerical{n} }  \
 {}
 FLOAT_CTOR(float) FLOAT_CTOR(double) FLOAT_CTOR(long double)
 #undef FLOAT_CTOR

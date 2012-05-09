@@ -22,7 +22,7 @@ struct partial_not_pred
   }
 };
 
-template<class Iterator>
+template<typename Iterator>
 inline void
 sort(const Iterator &beg, const Iterator &end)
 {

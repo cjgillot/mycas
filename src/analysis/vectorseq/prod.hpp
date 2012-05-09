@@ -6,11 +6,9 @@
 #include "analysis/vectorseq/vectorseq.hpp"
 #include "analysis/vectorseq/power.hpp"
 
-#include "util/functor.hpp"
-
 namespace analysis {
 
-class prod
+class prod final
 : public vectorseq<prod, power> {
 
   // grant access to super
@@ -73,47 +71,37 @@ public:
 
   using super::sort_predicate;
 
-  template< class Iter >
-  static prod* from_expr_range(const Iter &b, const Iter &e);
-  template< class Iter >
-  static prod* from_power_range(const number &n, const Iter &b, const Iter &e);
-  template< class Iter >
-  static prod* from_sorted_power_range(const number &n, const Iter &b, const Iter &e);
+  template<typename Iter>
+  static prod* from_expr_range(Iter&& b, Iter&& e);
+  template<typename Iter>
+  static prod* from_power_range(const number &n, Iter&& b, Iter&& e);
+  template<typename Iter>
+  static prod* from_sorted_power_range(const number &n, Iter&& b, Iter&& e);
 };
 
-namespace detail {
-
-struct expr2power
-: std::unary_function<const power*, const expr&>
+template<typename Iter>
+inline prod* prod::from_expr_range(Iter&& b, Iter&& e)
 {
-  inline const power* operator()( const expr &ex )
-  { return ex.get()->as_power(); }
-};
-
-}
-
-template< class Iter >
-inline prod* prod::from_expr_range(const Iter &b, const Iter &e)
-{
-  util::scoped_ptr< prod > tmp ( new prod( 1 ) );
-  tmp->construct_expr_range( b, e, detail::expr2power(), functor::multiplies_eq<number>() );
+  std::unique_ptr< prod > tmp ( new prod( 1 ) );
+  tmp->construct_expr_range(
+    std::forward<Iter>(b), std::forward<Iter>(e),
+    [](const expr &ex) { return ex.get()->as_power(); },
+    [](number &acc, const number &n) { acc *= n; }
+  );
   return tmp.release();
 }
-template< class Iter >
-inline prod* prod::from_power_range(const number &n, const Iter &b, const Iter &e)
+template<typename Iter >
+inline prod* prod::from_power_range(const number &n, Iter&& b, Iter&& e)
 {
-  ASSERT( ! n.null() );
-  util::scoped_ptr< prod > tmp ( new prod( n ) );
-  tmp->construct_mono_range( b, e );
+  std::unique_ptr< prod > tmp ( new prod( n ) );
+  tmp->construct_mono_range( std::forward<Iter>(b), std::forward<Iter>(e) );
   return tmp.release();
 }
-
-template< class Iter >
-inline prod* prod::from_sorted_power_range(const number &n, const Iter &b, const Iter &e)
+template<typename Iter>
+inline prod* prod::from_sorted_power_range(const number &n, Iter&& b, Iter&& e)
 {
-  ASSERT( ! n.null() );
-  util::scoped_ptr< prod > tmp ( new prod( n ) );
-  tmp->construct_sorted_mono_range( b, e );
+  std::unique_ptr< prod > tmp ( new prod( n ) );
+  tmp->construct_sorted_mono_range( std::forward<Iter>(b), std::forward<Iter>(e) );
   return tmp.release();
 }
 

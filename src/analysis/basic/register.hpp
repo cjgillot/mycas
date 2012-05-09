@@ -1,8 +1,6 @@
 #ifndef REGISTER_HPP
 #define REGISTER_HPP
 
-#include<boost/noncopyable.hpp>
-
 #include "util/refcounted.hpp"
 
 #include "rtti.hpp"

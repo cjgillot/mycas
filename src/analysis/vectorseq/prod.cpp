@@ -16,7 +16,7 @@ prod::prod(const number &n)
 prod* prod::mul(const prod &a, const prod &b)
 {
   const number &c = a.coef() * b.coef();
-  util::scoped_ptr< prod > tmp ( new prod( c ) );
+  std::unique_ptr< prod > tmp ( new prod( c ) );
   tmp->construct_add( a, b );
   return tmp.release();
 }
@@ -24,7 +24,7 @@ prod* prod::div(const prod &a, const prod &b)
 {
   ASSERT( ! b.coef().null() );
   const number &c = a.coef() / b.coef();
-  util::scoped_ptr< prod > tmp ( new prod( c ) );
+  std::unique_ptr< prod > tmp ( new prod( c ) );
   tmp->construct_sub( a, b );
   return tmp.release();
 }
@@ -32,7 +32,7 @@ prod* prod::inv(const prod &b)
 {
   ASSERT( ! b.coef().null() );
   const number &c = b.coef().inv();
-  util::scoped_ptr< prod > tmp ( new prod( c ) );
+  std::unique_ptr< prod > tmp ( new prod( c ) );
   tmp->construct_neg( b );
   return tmp.release();
 }
@@ -51,7 +51,7 @@ bool prod::unit() const {
 prod* prod::from_basic(const basic* a)
 {
   ptr<const power> pa = a->as_power();
-  util::scoped_ptr<prod> tmp ( new prod( 1 ) );
+  std::unique_ptr<prod> tmp ( new prod( 1 ) );
   tmp->construct_monomial( pa.get() );
   return tmp.release();
 }

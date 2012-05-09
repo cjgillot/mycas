@@ -1,10 +1,9 @@
 #include "analysis/basic/memory.hpp"
 
 #include <boost/pool/pool.hpp>
-#include <boost/aligned_storage.hpp>
+// #include <boost/aligned_storage.hpp>
 
 #include "util/assert.hpp"
-#include "util/null.hpp"
 
 // Usage of these pools improves memory allocation
 // of basic-like objects by a great factor (at least 10x)
@@ -51,9 +50,9 @@ private:
   boost::pool<> pool3;
 
 public:
-  inline  initializer_t() throw();
-  inline ~initializer_t() throw();
-  inline void touch() const throw() {}
+  inline  initializer_t() noexcept;
+  inline ~initializer_t() noexcept;
+  inline void touch() const noexcept {}
 };
 
 }
@@ -70,8 +69,7 @@ static boost::pool<>* pools [3] = { 0, 0, 0 };
 static const initializer_t initializer;
 
 static inline boost::pool<>*
-get_pool( std::size_t sz )
-  throw()
+get_pool( std::size_t sz ) noexcept
 {
   initializer.touch();
 
@@ -84,8 +82,7 @@ get_pool( std::size_t sz )
 }
 
 void*
-analysis::__memory::allocate( std::size_t n )
-  throw()
+analysis::__memory::allocate( std::size_t n ) noexcept
 {
   std::size_t sz = n + tag_size;
 
@@ -102,8 +99,7 @@ analysis::__memory::allocate( std::size_t n )
 }
 
 void
-analysis::__memory::release( void* p )
-  throw()
+analysis::__memory::release( void* p ) noexcept
 {
   --*(max_align**)&p;
 
@@ -120,8 +116,7 @@ analysis::__memory::release( void* p )
 #undef DATA
 
 inline
-initializer_t::initializer_t()
-  throw()
+initializer_t::initializer_t() noexcept
 : pool1( 4  * sizeof( void* ) )
 , pool2( 8  * sizeof( void* ) )
 , pool3( 12 * sizeof( void* ) )
@@ -131,8 +126,7 @@ initializer_t::initializer_t()
   pools[2] = &pool3;
 }
 inline
-initializer_t::~initializer_t()
-  throw()
+initializer_t::~initializer_t() noexcept
 {
   pools[0] =
   pools[1] =

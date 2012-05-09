@@ -6,13 +6,11 @@
 using namespace analysis;
 using namespace pseries_detail;
 
-#include "util/move.hpp"
-
 #define UNARY_OP( name, func )                    \
 pseries* pseries::name##_series(                  \
   const pseries* a                                \
 ) {                                               \
-  util::scoped_ptr<pseries> ret                   \
+  std::unique_ptr<pseries> ret                   \
     ( new pseries ( a->m_var ) );                 \
   ret->m_rep->m_value = pseries_export_##func(    \
     a->m_rep->m_value                             \
@@ -25,7 +23,7 @@ pseries* pseries::name##_series(                  \
   const pseries* a, const pseries* b              \
 ) {                                               \
   assert( a->m_var == b->m_var );                 \
-  util::scoped_ptr<pseries> ret                   \
+  std::unique_ptr<pseries> ret                   \
     ( new pseries( a->m_var ) );                  \
   ret->m_rep->m_value = pseries_export_##func(    \
     a->m_rep->m_value                             \
@@ -48,7 +46,7 @@ pseries* pseries::intpow(const pseries* b, unsigned long e)
   if( e == 0 )
     return new pseries( b->m_var, 1 );
 
-  util::scoped_ptr< pseries > acc ( b->clone() );
+  std::unique_ptr< pseries > acc ( b->clone() );
 
   while( ! (e & 1) )
   {
@@ -59,7 +57,7 @@ pseries* pseries::intpow(const pseries* b, unsigned long e)
   if( e == 1 )
     return acc.release();
 
-  util::scoped_ptr< pseries > ret ( acc.release() );
+  std::unique_ptr< pseries > ret ( acc.release() );
 
   acc.reset( mul_series( ret.get(), ret.get() ) );
   e >>= 1;
@@ -80,7 +78,7 @@ pseries* pseries::intpow(const pseries* b, unsigned long e)
 
 pseries* pseries::sca_series(const expr &sca, const pseries* a)
 {
-  util::scoped_ptr<pseries> ret
+  std::unique_ptr<pseries> ret
     ( new pseries ( a->m_var ) );
   ret->m_rep->m_value = pseries_export_sca( expr_copy(sca), a->m_rep->m_value );
   return ret.release();
@@ -88,13 +86,11 @@ pseries* pseries::sca_series(const expr &sca, const pseries* a)
 
 #include "analysis/vectorseq.hpp"
 
-#include "util/foreach.hpp"
-
 expr sum::series(const symbol &s) const
 {
   ptr< pseries > ret = new pseries( s, coef() );
 
-  foreach( const prod* h, *this )
+  for(const prod* h : *this)
   {
     ptr< const pseries > hs = h->series(s).as_a< pseries >();
     ret = pseries::add_series( ret.get(), hs.get() );
@@ -115,7 +111,7 @@ expr prod::series(const symbol &s) const
   ptr< pseries > posser = new pseries( s, 1 );
   ptr< pseries > negser = posser.get();
 
-  foreach( const power* h, *this )
+  for(const power* h : *this)
   {
     if( !h->expo().is_numerical() )
     {
@@ -136,7 +132,7 @@ expr prod::series(const symbol &s) const
       negdeg.push_back( std::make_pair( h->base(),-ne ) );
   }
 
-  foreach( const pair_t &p, posdeg )
+  for(const pair_t &p : posdeg)
   {
     ptr<const pseries> ser = p.first.series(s).as_a<pseries>();
     if( p.second > 1 )
@@ -144,7 +140,7 @@ expr prod::series(const symbol &s) const
     posser = pseries::mul_series( posser.get(), ser.get() );
   }
 
-  foreach( const pair_t &p, negdeg )
+  for(const pair_t &p : negdeg)
   {
     ptr<const pseries> ser = p.first.series(s).as_a<pseries>();
     if( p.second > 1 )
@@ -152,7 +148,7 @@ expr prod::series(const symbol &s) const
     negser = pseries::mul_series( negser.get(), ser.get() );
   }
 
-  foreach( const power* p, others )
+  for(const power* p : others)
   {
     ptr<const pseries> ser = p->series(s).as_a<pseries>();
     ret = pseries::mul_series( ret.get(), ser.get() );

@@ -7,9 +7,6 @@
 
 #include <boost/range.hpp>
 
-#include "util/null.hpp"
-#include "util/foreach.hpp"
-
 namespace analysis {
 
 #define VS vectorseq<I,M>
@@ -47,7 +44,7 @@ VS::rehash()
 {
   if( ! poly() )
     return;
-  foreach( const M* p, *this )
+  for(const M* p : *this)
     vectorseq_base::cons_hash( EP::coef_hash(p), EP::value_hash(p) );
 }
 
@@ -125,7 +122,7 @@ VS::construct_expr_range( Iter beg, const Iter &en, EM emono, NA nadd )
       // ex has been evaluated
       ASSERT( ! eps.empty() );
 
-      foreach( const M* p, eps )
+      for(const M* p : eps)
         seq.push_back( p );
     }
 

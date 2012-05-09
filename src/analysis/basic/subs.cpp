@@ -2,15 +2,12 @@
 
 #include "analysis/wildcard.hpp"
 
-#include "util/move.hpp"
-#include "util/functor.hpp"
-
 using namespace analysis;
 
 expr basic::subs_once(const exmap &map) const
 {
-  exmap::const_iterator end = map.end()
-      , it = map.find( this );
+  auto end = map.cend();
+  auto it  = map.find( this );
 
   if( it != end )
     return it->second.subs( map );

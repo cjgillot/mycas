@@ -37,23 +37,30 @@ private:
 
 public:
   expr();
-  expr(const expr &);
-  expr &operator=(const expr &);
+
+  expr(const expr &) = default;
+  expr(expr&&) = default;
+
+  expr &operator=(const expr &) = default;
+  expr &operator=(expr&&) = default;
+
   void swap(expr &o);
-  ~expr();
+  ~expr() = default;
 
   expr(const basic*);
   expr(const number &);
   template<class T> expr(const ptr<T> &);
 
-  expr(signed int); expr(signed long); // expr(long long);
-  expr(unsigned int); expr(unsigned long); // expr(unsigned long long);
+  expr(signed int); expr(signed long); //expr(long long);
+  expr(unsigned int); expr(unsigned long); //expr(unsigned long long);
 
   expr(float); expr(double); expr(long double);
 
 public:
   //!\brief Underlying basic pointer access
   const basic* get() const { return m_impl.get(); }
+
+  explicit operator const ptr<const basic>&() const { return m_impl; }
 
 public: // basic forwarding
   void eval(unsigned = default_eval_depth) const;

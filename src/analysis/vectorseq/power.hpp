@@ -14,7 +14,7 @@ namespace analysis {
  * This structure represents the power {b^e}
  * using the expair { coef=e; rest=b }.
  */
-class power
+class power final
 : public basic {
 
   REGISTER_STATIC_FINAL( power, basic, POWER_RTTI )

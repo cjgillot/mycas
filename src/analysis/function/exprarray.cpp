@@ -1,7 +1,4 @@
 #include "analysis/function/exprarray.hpp"
-
-#include "util/move.hpp"
-
 #include "analysis/wildcard.hpp"
 
 #include <boost/functional/hash.hpp>
@@ -130,7 +127,7 @@ exprarray::match_same_type(const basic &o, match_state &mm) const
 expr
 exprarray::subs(const exmap &map) const
 {
-  util::scoped_ptr<exprarray> ret;
+  std::unique_ptr<exprarray> ret;
 
   { // map_children
     const expr

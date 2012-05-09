@@ -15,28 +15,28 @@ sum::sum(const number &n)
 sum* sum::add(const sum &a, const sum &b)
 {
   const number &c = a.coef() + b.coef();
-  util::scoped_ptr< sum > tmp ( new sum( c ) );
+  std::unique_ptr< sum > tmp ( new sum( c ) );
   tmp->construct_add( a, b );
   return tmp.release();
 }
 sum* sum::sub(const sum &a, const sum &b)
 {
   const number &c = a.coef() - b.coef();
-  util::scoped_ptr< sum > tmp ( new sum( c ) );
+  std::unique_ptr< sum > tmp ( new sum( c ) );
   tmp->construct_sub( a, b );
   return tmp.release();
 }
 sum* sum::neg(const sum &b)
 {
   const number &c = b.coef().neg();
-  util::scoped_ptr< sum > tmp ( new sum( c ) );
+  std::unique_ptr< sum > tmp ( new sum( c ) );
   tmp->construct_neg( b );
   return tmp.release();
 }
 sum* sum::sca(const number &n, const sum &b)
 {
   const number &c = n * b.coef();
-  util::scoped_ptr< sum > tmp ( new sum( c ) );
+  std::unique_ptr< sum > tmp ( new sum( c ) );
   tmp->construct_sca( n, b );
   return tmp.release();
 }
@@ -52,7 +52,7 @@ bool sum::null() const
 sum* sum::from_basic(const basic* a)
 {
   ptr<const prod> pa = a->as_prod();
-  util::scoped_ptr<sum> tmp ( new sum( 0 ) );
+  std::unique_ptr<sum> tmp ( new sum( 0 ) );
   tmp->construct_monomial( pa.get() );
   return tmp.release();
 }

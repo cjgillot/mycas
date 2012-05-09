@@ -44,7 +44,7 @@ expand_prod_sum( const expr &scale, const sum  &addition )
     // cannot be numerical since [scale_prod] isn't
     seq.push_back( prod::handle::sca( ph, addition.coef() ) );
   }
-  foreach( const prod* p, addition )
+  for(const prod* p : addition)
   {
     ASSERT( p );
 

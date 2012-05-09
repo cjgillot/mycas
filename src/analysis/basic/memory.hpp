@@ -7,8 +7,8 @@ namespace analysis {
 
 namespace __memory {
   // for private use only
-  void* allocate( std::size_t ) throw();
-  void  release ( void* )       throw();
+  void* allocate( std::size_t ) noexcept;
+  void  release ( void* )       noexcept;
 }
 
 } // namespace analysis

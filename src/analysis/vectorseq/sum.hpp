@@ -6,8 +6,6 @@
 #include "analysis/vectorseq/vectorseq.hpp"
 #include "analysis/vectorseq/prod.hpp"
 
-#include "util/functor.hpp"
-
 namespace analysis {
 
 /*!\brief Addition class
@@ -18,7 +16,7 @@ namespace analysis {
  *
  * Printing : (+ c m1 m2 m3 ...)
  */
-class sum
+class sum final
 : public vectorseq<sum, prod> {
 
   friend class vectorseq<sum, prod>;
@@ -77,44 +75,34 @@ public:
 
   using super::sort_predicate;
 
-  template< class Iter >
-  static sum* from_expr_range(const Iter &b, const Iter &e);
-  template< class Iter >
-  static sum* from_prod_range(const number &n, const Iter &b, const Iter &e);
-  template< class Iter >
-  static sum* from_sorted_prod_range(const number &n, const Iter &b, const Iter &e);
+  template<typename Iter> static sum* from_expr_range(Iter&& b, Iter&& e);
+  template<typename Iter> static sum* from_prod_range(const number &n, Iter&& b, Iter&& e);
+  template<typename Iter> static sum* from_sorted_prod_range(const number &n, Iter&& b, Iter&& e);
 };
 
-namespace detail {
-
-struct expr2prod
-: std::unary_function<const prod*, const expr&>
+template<typename Iter>
+inline sum* sum::from_expr_range(Iter&& b, Iter&& e)
 {
-  inline const prod* operator()( const expr &ex )
-  { return ex.get()->as_prod(); }
-};
-
-}
-
-template< class Iter >
-inline sum* sum::from_expr_range(const Iter &b, const Iter &e)
-{
-  util::scoped_ptr< sum > tmp ( new sum( 0 ) );
-  tmp->construct_expr_range( b, e, detail::expr2prod(), functor::plus_eq<number>() );
+  std::unique_ptr< sum > tmp ( new sum( 0 ) );
+  tmp->construct_expr_range(
+    std::forward<Iter>(b), std::forward<Iter>(e),
+    [](const expr &ex) { return ex.get()->as_prod(); },
+    [](number &acc, const number &n) { acc += n; }
+  );
   return tmp.release();
 }
-template< class Iter >
-inline sum* sum::from_prod_range(const number &n, const Iter &b, const Iter &e)
+template<typename Iter >
+inline sum* sum::from_prod_range(const number &n, Iter&& b, Iter&& e)
 {
-  util::scoped_ptr< sum > tmp ( new sum( n ) );
-  tmp->construct_mono_range( b, e );
+  std::unique_ptr< sum > tmp ( new sum( n ) );
+  tmp->construct_mono_range( std::forward<Iter>(b), std::forward<Iter>(e) );
   return tmp.release();
 }
-template< class Iter >
-inline sum* sum::from_sorted_prod_range(const number &n, const Iter &b, const Iter &e)
+template<typename Iter>
+inline sum* sum::from_sorted_prod_range(const number &n, Iter&& b, Iter&& e)
 {
-  util::scoped_ptr< sum > tmp ( new sum( n ) );
-  tmp->construct_sorted_mono_range( b, e );
+  std::unique_ptr< sum > tmp ( new sum( n ) );
+  tmp->construct_sorted_mono_range( std::forward<Iter>(b), std::forward<Iter>(e) );
   return tmp.release();
 }
 

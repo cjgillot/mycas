@@ -14,7 +14,7 @@ struct power_expander
 expr expand_detail::prod_expand(const prod &self)
 {
   { // trivial case ?
-    foreach( const power* p, self )
+    for(const power* p : self)
       if( ( ! p->expo().is_numerical() )
        || ( ! p->base().is_a< symbol_ >() ) )
         goto nontrivial;
@@ -27,13 +27,13 @@ expr expand_detail::prod_expand(const prod &self)
   }
 
   typedef std::vector< expr > exvec_t;
-  util::scoped_ptr< exvec_t > children ( self.map_children( power_expander() ) );
+  std::unique_ptr< exvec_t > children ( self.map_children( power_expander() ) );
 
   // nothing has changed
   if( ! children )
   {
     // avoid the case : expanded * expanded sum
-    foreach( const power* p, self )
+    for(const power* p : self)
       if( ( p->expo().is_numerical() )
        && ( p->base().is_a< sum >() ) )
         goto has_sum;
@@ -69,7 +69,7 @@ expr expand_detail::prod_expand(const prod &self)
   // store the current expansion state
   expr last_sum = 1l;
 
-  foreach( const expr &ex, *children )
+  for(const expr &ex : *children)
     if( ! ex.is_a< sum >() )
       non_sum_seq.push_back( ex );
 

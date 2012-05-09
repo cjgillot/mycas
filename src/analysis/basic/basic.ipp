@@ -9,12 +9,8 @@
 namespace analysis {
 
 // cdtor
-inline
-basic::basic()
-: m_flags() {}
-inline
-basic::basic(const basic &o)
-: m_flags( o.m_flags ) {}
+inline basic::__flags_t::__flags_t() noexcept
+: evaluated{0}, expanded{0} {}
 inline
 basic::~basic() {}
 

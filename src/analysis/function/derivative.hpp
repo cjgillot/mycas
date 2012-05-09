@@ -29,13 +29,13 @@ public:
 
   template<class InputIterator>
   derivative(
-    const InputIterator &b
-  , const InputIterator &e
+    InputIterator&& b
+  , InputIterator&& e
   , const diff_map &ds
   , const func_id &i
   , iterator_tag
   )
-  : super( i, b, e, iterator_tag() )
+  : super( i, std::forward<InputIterator>(b), std::forward<InputIterator>(e), iterator_tag() )
   , m_map(ds) {}
 
 #define CT_ARGS( z, n, data )  \
@@ -108,8 +108,7 @@ private:
   void print(std::basic_ostream<char> &os) const
   {
     os << '(' << "D[";
-    typedef std::pair<unsigned, unsigned> pair_t;
-    foreach( const pair_t &d, m_map )
+    for(auto d : m_map)
       os << d.first << '@' << d.second << ' ';
     os << id().name << "]" << ' ';
     super::print_children(os);

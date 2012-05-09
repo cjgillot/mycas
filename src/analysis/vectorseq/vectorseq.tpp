@@ -11,9 +11,6 @@
 
 #include <boost/range/algorithm/for_each.hpp>
 
-#include "util/null.hpp"
-#include "util/foreach.hpp"
-
 namespace analysis {
 
 #define VS vectorseq<I,M>

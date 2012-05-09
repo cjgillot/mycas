@@ -8,7 +8,7 @@ namespace analysis {
 
 namespace pseries_detail { class iterator; }
 
-class pseries
+class pseries final
 : public basic
 {
   REGISTER_FINAL( pseries, basic )

@@ -2,8 +2,6 @@
 
 #include "analysis/pseries/closure.hpp"
 
-#include "util/ptr.hpp"
-
 using namespace analysis;
 using namespace pseries_detail;
 
@@ -27,7 +25,7 @@ expr pseries::differentiate(const symbol &s) const
     ret = pseries_export_map( (value)&closure, m_rep->m_value );
   }
 
-  util::ptr< pseries > serie = new pseries( m_var );
+  analysis::ptr< pseries > serie = new pseries( m_var );
   serie->m_rep->m_value = ret;
   return serie.get();
 }

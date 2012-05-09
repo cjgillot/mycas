@@ -14,7 +14,7 @@ struct prod_expander
 expr expand_detail::sum_expand(const sum &self)
 {
   typedef std::vector< expr > exvec_t;
-  util::scoped_ptr< exvec_t > children ( self.map_children( prod_expander() ) );
+  std::unique_ptr< exvec_t > children ( self.map_children( prod_expander() ) );
 
   // nothing has changed
   if( ! children )

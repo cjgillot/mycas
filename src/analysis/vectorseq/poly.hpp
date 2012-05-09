@@ -11,7 +11,6 @@
 #include <memory> // for allocator
 #include <iterator> // for reverse_iterator
 
-#include "util/null.hpp"
 #include "util/assert.hpp"
 #include "util/refcounted.hpp"
 

@@ -11,7 +11,7 @@ void
 match_state::as_exmap(exmap &ret) const
 {
   exmap::iterator it = ret.end();
-  foreach( const pair_t &p, *this )
+  for(const pair_t &p : *this)
   {
     it = ret.insert( it,
       std::make_pair(

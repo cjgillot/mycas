@@ -7,7 +7,7 @@ OCAMLDEP=ocamldep.opt
 OCAMLGENC=perl ../../../caml/gen_funcs.pl
 
 INCLUDE=-I../../../ -I/usr/local/lib/ocaml
-CFLAGS =
+CFLAGS =-std=c++0x
 MLFLAGS=-I ../../caml
 
 ifdef DEBUG

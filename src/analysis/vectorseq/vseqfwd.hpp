@@ -15,8 +15,7 @@ struct ExpairseqHandle;
 
 namespace vseq {
 
-template<class I, class M>
-struct handle;
+template<class> struct handle;
 
 //! \brief Polynomial container embedded in the \ref vectorseq
 template<class T, class Alloc = std::allocator<T*> >
@@ -49,16 +48,5 @@ poly<epair>* do_range_mutable(Iter beg, const Iter &end, std::size_t &hash);
 } // namespace vseq
 
 } // namespace analysis
-
-// declare specialization
-namespace std {
-
-template<class I, class M>
-inline void swap(
-  analysis::vseq::handle<I,M> &a
-, analysis::vseq::handle<I,M> &b
-);
-
-} // namespace std
 
 #endif

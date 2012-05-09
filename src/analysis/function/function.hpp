@@ -9,7 +9,6 @@
 #include "container/unsafe_array.hpp"
 
 #include "util/assert.hpp"
-#include <boost/preprocessor/repeat_from_to.hpp>
 
 namespace analysis {
 namespace detail {
@@ -26,16 +25,6 @@ struct choose_container<E, 0>
   typedef std::vector<E> type;
 };
 
-template<class, unsigned N, unsigned n>
-struct make_dependant {
-  enum { value = ( N == n ) };
-};
-
-template<class D, unsigned n>
-struct make_dependant<D, 0, n> {
-  enum { value = 1 };
-};
-
 template<unsigned N>
 struct construction
 {
@@ -49,6 +38,16 @@ struct construction
   {
     cont.get_allocator().construct( cont.begin() + n, val );
   }
+
+  template<std::size_t I, typename Arg0, typename... Args>
+  static void construct_loop( cont_t &cont, Arg0&& a0, Args&& ...rest )
+  {
+    cont.get_allocator().construct( cont.begin() + I, a0 );
+    construct_loop<I+1>( cont, std::forward<Args>(rest)... );
+  }
+
+  template<std::size_t I>
+  static void construct_loop(cont_t&) {}
 };
 
 template<>
@@ -63,6 +62,13 @@ struct construction<0>
   static void construct( unsigned, cont_t &cont, const expr &value )
   {
     cont.push_back( value );
+  }
+
+  template<typename Arg0, typename... Args>
+  static void construct_loop( cont_t &cont, Arg0&& a0, Args&& ...rest )
+  {
+    cont.push_back( a0 );
+    construct_loop( cont, std::forward<Args>(rest)... );
   }
 };
 
@@ -103,39 +109,19 @@ public:
   struct iterator_tag {};
 
   template<class InputIterator>
-  function(const func_id &i, const InputIterator &b, const InputIterator &e, iterator_tag)
-  : super( b, e ), function_base(i) {}
+  function(const func_id &i, InputIterator&& b, InputIterator&& e, iterator_tag)
+  : super( std::forward<InputIterator>(b), std::forward<InputIterator>(e) )
+  , function_base(i) {}
 
-#define ARGS( z, n, data )  \
-  , const expr &BOOST_PP_CAT( arg, n )
-
-#define CONT this->super::get_container()
-
-#define CT_ONE( z, n, data )  \
-  op_t::construct( n, CONT, arg##n );
-
-#define CTOR( z, n, data )                  \
-  template<class Dummy>                     \
-  function(                                 \
-    const Dummy &i                          \
-    BOOST_PP_REPEAT_##z( n, ARGS, data )    \
-  )                                         \
-  : super( detail::construction<N>::tag() ) \
-  , function_base( i ) {                    \
-    STATIC_ASSERT((                         \
-      detail::make_dependant<Dummy, N, n>   \
-        ::value ));                         \
-    typedef detail::construction<N> op_t;   \
-    op_t::reserve( n, CONT );               \
-    BOOST_PP_REPEAT_##z( n, CT_ONE, data ); \
+  template<typename... Args>
+  function(const func_id& i, Args&& ...args)
+  : super( detail::construction<N>::tag() )
+  , function_base( i )
+  {
+    typedef detail::construction<N> op_t;
+    op_t::reserve( sizeof...(Args), this->super::get_container() );
+    op_t::template construct_loop<0>( this->super::get_container(), std::forward<Args>(args)... );
   }
-
-  BOOST_PP_REPEAT_FROM_TO( 1, 20, CTOR, () )
-
-#undef CONT
-#undef CTOR
-#undef CT_ONE
-#undef ARGS
 
 protected:
   //! \brief Argument list sorting

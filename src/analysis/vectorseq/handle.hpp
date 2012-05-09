@@ -11,13 +11,12 @@
 namespace analysis {
 namespace vseq {
 
-template<class I, class M>
+template<class I>
 struct handle
-: private util::implement_concept< ExpairseqHandle< handle<I,M>, I > >
+: private util::implement_concept<
+    ExpairseqHandle< handle<I>, I
+  > >
 {
-private:
-  typedef vectorseq<I, M> eps_t;
-
 public:
   typedef I monomial_type;
   typedef const I* const_pointer;

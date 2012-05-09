@@ -3,13 +3,10 @@
 #include "analysis/wildcard.hpp"
 
 #include <vector>
-#include "util/move.hpp"
 
 #include "analysis/vectorseq/vectorseq.ipp"
-
 #include "analysis/vectorseq.hpp"
 
-#include "util/functor.hpp"
 
 using namespace analysis;
 
@@ -61,7 +58,7 @@ inline expr subser<prod>::subs_fnc( const prod* p ) const
 template<class Eps, class Mono, class F>
 ptr<const Eps> eps_subs(const Eps &self, const exmap &map, F nadd)
 {
-  util::scoped_ptr< std::vector<expr> > children ( self.map_children( subser<Mono>( map ) ) );
+  std::unique_ptr< std::vector<expr> > children ( self.map_children( subser<Mono>( map ) ) );
 
   if( ! children )
     return &self;
@@ -78,13 +75,21 @@ ptr<const Eps> eps_subs(const Eps &self, const exmap &map, F nadd)
 
 expr   sum::subs( const exmap &map ) const
 {
-  return eps_subs< sum,  prod>( *this, map, functor::plus_eq<number>() )
+  return
+    eps_subs< sum,  prod>(
+      *this, map,
+      [](number &acc, const number &x) { acc += x; }
+    )
     ->subs_once( map );
 }
 
 expr  prod::subs( const exmap &map ) const
 {
-  return eps_subs<prod, power>( *this, map, functor::multiplies_eq<number>() )
+  return
+    eps_subs<prod, power>(
+      *this, map,
+      [](number &acc, const number &x) { acc *= x; }
+    )
     ->subs_once( map );
 }
 

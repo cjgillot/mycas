@@ -21,19 +21,12 @@ protected:
   typedef exprseq exprseq_;
 
 protected:
-  template<class A1>
-  exprseq(const A1 &a1)
-  : m_container( a1 ) {}
-  template<class A1, class A2>
-  exprseq(const A1 &a1, const A2 &a2)
-  : m_container( a1, a2 ) {}
-  template<class A1, class A2, class A3>
-  exprseq(const A1 &a1, const A2 &a2, const A3 &a3)
-  : m_container( a1, a2, a3 ) {}
+  template<typename... Args>
+  exprseq(Args&& ...args)
+  : m_container( std::forward<Args>(args)... ) {}
 
-  // default copy ctor
-
-  // default dtor
+  exprseq(const exprseq&) = default;
+  ~exprseq() = delete;
 
 public: // range
   container_type &get_container() { return m_container; }
@@ -89,19 +82,12 @@ protected:
   typedef exprseq exprseq_;
 
 protected:
-  template<class A1>
-  exprseq(const A1 &a1)
-  : m_container( a1 ) {}
-  template<class A1, class A2>
-  exprseq(const A1 &a1, const A2 &a2)
-  : m_container( a1, a2 ) {}
-  template<class A1, class A2, class A3>
-  exprseq(const A1 &a1, const A2 &a2, const A3 &a3)
-  : m_container( a1, a2, a3 ) {}
+  template<typename... Args>
+  exprseq(Args&& ...args)
+  : m_container( std::forward<Args>(args)... ) {}
 
-  // default copy ctor
-
-  // default dtor
+  exprseq(const exprseq&) = default;
+  ~exprseq() = default;
 
 public: // exprarray
   /*virtual*/      expr* pbegin()       { return   &*  m_container.begin(); }

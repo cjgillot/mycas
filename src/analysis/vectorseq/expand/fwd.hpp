@@ -3,9 +3,7 @@
 
 #include "analysis/expr.hpp"
 
-#include "util/move.hpp"
 #include "util/assert.hpp"
-#include "util/foreach.hpp"
 
 #include "analysis/vectorseq.hpp"
 

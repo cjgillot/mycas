@@ -5,60 +5,26 @@
 #include "analysis/vectorseq/poly.hpp"
 #include "analysis/vectorseq/iterator.hpp"
 
-#include "util/functor.hpp"
 #include <boost/range.hpp>
 #include <boost/bind.hpp>
 
-#include "util/foreach.hpp"
 #include "util/assert.hpp"
-#include "util/move.hpp" // scoped_ptr
 
 namespace analysis {
 namespace vseq {
 
-namespace {
-
-template<class EP>
-struct negate
-: public std::unary_function<const basic*, const basic*>
-{
-  typedef typename EP::monomial_type M;
-
-  inline const basic*
-  operator()(const basic* p)
-  { return EP::neg( static_cast<const M*>( p ) ); }
-};
-
-template<class EP>
-struct scale
-: public std::unary_function<const basic*, const basic*>
-{
-  typedef typename EP::monomial_type M;
-
-  scale(const number &n_)
-  : n( n_ ) {}
-
-  inline const basic*
-  operator()(const basic* p)
-  { return EP::sca( static_cast<const M*>( p ), n ); }
-
-private:
-  const number &n;
-};
-
-}
-
 template<class EP, class Poly>
-Poly*
-do_neg( const Poly &a )
+Poly* do_neg(const Poly &a)
 {
-  util::scoped_ptr< Poly >
+  std::unique_ptr< Poly >
     ret ( new Poly( a.size() ) );
+
+  typedef typename EP::monomial_type const M;
 
   std::transform(
     a.begin(), a.end()
   , std::back_inserter( *ret )
-  , negate<EP>()
+  , [](const basic* p) { return EP::neg( static_cast<M*>(p) ); }
   );
 
   ret->shrink();
@@ -68,17 +34,17 @@ do_neg( const Poly &a )
 }
 
 template<class EP, class Poly>
-Poly*
-do_sca( const Poly &a
-      , const number &n )
+Poly* do_sca(const Poly &a, const number &n)
 {
-  util::scoped_ptr< Poly >
+  std::unique_ptr< Poly >
     ret ( new Poly( a.size() ) );
+
+  typedef typename EP::monomial_type const M;
 
   std::transform(
     a.begin(), a.end()
   , std::back_inserter( *ret )
-  , scale<EP>( n )
+  , [&n](const basic* p) { return EP::sca( static_cast<M*>(p), n ); }
   );
 
   ret->shrink();
@@ -89,16 +55,14 @@ do_sca( const Poly &a
 
 template<class EP, class Poly>
 Poly*
-do_add( const Poly &a
-      , const Poly &b )
+do_add(const Poly &a, const Poly &b)
 {
   typedef typename EP::monomial_type M;
 
-  util::scoped_ptr< Poly >
-    retp ( new Poly( a.size() + b.size() ) );
+  std::unique_ptr<Poly> retp ( new Poly( a.size() + b.size() ) );
   Poly &ret = *retp;
 
-  typedef eps_iterator< M, typename Poly::const_iterator > iterator;
+  typedef eps_iterator<M, typename Poly::const_iterator> iterator;
   iterator
     i1 = a.begin(), e1 = a.end(),
     i2 = b.begin(), e2 = b.end();
@@ -150,13 +114,11 @@ do_add( const Poly &a
 
 template<class EP, class Poly>
 Poly*
-do_sub( const Poly &a
-      , const Poly &b )
+do_sub(const Poly &a, const Poly &b)
 {
   typedef typename EP::monomial_type M;
 
-  util::scoped_ptr< Poly >
-    retp ( new Poly( a.size() + b.size() ) );
+  std::unique_ptr<Poly> retp { new Poly( a.size() + b.size() ) };
   Poly &ret = *retp;
 
   typedef eps_iterator< M, typename Poly::const_iterator > iterator;
@@ -192,7 +154,7 @@ do_sub( const Poly &a
     //! collision case : *i1 >< *i2
 
     ret.push_back( EP::sub( *i1, *i2 ) );
-    const M* e = static_cast<const M*>( ret.back() );
+    auto e = static_cast<const M*>( ret.back() );
 
     if( EP::null(e) )
       ret.pop_back();

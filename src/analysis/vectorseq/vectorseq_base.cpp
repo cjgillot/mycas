@@ -1,7 +1,5 @@
 #include "analysis/vectorseq/vectorseq_base.hpp"
 
-#include "util/foreach.hpp"
-
 using namespace analysis;
 using namespace vectorseq_detail;
 

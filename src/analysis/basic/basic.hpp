@@ -18,8 +18,7 @@ namespace analysis {
  * for use with \c ptr via \c expr or \c ptr.
  */
 class basic
-: private util::nonassignable {
-
+{
   REGISTER_BASE( basic, MAX_RTTI )
   REGISTER_MEMORY()
 
@@ -27,13 +26,18 @@ private: // flags, mutable to allow update by basecase eval() and expand()
   struct __flags_t {
     bool evaluated : 1;
     bool expanded  : 1;
+
+    __flags_t() noexcept;
+//     __flags_t(const __flags_t&) = default;
   };
   mutable __flags_t m_flags;
 
 protected:
-  basic();
-  basic(const basic&);
+  basic() = default;
+  basic(const basic&) = default;
   virtual ~basic();
+
+  basic& operator=(const basic&) = delete;
 
 public:
   //! \brief Virtual clone

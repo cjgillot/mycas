@@ -1,7 +1,6 @@
 #ifndef EXPAND_HEAPMUL_HPP
 #define EXPAND_HEAPMUL_HPP
 
-#include "util/foreach.hpp"
 #include "container/unsafe_vector.hpp"
 
 #include <algorithm>
@@ -31,14 +30,11 @@ public:
     EP::sort_hash( cur.get(), chash, shash );
   }
 
-  heap_obj( const heap_obj &o )
-  : super( o )
-  , f( o.f ), git( o.git ), gen( o.gen )
-  , cur( o.cur )
-  {}
+  heap_obj(const heap_obj&) = default;
+  heap_obj(heap_obj&&) = default;
 
-  heap_obj &operator=(heap_obj o)
-  { o.swap( *this ); return *this; }
+  heap_obj &operator=(const heap_obj&) = default;
+  heap_obj &operator=(heap_obj&&) = default;
 
   ~heap_obj() {}
 
@@ -125,7 +121,7 @@ void expand_heap(
       heap.push_back( &objs.back() );
     }
   }
-  foreach( const prod* f, F )
+  for(const prod* f : F)
   {
     objs.push_back( ho_t( f, G.begin(), G.end() ) );
     heap.push_back( &objs.back() );

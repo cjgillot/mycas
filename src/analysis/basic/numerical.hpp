@@ -7,7 +7,7 @@
 
 namespace analysis {
 
-class numerical
+class numerical final
 : public basic {
 
   REGISTER_STATIC_FINAL( numerical, basic, NUMERICAL_RTTI )

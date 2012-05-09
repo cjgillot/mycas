@@ -9,9 +9,9 @@ static bool
 matched_wild_p( const wildcard_ &pattern, match_state &mm )
 {
   unsigned pid = pattern.id();
-  match_state::const_iterator it = mm.find( pid );
+  auto it = mm.find( pid );
 
-  return ( it != mm.end() && it->first == pid );
+  return it != mm.end() && it->first == pid;
 }
 
 static bool
@@ -19,7 +19,7 @@ match_wild( const basic &self, const wildcard_ &pattern, match_state &mm )
 {
   unsigned pid = pattern.id();
   {
-    match_state::const_iterator it = mm.find( pid );
+    auto it = mm.find( pid );
 
     if( it != mm.end() && it->first == pid )
       // already matched somewhere
@@ -58,7 +58,7 @@ struct sum_generator
   template< class Iter >
   static sum* create( const number &n, const Iter &b, const Iter &e )
   {
-    util::scoped_ptr<sum> r ( sum::from_expr_range( b, e ) );
+    std::unique_ptr<sum> r { sum::from_expr_range( b, e ) };
     r->coef() += n;
     return r.release();
   }
@@ -69,7 +69,7 @@ struct prod_generator
   template< class Iter >
   static prod* create( const number &n, const Iter &b, const Iter &e )
   {
-    util::scoped_ptr<prod> r ( prod::from_expr_range( b, e ) );
+    std::unique_ptr<prod> r { prod::from_expr_range( b, e ) };
     r->coef() *= n;
     return r.release();
   }

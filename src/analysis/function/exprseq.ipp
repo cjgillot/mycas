@@ -3,9 +3,7 @@
 
 #include "analysis/function/exprseq.hpp"
 
-#include "util/foreach.hpp"
 #include "util/assert.hpp"
-#include "util/move.hpp"
 
 #include "analysis/wildcard.hpp"
 
@@ -18,7 +16,7 @@ std::size_t
 exprseq<C, false>::hash() const
 {
   std::size_t seed = 0u;
-  foreach( const expr &a, m_container )
+  for(const expr &a : m_container)
     boost::hash_combine( seed, a.hash() );
   return seed;
 }
@@ -36,7 +34,7 @@ template<class C>
 bool
 exprseq<C, false>::has(const symbol &s) const
 {
-  foreach(const expr &e, m_container)
+  for(const expr &e : m_container)
     if( e.has(s) )
       return true;
   return false;
@@ -108,14 +106,14 @@ template<class C>
 expr
 exprseq<C, false>::subs(const exmap &map) const
 {
-  util::scoped_ptr<exprseq> ret;
+  std::unique_ptr<exprseq> ret;
 
   size_t index = 0;
   const_iterator it = begin(), en = end();
   for( ; it != en; ++it, ++index )
   {
     const expr &orig = *it;
-    const expr &imag = orig.subs( map );
+    const expr imag = orig.subs( map );
 
     if( orig.get() == imag.get() )
       continue;

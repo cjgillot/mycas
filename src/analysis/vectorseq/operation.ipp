@@ -7,9 +7,7 @@
 #include <functional>
 #include <boost/range.hpp>
 
-#include "util/foreach.hpp"
 #include "util/assert.hpp"
-#include "util/move.hpp" // move_ptr
 
 namespace analysis {
 namespace vseq {
@@ -24,17 +22,16 @@ template<class Iter>
 std::size_t distance_ra_imp( const Iter &a, const Iter &b, boost::incrementable_traversal_tag )
 { return 0; }
 
-template<class EP, class Iter>
-bool is_sorted_epair( Iter first, const Iter &last )
+template<class EP, class I1, class I2>
+bool is_sorted_epair(I1&& first, I2&& last )
 {
-  if( first == last )
-    return true;
+  typedef typename EP::monomial_type M;
 
-  for( Iter next = first; ++next != last; first = next )
-    if( EP::compare( *first, *next ) > 0 )
-      return false;
-
-  return true;
+  return std::is_sorted(
+    std::forward<I1>(first),
+    std::forward<I2>(last),
+    [](const M* a, const M* b) { return EP::compare(a,b) < 0; }
+  );
 }
 
 } // namespace detail
@@ -56,12 +53,11 @@ do_range_sorted( Iter beg, const Iter &end )
   // test range is sorted
   ASSERT( detail::is_sorted_epair<EP>( beg, end ) );
 
-  typename std::iterator_traits< Iter >::difference_type
-    dist = std::distance( beg, end );
+  const auto dist = std::distance( beg, end );
 
   ASSERT( dist >= 0 );
 
-  util::scoped_ptr<vec_t> ret( new vec_t( std::size_t( dist ) ) );
+  std::unique_ptr<vec_t> ret { new vec_t{(std::size_t)dist} };
 
   { // unique_copy and hash
 
@@ -97,19 +93,19 @@ do_range_sorted( Iter beg, const Iter &end )
 }
 
 //! \brief Construct a vector from an unsorted range of \c epair
-template<class epair, class M, class Iter>
-poly<M>*
-do_range_const( const Iter &beg, const Iter &end )
+template<class EP, class Iter>
+poly<typename EP::monomial_type const>
+do_range_const(Iter&& beg, Iter&& end)
 {
   CONCEPT_ASSERT(( boost::InputIterator<Iter> ));
 
-  typedef std::vector<M> vec_t;
-  vec_t tmp ( beg, end );
+  typedef std::vector<typename EP::const_pointer> vec_t;
+  vec_t tmp { std::forward<Iter>(beg), std::forward<Iter>(end) };
 
-  typedef sort_pred<epair,M> p_t;
+  typedef sort_pred<EP> p_t;
   std::sort( tmp.begin(), tmp.end(), p_t() );
 
-  return do_range_sorted<epair>( tmp.begin(), tmp.end() );
+  return do_range_sorted<EP>( tmp.begin(), tmp.end() );
 }
 
 }} // namespace analysis::vseq

@@ -4,17 +4,11 @@
 #include <caml.hpp>
 
 #include "analysis/expr.hpp"
-#include "util/move.hpp"
 
 namespace analysis {
 
-value expr_copy(const expr &);
-
-#ifdef BOOST_HAS_RVALUE_REFS // c++0x
-value expr_move(const expr&&);
-#else
-value expr_move(const expr &);
-#endif
+value expr_copy(const expr&);
+value expr_move(expr&&);
 
 } // namespace analysis
 
