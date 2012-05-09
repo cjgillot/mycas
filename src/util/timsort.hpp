@@ -17,8 +17,6 @@
 #include <algorithm>
 #include <utility>
 
-#include "util/move.hpp"
-
 namespace util { namespace detail {
 
 template <typename Value, typename LessFunction> class Compare {
