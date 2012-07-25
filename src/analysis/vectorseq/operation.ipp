@@ -15,15 +15,18 @@ namespace vseq {
 namespace detail {
 
 template<class Iter>
-std::size_t distance_ra_imp( const Iter &a, const Iter &b, boost::random_access_traversal_tag )
+inline std::size_t
+distance_ra_imp( const Iter &a, const Iter &b, boost::random_access_traversal_tag )
 { return b - a; }
 
 template<class Iter>
-std::size_t distance_ra_imp( const Iter &a, const Iter &b, boost::incrementable_traversal_tag )
+inline std::size_t
+distance_ra_imp( const Iter &a, const Iter &b, boost::incrementable_traversal_tag )
 { return 0; }
 
 template<class EP, class I1, class I2>
-bool is_sorted_epair(I1&& first, I2&& last )
+inline bool
+is_sorted_epair(I1&& first, I2&& last )
 {
   typedef typename EP::monomial_type M;
 
@@ -37,7 +40,8 @@ bool is_sorted_epair(I1&& first, I2&& last )
 } // namespace detail
 
 template<class Iter>
-std::size_t distance_ra( const Iter &a, const Iter &b )
+inline std::size_t
+distance_ra( const Iter &a, const Iter &b )
 { return detail::distance_ra_imp( a, b, typename boost::iterator_traversal<Iter>::type() ); }
 
 //! \brief Construct a vector from a sorted range of \c epair
