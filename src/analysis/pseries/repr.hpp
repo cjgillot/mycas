@@ -10,11 +10,11 @@
 namespace analysis {
 
 class pseries::repr
-: private util::noncopyable {
+: public analysis::memory_base<repr>
+, private util::noncopyable {
 
   value m_value;
 
-  REGISTER_MEMORY()
   MAKE_REFCOUNTED( repr );
 
 public:

@@ -18,9 +18,9 @@ namespace analysis {
  * for use with \c ptr via \c expr or \c ptr.
  */
 class basic
+: public analysis::memory_base<basic>
 {
   REGISTER_BASE( basic, MAX_RTTI )
-  REGISTER_MEMORY()
 
 private: // flags, mutable to allow update by basecase eval() and expand()
   struct __flags_t {
