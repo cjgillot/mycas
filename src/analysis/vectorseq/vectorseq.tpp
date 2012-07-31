@@ -6,7 +6,6 @@
 
 #include "analysis/vectorseq/vectorseq.ipp"
 
-#include "analysis/vectorseq/poly.tpp"
 #include "analysis/vectorseq/operation.tpp"
 
 #include <boost/range/algorithm/for_each.hpp>

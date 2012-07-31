@@ -120,4 +120,6 @@ private: // disallow array operators
 
 }} // namespace analysis::vseq
 
+
+#include "analysis/vectorseq/poly.tpp"
 #endif

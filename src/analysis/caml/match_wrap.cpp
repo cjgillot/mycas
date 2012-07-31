@@ -12,6 +12,7 @@
 #include "iter_wrap.hpp"
 
 using namespace analysis;
+using vectorseq_detail::vectorseq_base;
 
 namespace {
 

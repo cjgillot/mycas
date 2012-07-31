@@ -8,6 +8,8 @@
 
 #include "rtti/visitor.hpp"
 
+#include <iostream>
+
 using namespace analysis;
 
 void pprint( const expr &ex );

@@ -7,6 +7,8 @@
 
 #include "analysis/caml/expr_wrap.hpp"
 
+#include <iostream>
+
 using namespace analysis;
 
 namespace _caml_expr {
