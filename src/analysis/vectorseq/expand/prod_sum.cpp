@@ -60,7 +60,7 @@ expand_prod_sum( const expr &scale, const sum  &addition )
       seq.push_back( ex.get()->as_prod() );
   }
 
-  sort( seq.begin(), seq.end(), sum::sort_predicate() );
+  expand_detail::sort( seq.begin(), seq.end() );
 
   ptr< const sum > ret = sum::from_sorted_prod_range( coef, seq.begin(), seq.end() );
   ret->basic::expand(); // mark expanded

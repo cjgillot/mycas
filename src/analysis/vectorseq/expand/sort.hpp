@@ -26,21 +26,34 @@ template<typename Iterator>
 inline void
 sort(const Iterator &beg, const Iterator &end)
 {
-  std::size_t nruns = 0;
+  /*
+   * The range [beg, end) has a very special structure, coming from
+   * the heap multiplication algorithm.
+   *
+   * It is mainly a sequence of one or more "almost sorted" sequences,
+   * which come from overflow in hash.
+   * Each "almost sorted" sequence is sorted wrt the hash,
+   * but not wrt the complete predicate, so insertion sort
+   * is efficient (small movements).
+   * Then, some merge does the trick.
+   *
+   * For now, we use timsort algorithm, because std::inplace_merge
+   * rejects the iterator type.
+   */
 
-  Iterator it = beg;
+  // select first "almost sorted" range
+  Iterator mid = std::adjacent_find( beg, end, partial_not_pred() );
+  util::insertion_sort( beg, mid, sum::sort_predicate() );
+
   do
-  { // create runs for timsort
-    Iterator next = std::adjacent_find( it, end, partial_not_pred() );
-    // insertion_sort should not behave too bad
-    // on subranges already hash-sorted
-    util::insertion_sort( it, next, sum::sort_predicate() );
-    it = next; ++nruns;
+  { // select next "almost sorted" range
+    Iterator next = std::adjacent_find( mid, end, partial_not_pred() );
+    util::insertion_sort( mid, next, sum::sort_predicate() );
+    mid = next;
   }
-  while( it != end );
+  while(mid != end);
 
-  if( nruns > 1 )
-    util::timsort( beg, end, sum::sort_predicate() );
+  util::timsort( beg, end, sum::sort_predicate() );
 }
 
 }} // namespace analysis::expand_detail
