@@ -64,6 +64,9 @@ private:
   bool match_same_type(const basic &, match_state &) const;
 
 public:
+  static sum* add_num(const sum &, const number &);
+  static sum* sub_num(const sum &, const number &);
+
   static sum* add(const sum &, const sum &);
   static sum* sub(const sum &, const sum &);
   static sum* neg(const sum &);

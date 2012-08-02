@@ -13,6 +13,19 @@ prod::prod(const number &n)
 : super(n) {}
 
 // operations
+prod* prod::mul_num(const prod &a, const number &b)
+{
+  std::unique_ptr< prod > tmp ( new prod( a ) );
+  tmp->coef() *= b;
+  return tmp.release();
+}
+prod* prod::div_num(const prod &a, const number &b)
+{
+  ASSERT( ! b.coef().null() );
+  std::unique_ptr< prod > tmp ( new prod( a ) );
+  tmp->coef() /= b;
+  return tmp.release();
+}
 prod* prod::mul(const prod &a, const prod &b)
 {
   const number &c = a.coef() * b.coef();

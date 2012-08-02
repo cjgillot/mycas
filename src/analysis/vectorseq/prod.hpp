@@ -62,6 +62,9 @@ private:
   bool match_same_type(const basic &, match_state &) const;
 
 public:
+  static prod* mul_num(const prod &, const number &);
+  static prod* div_num(const prod &, const number &);
+
   static prod* mul(const prod &, const prod &);
   static prod* div(const prod &, const prod &);
   static prod* inv(const prod &);

@@ -34,11 +34,11 @@ expr::compare(const expr &a, const expr &b)
 #define IS_NUM(a) ((a).is_numerical())
 #define NUM( a ) ((a).as_a< numerical >())
 
-#define OPERATE_NUM( arge, argn, klass, op ) do { \
-  CLONE_TO( retp, arge, klass );                  \
-  const_cast< number& >( retp->coef() )           \
-  op NUM( argn )->get();                          \
-  return retp->eval( default_eval_depth );        \
+#define OPERATE_NUM( a, n, klass, fn ) do       { \
+  PREPARE( ap, a, klass );                        \
+  expr ret ( klass::fn( *ap, NUM(n)->get() ) );   \
+  ret.eval();                                     \
+  return ret;                                     \
 } while(0) //;
 #define OPERATE_BIN( a, b, klass, fn ) do {       \
   PREPARE( ap, a, klass );                        \
@@ -52,8 +52,8 @@ expr::compare(const expr &a, const expr &b)
 expr expr::name(const expr &a, const expr &b) {   \
   bool an = IS_NUM(a), bn = IS_NUM(b);            \
   if( an & bn ) return numerical::name( *NUM(a), *NUM(b) );  \
-  if( bn ) OPERATE_NUM( a, b, klass, op );        \
-  if( an ) OPERATE_NUM( b, a, klass, op );        \
+  if( bn ) OPERATE_NUM( a, b, klass, name##_num );\
+  if( an ) OPERATE_NUM( b, a, klass, name##_num );\
   OPERATE_BIN( a, b, klass, name );               \
 }
 

@@ -12,6 +12,18 @@ sum::sum(const number &n)
 : super(n) {}
 
 // operations
+sum* sum::add_num(const sum &a, const number &b)
+{
+  std::unique_ptr< sum > tmp ( new sum( a ) );
+  tmp->coef() += b;
+  return tmp.release();
+}
+sum* sum::sub_num(const sum &a, const number &b)
+{
+  std::unique_ptr< sum > tmp ( new sum( a ) );
+  tmp->coef() -= b;
+  return tmp.release();
+}
 sum* sum::add(const sum &a, const sum &b)
 {
   const number &c = a.coef() + b.coef();
