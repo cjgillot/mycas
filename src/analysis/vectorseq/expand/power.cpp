@@ -3,22 +3,6 @@
 using namespace analysis;
 using namespace expand_detail;
 
-namespace {
-
-struct repower
-: public std::unary_function<const expr&, expr>
-{
-  const expr* base;
-
-  repower( const expr &b )
-  : base( &b ) {}
-
-  inline expr operator()( const expr &p ) const
-  { return expr::pow( *base, p ).expand(); }
-};
-
-}
-
 expr analysis::expand_detail::power_expand(const power &self)
 {
   const expr &e_base = self.base().expand();
@@ -39,7 +23,7 @@ expr analysis::expand_detail::power_expand(const power &self)
       std::transform(
         s_expo.begin(), s_expo.end()
       , std::back_inserter( seq )
-      , repower( e_base )
+      , [&e_base](const expr &expo) { return expr::pow(e_base,expo).expand(); }
       );
 
       ptr< const prod > restp =
