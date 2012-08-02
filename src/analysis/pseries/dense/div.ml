@@ -5,27 +5,27 @@ open Mul
 
 module LongDiv = struct
 
-	(* C = M(n) *)
-	(*
-	F = f+xF' = QG = (q+xQ')(g+xG')
-	=> f = qg and F' = (q+xQ')G' + Q'g = QG' + Q'g
-	=> Q = q+xQ' = f /g + x(1/g)(F' − QG')
+  (* C = M(n) *)
+  (*
+  F = f+xF' = QG = (q+xQ')(g+xG')
+  => f = qg and F' = (q+xQ')G' + Q'g = QG' + Q'g
+  => Q = q+xQ' = f /g + x(1/g)(F' − QG')
 
-	 (f:ft) / (g:gt) = qs where qs = f/g : 1/g*(ft-qs*gt)
-	*)
-	let rec div fs gs =
-	  let fv = !?fs and gv = !?gs in
-	  if fv && !!fs == E then lazv E else
-	  if gv && !!gs == E then raise Division_by_zero else
-	  if fv && gv
-	  then lazv( _div ( !!fs, !!gs ) )
-	  else lazy( _div ( !!fs, !!gs ) )
+    (f:ft) / (g:gt) = qs where qs = f/g : 1/g*(ft-qs*gt)
+  *)
+  let rec div fs gs =
+    let fv = !?fs and gv = !?gs in
+    if fv && !!fs == E then lazv E else
+    if gv && !!gs == E then raise Division_by_zero else
+    if fv && gv
+    then lazv( _div ( !!fs, !!gs ) )
+    else lazy( _div ( !!fs, !!gs ) )
 
-	and _div = function
-	| E, _ -> E
-	| _, E -> raise Division_by_zero
+  and _div = function
+  | E, _ -> E
+  | _, E -> raise Division_by_zero
 
-	| N(f,ft), N(g,gt) when Expr.null_p g ->
+  | N(f,ft), N(g,gt) when Expr.null_p g ->
       if Expr.null_p f
       then
         (* XXX may break stream requirements !!! *)
@@ -47,15 +47,15 @@ module LongDiv = struct
       ))
       in qs
 
-	let ( /: ) = div
+  let ( /: ) = div
 
-	(* C = M(n) *)
-	let _inv = function
-	| E ->
+  (* C = M(n) *)
+  let _inv = function
+  | E ->
       raise Division_by_zero
 
-	| N(g,gt) when Expr.null_p g ->
-	    raise Division_by_zero
+  | N(g,gt) when Expr.null_p g ->
+      raise Division_by_zero
 
   | N(g,gt) when Expr.unit_p g ->
       let rec qs = N( g, lazy(
@@ -70,10 +70,10 @@ module LongDiv = struct
       ))
       in qs
 
-	let inv fs =
-	  if !?fs
-	  then lazv( _inv !!fs )
-	  else lazy( _inv !!fs )
+  let inv fs =
+    if !?fs
+    then lazv( _inv !!fs )
+    else lazy( _inv !!fs )
 
 end
 
@@ -90,7 +90,7 @@ module IterNewton = struct
     | E -> raise Division_by_zero
     | N(f0,ft) ->
         let s0 = alone (Expr.inv f0) in
-        _newton (fnc (lazv f)) s0
+        _newton (fnc (lazv f)) s0 1
 
   let inv f =
     if !? f
@@ -99,12 +99,12 @@ module IterNewton = struct
 
   let _div (a,b) = _mul (a, _inv b)
   let div fs gs =
-	  let fv = !?fs and gv = !?gs in
-	  if fv && !!fs == E then lazv E else
-	  if gv && !!gs == E then raise Division_by_zero else
-	  if fv && gv
-	  then lazv( _div ( !!fs, !!gs ) )
-	  else lazy( _div ( !!fs, !!gs ) )
+    let fv = !?fs and gv = !?gs in
+    if fv && !!fs == E then lazv E else
+    if gv && !!gs == E then raise Division_by_zero else
+    if fv && gv
+    then lazv( _div ( !!fs, !!gs ) )
+    else lazy( _div ( !!fs, !!gs ) )
 
 end
 

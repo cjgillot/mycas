@@ -23,4 +23,4 @@ val integrate :
 
 val newton :
   ('a node lazy_t -> 'a node lazy_t) ->
-  'a node lazy_t -> 'a node lazy_t
+  'a node lazy_t -> int -> 'a node lazy_t

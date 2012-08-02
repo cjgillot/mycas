@@ -123,7 +123,7 @@ let integrate const p = lazv( _integrate const p )
 
 (****** newton iteration ******)
 
-let newton f s = Newton.newton f s
+let newton f s n = Newton.newton f s n
 
 (*
 (****** reciprocal ******)
