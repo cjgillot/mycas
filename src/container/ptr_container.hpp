@@ -1,6 +1,10 @@
 #ifndef CONTAINER_PTR_HPP
 #define CONTAINER_PTR_HPP
 
+#include "container/unsafe_vector.hpp"
+
+#if 0
+
 #include <boost/iterator/iterator_adaptor.hpp>
 
 namespace container {
@@ -19,8 +23,109 @@ struct ptr_traits<T*>
 };
 }
 
+template<class, class>
+struct ptr_ref_proxy;
+
 template<class Iter, class Policy>
-struct ptr_proxy
+struct ptr_val_proxy
+: private Policy
+{
+private:
+  typedef typename boost::iterator_value<Iter>::type value_type;
+  typedef typename boost::iterator_reference<Iter>::type reference;
+
+  value_type m_val;
+
+  template<class, class>
+  friend struct ptr_ref_proxy;
+
+public:
+  ptr_val_proxy()
+  : Policy(), m_val(nullptr) {}
+
+  ptr_val_proxy(value_type r, const Policy &pol)
+  : Policy(pol)
+  {
+    this->Policy::assign( &m_val, r );
+  }
+
+  ptr_val_proxy(const ptr_val_proxy &o)
+  : Policy(o)
+  {
+    this->Policy::assign( &m_val, o.m_val );
+  }
+  ptr_val_proxy&
+  operator=(const ptr_val_proxy &o)
+  {
+    this->Policy::operator=( o );
+    this->Policy::assign( &m_val, o.m_val );
+    return *this;
+  }
+
+  ptr_val_proxy(ptr_val_proxy&& o)
+  : Policy{ std::move(o) }, m_val{o.m_val} { o.m_val = nullptr; }
+  ptr_val_proxy&
+  operator=(ptr_val_proxy&& o)
+  {
+    this->Policy::operator=( std::move(o) );
+    this->Policy::move( &m_val, o.m_val );
+    o.m_val = nullptr;
+    return *this;
+  }
+
+  ptr_val_proxy(const ptr_ref_proxy<Iter, Policy> &o)
+  : Policy{o}
+  {
+    this->Policy::assign( &m_val, o.m_ref );
+  }
+  ptr_val_proxy&
+  operator=(const ptr_ref_proxy<Iter, Policy> &o)
+  {
+    this->Policy::operator=( o );
+    this->Policy::assign( &m_val, o.m_ref );
+    return *this;
+  }
+
+  ptr_val_proxy(ptr_ref_proxy<Iter, Policy>&& o)
+  : Policy{ std::move(o) }, m_val{o.m_ref} {}
+  ptr_val_proxy&
+  operator=(ptr_ref_proxy<Iter, Policy>&& o)
+  {
+    this->Policy::operator=( std::move(o) );
+    this->Policy::move( &m_val, o.m_ref );
+    return *this;
+  }
+
+  ptr_val_proxy&
+  operator=(value_type v)
+  {
+    this->Policy::assign( &m_val, v );
+    return *this;
+  }
+
+  ~ptr_val_proxy()
+  {
+    this->Policy::release( &m_val );
+  }
+
+public:
+  auto operator*() const -> decltype( *m_val )
+  { return *m_val; }
+
+  value_type operator->() const
+  { return  m_val; }
+
+  operator value_type() const
+  { return  m_val; }
+
+  void swap(ptr_val_proxy &o)
+  {
+    std::swap( m_val, o.m_val );
+  }
+};
+
+template<class Iter, class Policy>
+struct ptr_ref_proxy
 : private Policy
 {
 private:
@@ -29,31 +134,61 @@ private:
 
   reference m_ref;
 
+  template<class, class>
+  friend struct ptr_val_proxy;
+
 private:
-  ptr_proxy() = delete;
+  ptr_ref_proxy() = delete;
 
 public:
-  ptr_proxy(reference r, const Policy &pol)
+  ptr_ref_proxy(reference r, const Policy &pol)
   : Policy(pol), m_ref(r) {}
 
-  ptr_proxy(const ptr_proxy &o)
+  ptr_ref_proxy(const ptr_ref_proxy &o)
   : Policy{o}, m_ref{o.m_ref} {}
-  ptr_proxy&
-  operator=(const ptr_proxy &o)
+  ptr_ref_proxy&
+  operator=(const ptr_ref_proxy &o)
   {
     this->Policy::operator=( o );
     this->Policy::assign( &m_ref, o.m_ref );
     return *this;
   }
 
-  ptr_proxy&
+  ptr_ref_proxy(ptr_ref_proxy&& o)
+  : Policy{ std::move(o) }, m_ref{o.m_ref} {}
+  ptr_ref_proxy&
+  operator=(ptr_ref_proxy&& o)
+  {
+    this->Policy::operator=( std::move(o) );
+    this->Policy::move( &m_ref, o.m_ref );
+    o.m_ref = nullptr;
+    return *this;
+  }
+
+  ptr_ref_proxy&
+  operator=(const ptr_val_proxy<Iter, Policy> &o)
+  {
+    this->Policy::operator=( o );
+    this->Policy::assign( &m_ref, o.m_val );
+    return *this;
+  }
+  ptr_ref_proxy&
+  operator=(ptr_val_proxy<Iter, Policy>&& o)
+  {
+    this->Policy::operator=( std::move(o) );
+    this->Policy::move( &m_ref, o.m_val );
+    o.m_val = nullptr;
+    return *this;
+  }
+
+  ptr_ref_proxy&
   operator=(value_type v)
   {
     this->Policy::assign( &m_ref, v );
     return *this;
   }
 
-  ~ptr_proxy() {}
+  ~ptr_ref_proxy() {}
 
 public:
   auto operator*() const -> decltype( *m_ref )
@@ -65,7 +200,7 @@ public:
   operator value_type() const
   { return  m_ref; }
 
-  void swap(ptr_proxy &o)
+  void swap(ptr_ref_proxy &o)
   {
     std::swap( m_ref, o.m_ref );
   }
@@ -76,9 +211,9 @@ struct ptr_iterator
 : boost::iterator_adaptor<
     ptr_iterator<Iter, Policy> // Derived
   , Iter // Base
-  , typename boost::iterator_value<Iter>::type // Value
+  , ptr_val_proxy<Iter, Policy> //typename boost::iterator_value<Iter>::type // Value
   , typename std::iterator_traits<Iter>::iterator_category
-  , ptr_proxy<Iter, Policy> // Reference
+  , ptr_ref_proxy<Iter, Policy> // Reference
   >
 {
 private:
@@ -141,13 +276,59 @@ DEFINE_PTR_CONTAINER( ptr_vector, std::vector )
 
 namespace std {
 
-template<class Ptr, class Policy>
-void swap( container::ptr_proxy<Ptr, Policy> &a, container::ptr_proxy<Ptr, Policy> &b )
-{ a.swap(b); }
+// template<class Ptr, class Policy>
+// void swap( container::ptr_proxy<Ptr, Policy> &a, container::ptr_proxy<Ptr, Policy> &b )
+// { a.swap(b); }
 
 template<class Iter, class Policy>
 void iter_swap( const container::ptr_iterator<Iter, Policy> &a, const container::ptr_iterator<Iter, Policy> &b )
 { a.iter_swap(b); }
+
+}
+
+#endif
+
+namespace container {
+
+template<typename T>
+class ptr
+: public boost::intrusive_ptr<T>
+{
+  typedef boost::intrusive_ptr<T> super_t;
+
+public:
+  ptr() = default;
+  ptr(const ptr&) = default;
+  ptr(ptr&&) = default;
+  ~ptr() = default;
+
+  ptr& operator=(const ptr&) = default;
+  ptr& operator=(ptr&&) = default;
+
+  ptr(const boost::intrusive_ptr<T>& o)
+  : super_t(o) {}
+  ptr(boost::intrusive_ptr<T>&& o)
+  : super_t(o) {}
+
+  ptr(T* o)
+  : super_t(o) {}
+
+public:
+//   template<typename... Args>
+//   ptr(Args&&... args)
+//   : boost::intrusive_ptr<T>( std::forward<Args>(args)... ) {}
+
+public:
+  operator T*() const { return this->get(); }
+  template<typename U>
+  explicit operator U*() const { return static_cast<U*>(this->get()); }
+};
+
+template<typename T, typename Alloc = std::allocator<ptr<T>>>
+using ptr_vector = std::vector< ptr<T>, Alloc >;
+
+template<typename T, typename Alloc = std::allocator<ptr<T>>>
+using ptr_unsafe_vector = container::unsafe_vector< ptr<T>, Alloc >;
 
 }
 
