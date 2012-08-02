@@ -1,3 +1,5 @@
+#if 0
+
 #include "mp_operators.hpp"
 
 #include "number.hpp"
@@ -15,3 +17,5 @@ int main()
 
   return 0;
 }
+
+#endif
