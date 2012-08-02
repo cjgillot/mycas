@@ -97,17 +97,32 @@ public:
 
   void destroy( pointer p )
   {
-    intrusive_ptr_release( *p );
+    ASSERT( *p );
+    release( p );
     super_type::destroy( p );
   }
 
   void assign( pointer p, value_type x )
   {
+    if( *p == x ) return;
     value_type y = std::move( *p );
 
     intrusive_ptr_add_ref( x );
-    *p = std::move( x );
-    intrusive_ptr_release( y );
+    *p = x;
+    if( y )
+      intrusive_ptr_release( y );
+  }
+
+  void move( pointer p, value_type x )
+  {
+    if( *p && *p != x ) intrusive_ptr_release( *p );
+    *p = std::move(x);
+  }
+
+  void release( pointer p )
+  {
+    if( *p )
+      intrusive_ptr_release( *p );
   }
 };
 
