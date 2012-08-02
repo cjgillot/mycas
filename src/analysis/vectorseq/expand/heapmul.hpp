@@ -1,6 +1,8 @@
 #ifndef EXPAND_HEAPMUL_HPP
 #define EXPAND_HEAPMUL_HPP
 
+#include "analysis/vectorseq.hpp"
+
 #include "container/unsafe_vector.hpp"
 
 #include <algorithm>
@@ -82,74 +84,67 @@ struct predicate
   }
 };
 
-/*!\brief Heap multiplication
- *
- * Complexity ( n < m )
+/*!\brief Heap n-ary merging
+ * n = #f, m = #g
+ * Complexity
  * - Multiplication : n*m
  * - Comparison : n*m*lg(n)
  * - Space : n
  */
-template<class EP, class RRange, class ARange>
-void expand_heap(
-    RRange &ret,
-    const number &f0, const ARange &F,
-    const number &g0, const ARange &G
-) {
-  if( F.size() > G.size() )
-  {
-    expand_heap<EP>( ret, g0, G, f0, F );
-    return;
-  }
-
-  typedef typename ARange::const_iterator iter_t;
+template<class Iter, class EP = prod::handle>
+struct heap_nmerge
+{
+private:
   typedef heap_obj_base hob_t;
-  typedef heap_obj<EP, prod, iter_t> ho_t;
+  typedef heap_obj<EP, prod, Iter> ho_t;
 
-  container::unsafe_vector<ho_t  > objs ( F.size() + 2 );
-  container::unsafe_vector<hob_t*> heap ( F.size() + 2 );
+  container::unsafe_vector<ho_t  > objs;
+  container::unsafe_vector<hob_t*> heap;
 
+public:
+  explicit heap_nmerge(std::size_t len)
+  : objs(len), heap(len) {}
+  ~heap_nmerge() = default;
+
+private:
+  heap_nmerge(const heap_nmerge&) = delete;
+  heap_nmerge& operator=(const heap_nmerge&) = delete;
+  heap_nmerge(heap_nmerge&&) = delete;
+  heap_nmerge& operator=(heap_nmerge&&) = delete;
+
+public:
+  void add_one(const prod* scale, const Iter& beg, const Iter& end)
   {
-    if( !f0.null() )
-    {
-      objs.push_back( ho_t( prod::from_number(f0), G.begin(), G.end() ) );
-      heap.push_back( &objs.back() );
-    }
-
-    if( !g0.null() )
-    {
-      objs.push_back( ho_t( prod::from_number(g0), F.begin(), F.end() ) );
-      heap.push_back( &objs.back() );
-    }
-  }
-  for(const prod* f : F)
-  {
-    objs.push_back( ho_t( f, G.begin(), G.end() ) );
+    objs.emplace_back( scale, beg, end );
     heap.push_back( &objs.back() );
   }
-
-  std::make_heap( heap.begin(), heap.end(), predicate() );
-
-  ASSERT( ! heap.empty() );
-
-  // TODO help coefficient cancelling
-  while( ! heap.empty() )
+  template<class RRange>
+  void main(RRange& ret)
   {
-    const ho_t* ho = static_cast< const ho_t* >( heap.front() );
-    ret.push_back( ho->get() );
+    std::make_heap( heap.begin(), heap.end(), predicate() );
 
-    if( ho->valid() )
+    ASSERT( ! heap.empty() );
+
+    // TODO help coefficient cancelling
+    while( ! heap.empty() )
     {
-      std:: pop_heap( heap.begin(), heap.end(), predicate() );
-      static_cast<ho_t*>( heap.back() )->next() ;
-      std::push_heap( heap.begin(), heap.end(), predicate() );
-    }
-    else
-    {
-      std:: pop_heap( heap.begin(), heap.end(), predicate() );
-      heap. pop_back();
+      const ho_t* ho = static_cast< const ho_t* >( heap.front() );
+      ret.push_back( ho->get() );
+
+      if( ho->valid() )
+      {
+        std:: pop_heap( heap.begin(), heap.end(), predicate() );
+        static_cast<ho_t*>( heap.back() )->next() ;
+        std::push_heap( heap.begin(), heap.end(), predicate() );
+      }
+      else
+      {
+        std:: pop_heap( heap.begin(), heap.end(), predicate() );
+        heap. pop_back();
+      }
     }
   }
-}
+};
 
 }} // namespace analysis::expand_detail
 

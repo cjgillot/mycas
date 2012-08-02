@@ -15,8 +15,11 @@
 namespace analysis {
 namespace expand_detail {
 
-template<class handle, class RRange, class ARange>
-void expand_heap( RRange &, const ARange &, const ARange & );
+void expand_heap(
+    container::ptr_unsafe_vector<const prod> &ret,
+    const number &f0, const sum &F,
+    const number &g0, const sum &G
+);
 
 ptr<const sum>  expand_sum_sum ( const sum  &, const sum & );
 ptr<const sum>  expand_prod_sum( const expr &, const sum & );

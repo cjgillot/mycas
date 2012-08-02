@@ -29,7 +29,7 @@ expand_sum_sum( const sum &a, const sum &b )
   const number &bc = b.coef();
 
   // hard multiplication work
-  expand_detail::expand_heap<prod::handle>( seq, ac, a, bc, b );
+  expand_detail::expand_heap( seq, ac, a, bc, b );
 
   expand_detail::sort( seq.begin(), seq.end() );
 
