@@ -17,8 +17,8 @@ namespace container {
 
 template< class _Tp, class _Alloc = std::allocator<_Tp> >
 class unsafe_vector
-: private util::implement_concept< boost::Container<unsafe_vector<_Tp, _Alloc> > >
-, private _Alloc::template rebind<_Tp>::other {
+// : private util::implement_concept< boost::Container<unsafe_vector<_Tp, _Alloc> > >
+: private _Alloc::template rebind<_Tp>::other {
 
   typedef typename _Alloc::template rebind<_Tp>::other _Tp_alloc_type;
 
@@ -38,7 +38,7 @@ public: // member typedefs
   typedef std::size_t     size_type;
   typedef std::ptrdiff_t  difference_type;
 
-  typedef _Alloc          allocator_type;
+  typedef _Tp_alloc_type  allocator_type;
 
   typedef pointer                               iterator;
   typedef std::reverse_iterator<iterator>       reverse_iterator;
@@ -50,7 +50,7 @@ protected:
         allocator_type &get_allocator()       { return *this; }
   const allocator_type &get_allocator() const { return *this; }
 
-public: // cdtor
+public: // copy/move cdtor
   unsafe_vector( const unsafe_vector &o )
   : _Tp_alloc_type( o.get_allocator() )
   , m_number( o.m_number )
@@ -59,6 +59,16 @@ public: // cdtor
   {
     if( m_number )
       container::uninitialized_copy( o.begin(), o.end(), m_start, get_allocator() );
+  }
+
+  unsafe_vector( unsafe_vector&& o )
+  : _Tp_alloc_type( std::move( o.get_allocator() ) )
+  , m_number( std::move( o.m_number ) )
+  , m_start( std::move( o.m_start ) )
+  , m_finish( std::move( o.m_finish ) )
+  {
+    o.m_start = o.m_finish = nullptr;
+    o.m_number = 0;
   }
 
   unsafe_vector& operator=( const unsafe_vector &o )
@@ -70,7 +80,29 @@ public: // cdtor
       // copy and swap
       unsafe_vector( o ).swap( *this );
     else
-      m_start = m_finish = 0;
+    {
+      m_start = m_finish = nullptr;
+      m_number = 0;
+    }
+
+    return *this;
+  }
+
+  unsafe_vector& operator=( unsafe_vector &&o )
+  {
+    if( &o == this )
+      return *this;
+
+    this->_Tp_alloc_type::operator=( std::move(o) );
+
+    m_start = o.m_start;
+    m_finish = o.m_finish;
+    m_number = o.m_number;
+
+    o.m_start = o.m_finish = nullptr;
+    o.m_number = 0;
+
+    return *this;
   }
 
   void swap( unsafe_vector &o ) throw()
