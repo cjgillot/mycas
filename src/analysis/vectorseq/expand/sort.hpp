@@ -33,25 +33,8 @@ sort(const Iterator &beg, const Iterator &end)
    * It is mainly a sequence of one or more "almost sorted" sequences,
    * which come from overflow in hash.
    * Each "almost sorted" sequence is sorted wrt the hash,
-   * but not wrt the complete predicate, so insertion sort
-   * is efficient (small movements).
-   * Then, some merge does the trick.
-   *
-   * For now, we use timsort algorithm, because std::inplace_merge
-   * rejects the iterator type.
+   * but not wrt the complete predicate, so it may probably create a timsort run.
    */
-
-  // select first "almost sorted" range
-  Iterator mid = std::adjacent_find( beg, end, partial_not_pred() );
-  util::insertion_sort( beg, mid, sum::sort_predicate() );
-
-  do
-  { // select next "almost sorted" range
-    Iterator next = std::adjacent_find( mid, end, partial_not_pred() );
-    util::insertion_sort( mid, next, sum::sort_predicate() );
-    mid = next;
-  }
-  while(mid != end);
 
   util::timsort( beg, end, sum::sort_predicate() );
 }
