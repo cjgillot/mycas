@@ -13,10 +13,11 @@ namespace detail {
 
 /// This is a helper function for the sort routine.
 template<typename _RandomAccessIterator, typename _Compare>
-void
+static inline void
 unguarded_linear_insert( _RandomAccessIterator last, _Compare comp )
 {
-  auto val = std::move(*last);
+  typename std::iterator_traits<_RandomAccessIterator>::value_type
+    val = std::move(*last);
 
   _RandomAccessIterator next = last;
 
@@ -30,9 +31,8 @@ unguarded_linear_insert( _RandomAccessIterator last, _Compare comp )
   *last = std::move( val );
 }
 
-/// This is a helper function for the sort routine.
 template<typename _RandomAccessIterator, typename _Compare>
-void
+inline void
 insertion_sort(_RandomAccessIterator first,
       const _RandomAccessIterator &last, _Compare comp)
 {
@@ -42,7 +42,8 @@ insertion_sort(_RandomAccessIterator first,
   {
     if( comp(*i, *first) )
     {
-      auto val = std::move(*i);
+      typename std::iterator_traits<_RandomAccessIterator>::value_type
+        val = std::move(*i);
       std::move_backward( first, i, i + 1 );
       *first = std::move(val);
     }
