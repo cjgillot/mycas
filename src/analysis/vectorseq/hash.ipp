@@ -3,6 +3,7 @@
 
 #include "analysis/vectorseq/vectorseq_base.hpp"
 
+#include <limits>
 #include <boost/functional/hash.hpp>
 
 namespace analysis {
@@ -17,10 +18,13 @@ VSB::coef_hash() const
 inline std::size_t
 VSB::value_hash() const
 {
-  std::size_t seed = 0;
-  boost::hash_combine(seed, m_coefhash);
-  boost::hash_combine(seed, m_seqhash);
-  return seed;
+#define NBITS (std::numeric_limits<std::size_t>::digits)
+#define SHIFT (3 * NBITS / 4)
+#define MASK  ((std::size_t(1l) << SHIFT) - std::size_t(1l))
+  return (m_coefhash << SHIFT) | (m_seqhash & MASK);
+#undef MASK
+#undef SHIFT
+#undef NBITS
 }
 
 inline void
